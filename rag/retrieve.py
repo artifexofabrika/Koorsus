@@ -84,7 +84,7 @@ def format_context(results):
     parts = []
     for i, r in enumerate(results, 1):
         src = (r.get("meta") or {}).get("source", "unknown")
-        parts.append(f"[{i}] Source: {src}\n{r['doc']}")
+        parts.append(f"Source: {src}\n{r['doc']}")
     return "\n\n".join(parts)
 
 
