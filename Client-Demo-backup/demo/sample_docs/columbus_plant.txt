@@ -1,0 +1,21 @@
+Columbus Plant — Operational Summary
+
+The Columbus facility reduced changeover time on Line 3 from 45 minutes to
+12 minutes by applying Single-Minute Exchange of Die (SMED) principles over
+a six-week kaizen event in March. The primary gains came from converting
+internal setup tasks to external tasks, standardizing tool carts, and
+introducing a two-person parallel workflow during the die change.
+
+Overall Equipment Effectiveness (OEE) on Line 3 improved from 61% to 78%
+following the changeover project. Availability rose from 84% to 91%, and
+performance improved from 79% to 88%. Quality remained steady at 97%.
+
+The plant's safety record in the most recent quarter: zero lost-time
+injuries, two recordable incidents, both minor lacerations. The safety
+committee meets every Tuesday at 7:00 AM in the conference room adjacent to
+the shipping dock.
+
+Inventory turns improved from 6.2 to 8.4 annually after the kanban
+implementation in the parts warehouse. The warehouse now maintains three
+days of raw material buffer, down from twelve. The kanban cards are
+reviewed every Monday morning by the materials supervisor.

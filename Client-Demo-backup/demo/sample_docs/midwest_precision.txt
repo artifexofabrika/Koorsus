@@ -1,0 +1,114 @@
+Midwest Precision Components — Operations Handbook
+Revision 7.2, Effective January 2026
+
+SECTION 1: FACILITY OVERVIEW
+
+Midwest Precision Components operates a 68,000 square foot facility in
+Groveport, Ohio, employing 84 people across three shifts. The plant produces
+precision-machined components for the agricultural equipment and hydraulic
+valve industries. Annual revenue for the most recent fiscal year was 14.2
+million dollars.
+
+The facility operates three CNC machining cells, one dedicated turning cell,
+and a finishing department with vibratory deburring and passivation lines.
+Primary customers include two Tier 1 agricultural OEMs and one hydraulic
+distributor. No single customer represents more than 32 percent of revenue.
+
+SECTION 2: QUALITY MANAGEMENT
+
+The quality management system is certified to ISO 9001:2015, with the most
+recent surveillance audit completed in November 2025. Zero major
+nonconformities were issued. Two minor nonconformities were recorded: one
+concerning calibration record retention, one concerning supplier
+re-evaluation timing. Both were closed within the required 30-day window.
+
+First-pass yield across all machining cells averaged 97.3 percent in the
+most recent quarter. The target is 98.0 percent. The largest single source
+of scrap is tool breakage on Cell 2, accounting for 41 percent of
+scrapped parts. A tool-life monitoring pilot is scheduled for the second
+quarter.
+
+Customer complaints totaled 7 in the last twelve months, down from 14 in
+the prior period. All complaints were resolved within 15 business days.
+No product recalls have occurred in the company's 22-year history.
+
+SECTION 3: MAINTENANCE AND RELIABILITY
+
+Preventive maintenance is scheduled through a CMMS and executed by two
+full-time maintenance technicians. Overall Equipment Effectiveness across
+the plant averaged 74 percent last quarter. The CNC cells averaged 79
+percent; the finishing department lagged at 63 percent, primarily due to
+unplanned downtime on the passivation line.
+
+Mean time between failures on the passivation line was 142 hours last
+quarter, against a target of 250 hours. The primary failure mode is pump
+seal degradation, attributed to inadequate filtration of the recirculating
+solution. A filtration upgrade was quoted at 18,000 dollars with an
+estimated 14-month payback.
+
+Spare parts inventory is valued at 62,000 dollars. Critical spares are
+identified in the CMMS. The maintenance manager reviews spare parts
+consumption monthly and adjusts reorder points quarterly.
+
+SECTION 4: SUPPLY CHAIN
+
+The plant maintains 47 active suppliers. Of these, 12 are designated
+strategic suppliers representing 78 percent of purchased material spend.
+Raw material lead times averaged 4.2 weeks last quarter, down from 6.8
+weeks during the prior-year period.
+
+Steel bar stock is the largest single commodity purchased, at approximately
+1.1 million dollars annually. The plant holds 3 weeks of bar stock on
+hand as buffer against mill lead-time variability. Aluminum and brass are
+held at 2 weeks.
+
+Supplier on-time delivery averaged 94.1 percent last quarter. The target
+is 96 percent. Two suppliers are on formal corrective action plans for
+repeated late deliveries.
+
+SECTION 5: SAFETY
+
+The plant recorded zero lost-time injuries in the most recent calendar
+year. Three recordable incidents occurred: two minor lacerations requiring
+first aid, and one strain injury from manual lifting. The strain injury
+prompted a review of lifting aids in the shipping department.
+
+The safety committee meets on the first Wednesday of each month at 6:30 AM.
+Membership includes the plant manager, the safety coordinator, two hourly
+representatives from each shift, and the maintenance manager. Meeting
+minutes are posted on the shop floor bulletin board within 48 hours.
+
+Lockout/tagout procedures are reviewed annually. The most recent review
+identified 14 energy isolation points that required updated labeling. All
+were corrected within 60 days.
+
+SECTION 6: CONTINUOUS IMPROVEMENT
+
+The plant runs a formal kaizen program with a target of 24 events per year.
+In the most recent year, 27 events were completed. Documented savings
+totaled 412,000 dollars, against a program cost of 96,000 dollars.
+
+The largest single kaizen saving came from a setup reduction project on
+Cell 3, which reduced changeover time from 38 minutes to 9 minutes and
+generated estimated annual savings of 118,000 dollars.
+
+A second significant project addressed material handling between the
+machining cells and finishing, reducing work-in-process inventory by 34
+percent and freeing 1,200 square feet of floor space for a new deburring
+station.
+
+SECTION 7: WORKFORCE
+
+Total headcount is 84, comprising 61 hourly production employees, 12
+salaried support staff, 6 engineers, 3 maintenance technicians, and 2
+senior managers. Average tenure is 8.4 years. Voluntary turnover last
+year was 11 percent, against a regional manufacturing average of 16
+percent.
+
+The plant operates an apprenticeship program in partnership with a local
+community college. Four apprentices are currently enrolled. Two apprentices
+graduated into full-time machinist roles in the past year.
+
+Cross-training matrices are maintained for all production roles. The
+current average is 2.7 qualified operators per position, against a target
+of 3.0. The turning cell is the thinnest at 2.1 operators per position.

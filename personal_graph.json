@@ -1,0 +1,65 @@
+{
+  "identity": {
+    "name": "",
+    "preferred_address": "sir",
+    "age": null,
+    "location": "",
+    "languages": [],
+    "personality": ""
+  },
+  "biography": {
+    "early_life": "",
+    "career": [],
+    "significant_events": []
+  },
+  "health_and_wellness": {
+    "medications": "['metformin', '1000 mg', 'L-carnitine', '1200 mg', 'B12', '1000 mcg']",
+    "weight": null,
+    "height": null,
+    "physical_concerns": [],
+    "exercise": "",
+    "dietary_preferences": ""
+  },
+  "current_projects": {
+    "primary": "Jeeves \u2013 a private AI valet for security and privacy, built in Vietnam",
+    "description": "",
+    "status": "",
+    "deadline": ""
+  },
+  "emotional_state": {
+    "current_mood": "",
+    "recent_stressors": [],
+    "recent_accomplishments": [],
+    "support_network": ""
+  },
+  "conversation_memory": [],
+  "preferences_and_quirks": {
+    "favorite_writer": "",
+    "communication_style": "",
+    "technology_stance": "",
+    "coffee": "",
+    "philosophy": ""
+  },
+  "custom_facts": {
+    "favorite_writer": "P.G. Wodehouse",
+    "beverage_preference": "black coffee with cream",
+    "request": "calorie intake information",
+    "ability": "AI cannot physically bring coffee",
+    "assistance_type": "recipes or ordering",
+    "voice-to-text software": "transcription history",
+    "voice pattern training": "True",
+    "mis-transcriptions": "occasional",
+    "literary_preference": "P.G. Wodehouse's works",
+    "interests": "food and cooking",
+    "meal_contents": "['four eggs', 'emperor mushrooms', 'coconut oil']",
+    "user_satisfaction": "satisfaction with the meal's energy-boosting qualities",
+    "assistance_suggestion": "identifying tracking method",
+    "meal_consumed": "['four eggs', 'two sandwiches', '200g roasted pork']",
+    "preference": "relaxing on the beach",
+    "name": "Randy",
+    "medications": "recent",
+    "meal": "recent",
+    "preferences": "specific health or well-being topics",
+    "food_consumption": "four eggs"
+  }
+}
