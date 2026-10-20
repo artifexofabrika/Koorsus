@@ -51,3 +51,8 @@ SYSTEM_PROMPT = (
 # Telegram
 TELEGRAM_BOT_TOKEN = "8803200140:AAGi3JObWNfVktqJ9aXjYc-cpsQe_sIt5_c"
 TELEGRAM_CHAT_ID = 7451582244
+
+# Email
+EMAIL_USERNAME = "artifexofabrika@gmail.com"
+EMAIL_APP_PASSWORD = "zfkbbhpomikrkwfc"
+EMAIL_ALLOWED_SENDERS = "randy.d.wolf@proton.me"
