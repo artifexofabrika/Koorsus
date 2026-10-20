@@ -1,0 +1,17 @@
+[Unit]
+Description=Koorsus web application
+After=network.target llama-server.service
+Wants=llama-server.service
+
+[Service]
+User=jeeves
+Group=jeeves
+ExecStart=/home/jeeves/jeeves-env/bin/python /home/jeeves/Client-Demo/serve.py
+WorkingDirectory=/home/jeeves/Client-Demo
+Restart=on-failure
+RestartSec=5
+Environment="HF_HUB_OFFLINE=1"
+Environment="TRANSFORMERS_OFFLINE=1"
+
+[Install]
+WantedBy=multi-user.target
