@@ -47,3 +47,7 @@ SYSTEM_PROMPT = (
     "If the context does not contain the answer, say plainly that it is not in the documents. "
     "Cite the source document for every claim."
 )
+
+# Telegram
+TELEGRAM_BOT_TOKEN = "8803200140:AAGi3JObWNfVktqJ9aXjYc-cpsQe_sIt5_c"
+TELEGRAM_CHAT_ID = 7451582244
