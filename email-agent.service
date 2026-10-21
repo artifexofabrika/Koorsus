@@ -1,0 +1,16 @@
+[Unit]
+Description=Koorsus email agent
+After=network.target koorsus.service
+Wants=koorsus.service
+
+[Service]
+User=jeeves
+Group=jeeves
+Environment="PYTHONUNBUFFERED=1"
+ExecStart=/home/jeeves/jeeves-env/bin/python /home/jeeves/Client-Demo/email_skill.py
+WorkingDirectory=/home/jeeves/Client-Demo
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

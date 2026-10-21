@@ -64,7 +64,11 @@ def ask_koorsus(question):
         d = r.json()
         ans = d.get("answer", "(no answer)")
         src = d.get("sources", [])
-        return f"{ans}\n\n--- {', '.join(src)}" if src else ans
+        body = "Thank you for your enquiry.\n\n" + ans
+        if src:
+            body += "\n\nReference: " + ", ".join(src)
+        body += "\n\nKind regards,\nArtifexo Fabrika"
+        return body
     except Exception as e:
         return f"Koorsus unreachable: {e}"
 

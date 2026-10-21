@@ -171,7 +171,9 @@ def ask_route():
     if not results:
         return jsonify({"answer": "No documents are loaded.", "sources": []})
     ans = answer(q, results)
-    sources = sorted({(r.get("meta") or {}).get("source", "?") for r in results})
+    _markers = ("not in the provided context", "not mentioned", "not in the documents", "does not contain", "no information about")
+    refused = any(m in ans.lower() for m in _markers)
+    sources = [] if refused else sorted({(r.get("meta") or {}).get("source", "?") for r in results})
     return jsonify({"answer": ans, "sources": sources})
 
 

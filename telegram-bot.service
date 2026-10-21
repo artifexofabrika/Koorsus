@@ -1,0 +1,16 @@
+[Unit]
+Description=Telegram bridge to Koorsus
+After=network.target koorsus.service
+Wants=koorsus.service
+
+[Service]
+Environment="PYTHONUNBUFFERED=1"
+User=jeeves
+Group=jeeves
+ExecStart=/home/jeeves/jeeves-env/bin/python /home/jeeves/Client-Demo/telegram_bot.py
+WorkingDirectory=/home/jeeves/Client-Demo
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

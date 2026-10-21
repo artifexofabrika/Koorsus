@@ -3,7 +3,9 @@ Description=llama.cpp server for Koorsus
 After=network.target
 
 [Service]
-ExecStart=/home/jeeves/llama.cpp/build/bin/llama-server -m /home/jeeves/llama.cpp/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf --host 0.0.0.0 --port 8080 -c 2048
+User=jeeves
+Group=jeeves
+ExecStart=/home/jeeves/llama.cpp/build/bin/llama-server -m /home/jeeves/llama.cpp/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf --host 0.0.0.0 --port 8080 -c 2048 -ngl 99 -ub 2048
 Restart=always
 RestartSec=10
 Environment="PATH=/usr/local/cuda-12.6/bin:/usr/bin:/bin"

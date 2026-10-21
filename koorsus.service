@@ -4,6 +4,7 @@ After=network.target llama-server.service
 Wants=llama-server.service
 
 [Service]
+Environment="PYTHONUNBUFFERED=1"
 User=jeeves
 Group=jeeves
 ExecStart=/home/jeeves/jeeves-env/bin/python /home/jeeves/Client-Demo/serve.py
