@@ -1,0 +1,15 @@
+[Unit]
+Description=Myarra metrics dashboard
+After=network.target
+
+[Service]
+User=jeeves
+Group=jeeves
+Environment="PYTHONUNBUFFERED=1"
+ExecStart=/home/jeeves/jeeves-env/bin/python /home/jeeves/Client-Demo/myarr/dashboard.py
+WorkingDirectory=/home/jeeves/Client-Demo
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
