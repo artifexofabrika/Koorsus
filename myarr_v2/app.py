@@ -142,6 +142,29 @@ def a3_view(exp_id):
     conn.close()
     return render_template("a3.html", e=e_dict)
 
+@app.route("/admin", methods=["GET", "POST"])
+def admin_view():
+    conn = get_db_connection()
+    msg = None
+    if request.method == "POST":
+        name = request.form.get("name")
+        role = request.form.get("role")
+        line_id = request.form.get("line_id")
+        tg_id = request.form.get("telegram_id")
+        
+        if name and tg_id:
+            try:
+                conn.execute("INSERT INTO users (name, role, line_id, telegram_id) VALUES (?, ?, ?, ?)",
+                             (name, role, line_id if line_id else None, tg_id))
+                conn.commit()
+                msg = f"User {name} added successfully."
+            except Exception as e:
+                msg = f"Error: {e}"
+                
+    users = conn.execute("SELECT * FROM users WHERE active=1").fetchall()
+    conn.close()
+    return render_template("admin.html", users=users, msg=msg)
+
 if __name__ == "__main__":
     from waitress import serve
     serve(app, host="0.0.0.0", port=5002)

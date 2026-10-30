@@ -99,3 +99,35 @@ def ingest_csv(file_stream, table_name):
         conn.close()
         
     return success_count
+
+def init_users_table():
+    """Creates the users table for Telegram/UI authentication."""
+    conn = get_db_connection()
+    c = conn.cursor()
+    
+    # Users Table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            role TEXT DEFAULT 'Operator',
+            line_id INTEGER REFERENCES lines(id),
+            telegram_id TEXT UNIQUE,
+            active INTEGER DEFAULT 1
+        )
+    ''')
+    
+    # Link hourly runs and changeovers to a specific user
+    try:
+        c.execute("ALTER TABLE hourly_runs ADD COLUMN user_id INTEGER REFERENCES users(id)")
+        c.execute("ALTER TABLE co_events ADD COLUMN user_id INTEGER REFERENCES users(id)")
+    except sqlite3.OperationalError:
+        pass # Columns already exist
+        
+    conn.commit()
+    conn.close()
+    print("Users table initialized.")
+
+if __name__ == "__main__":
+    init_db()
+    init_users_table()

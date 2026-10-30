@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Myarra - Admin{% endblock %}
+{% block content %}
+<h1>User Administration</h1>
+<div class="sub">Manage Floor Access & Telegram IDs</div>
+
+{% if msg %}<div class="success">{{ msg }}</div>{% endif %}
+
+<div class="grid">
+  <div class="box">
+    <h2>Active Users</h2>
+    <table style="margin-top:0;">
+      <tr><th>Name</th><th>Role</th><th>Line</th><th>Telegram ID</th></tr>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.name }}</td>
+        <td>{{ u.role }}</td>
+        <td>{{ u.line_id or 'All' }}</td>
+        <td style="font-family:monospace">{{ u.telegram_id or 'Not set' }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  
+  <div class="box">
+    <h2>Add New User</h2>
+    <form method="POST">
+      <div>
+        <label style="color:var(--muted);font-size:0.7rem;text-transform:uppercase;margin-bottom:0.2rem;display:block">Name</label>
+        <input type="text" name="name" class="file-input" required>
+      </div>
+      <div>
+        <label style="color:var(--muted);font-size:0.7rem;text-transform:uppercase;margin-bottom:0.2rem;display:block">Role (Operator, Lead, Manager)</label>
+        <input type="text" name="role" class="file-input" value="Operator">
+      </div>
+      <div>
+        <label style="color:var(--muted);font-size:0.7rem;text-transform:uppercase;margin-bottom:0.2rem;display:block">Assigned Line (leave blank for all)</label>
+        <input type="number" name="line_id" class="file-input">
+      </div>
+      <div>
+        <label style="color:var(--muted);font-size:0.7rem;text-transform:uppercase;margin-bottom:0.2rem;display:block">Telegram Chat ID</label>
+        <input type="text" name="telegram_id" class="file-input" placeholder="e.g., 7451582244">
+      </div>
+      <button type="submit">Add User</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
