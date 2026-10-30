@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Myarra - PDCA{% endblock %}
+{% block content %}
+<h1>Lean Planning Board</h1>
+<div class="sub">Active PDCA Experiments</div>
+
+{% for dept, cards in groups.items() %}
+  <h2 style="color:var(--accent);margin-top:2rem;margin-bottom:1rem;border-bottom:1px solid var(--border);padding-bottom:.5rem">{{ dept }}</h2>
+  <div class="grid">
+  {% for c in cards %}
+  <a href="/pdca/{{ c.id }}" style="text-decoration:none; color:inherit;">
+    <div class="box" style="transition: background 0.2s; height: 100%;" onmouseover="this.style.background='rgba(192, 168, 120, 0.1)'" onmouseout="this.style.background='var(--card-bg)'">
+      <h3 style="color:var(--text);margin:0 0 1rem;font-size:1.1rem">{{ c.title }} <span style="font-size:.7rem;color:var(--muted);font-weight:normal">(Line {{ c.line_id or 'N/A' }})</span></h3>
+      <p style="color:var(--muted);font-size:.85rem;line-height:1.5;margin:0 0 1rem"><strong>Problem:</strong> {{ c.problem_statement }}</p>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem;font-size:.85rem">
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;margin-bottom:.2rem">Standard</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">{{ '%.0f'|format(c.standard_min) }}m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;margin-bottom:.2rem">Target</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">{{ '%.0f'|format(c.target_goal_min) }}m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;margin-bottom:.2rem">Current Avg</span>
+          {% if c.current_avg is not none %}
+            <div style="font-weight:bold;font-size:1.1rem" class="{{ 'good' if c.current_avg <= c.target_goal_min else 'bad' }}">{{ '%.0f'|format(c.current_avg) }}m</div>
+          {% else %}
+            <div style="font-weight:bold;font-size:1.1rem;color:var(--danger)">N/A</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+  </div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Myarra{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <nav>
+    <a href="/">Dashboard</a> | <a href="/changeover">Changeover</a> | <a href="/pdca">PDCA Board</a> | <a href="/setup">Setup</a>
+  </nav>
+  <br>
+  {% block content %}{% endblock %}
+  <footer>Myarra is the measure. Most plants work hard. Few close the loop.</footer>
+</body>
+</html>

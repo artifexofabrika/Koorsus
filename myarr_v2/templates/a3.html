@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}A3 - {{ e.title }}{% endblock %}
+{% block content %}
+<a href="/pdca" style="font-size:0.9rem;">&larr; Back to Board</a>
+<h1>{{ e.title }} (Line {{ e.line_id or 'N/A' }})</h1>
+<div class="sub">Digital A3 Problem Solving</div>
+
+<div class="box" style="display:flex; gap:2rem; margin-bottom:2rem; border-left:3px solid var(--accent)">
+  <div><span style="color:var(--muted);font-size:.65rem;text-transform:uppercase;display:block">Standard</span><span style="font-size:1.2rem;font-weight:bold;color:var(--accent)">{{ '%.0f'|format(e.standard_min) }}m</span></div>
+  <div><span style="color:var(--muted);font-size:.65rem;text-transform:uppercase;display:block">Target</span><span style="font-size:1.2rem;font-weight:bold;color:var(--accent)">{{ '%.0f'|format(e.target_goal_min) }}m</span></div>
+  <div><span style="color:var(--muted);font-size:.65rem;text-transform:uppercase;display:block">Current Avg</span>
+    {% if e.current_avg is not none %}
+      <span style="font-size:1.2rem;font-weight:bold" class="{{ 'good' if e.current_avg <= e.target_goal_min else 'bad' }}">{{ '%.0f'|format(e.current_avg) }}m</span>
+    {% else %}
+      <span style="font-size:1.2rem;font-weight:bold;color:var(--danger)">N/A</span>
+    {% endif %}
+  </div>
+</div>
+
+<form method="POST" class="box" style="max-width:900px">
+  <div style="display:flex; gap:1rem; margin-bottom:1rem">
+    <div style="flex:1">
+      <label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">Problem Severity</label>
+      <select name="severity" class="file-input">
+        <option value="1" {{ 'selected' if e.severity == 1 }}>1 - Low</option>
+        <option value="3" {{ 'selected' if e.severity == 3 }}>3 - Medium</option>
+        <option value="5" {{ 'selected' if e.severity == 5 }}>5 - High</option>
+      </select>
+    </div>
+    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">Start Date</label><input type="date" name="start_date" value="{{ e.start_date }}" class="file-input"></div>
+    <div style="flex:2"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">PDCA Owner(s)</label><input type="text" name="owner" value="{{ e.owner or '' }}" class="file-input"></div>
+    <div style="flex:2"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">Mgmt/CI Sponsor</label><input type="text" name="sponsor" value="{{ e.sponsor or '' }}" class="file-input"></div>
+  </div>
+  
+  <div style="display:flex; gap:1rem; margin-bottom:1rem">
+    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">Team Members Involved</label><input type="text" name="team" value="{{ e.team or '' }}" class="file-input"></div>
+    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">Departments Involved</label><input type="text" name="departments" value="{{ e.departments or '' }}" class="file-input"></div>
+  </div>
+
+  <div style="display:flex; gap:1rem; margin-bottom:1rem">
+    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">What is our Current Condition?</label><textarea name="current_condition" class="file-input" style="min-height:80px">{{ e.current_condition or '' }}</textarea></div>
+    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">What is our Target Condition?</label><textarea name="target_condition" class="file-input" style="min-height:80px">{{ e.target_condition or '' }}</textarea></div>
+  </div>
+
+  <div style="display:flex; gap:1rem; margin-bottom:1rem">
+    <div style="flex:2"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">What is the Problem? (Root Cause)</label><textarea name="root_cause" class="file-input" style="min-height:80px">{{ e.root_cause or '' }}</textarea></div>
+    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">Fishbone Category</label>
+      <select name="fishbone_category" class="file-input">
+        <option value="">-- Select --</option>
+        <option value="Man" {{ 'selected' if e.fishbone_category == 'Man' }}>Man</option>
+        <option value="Method" {{ 'selected' if e.fishbone_category == 'Method' }}>Method</option>
+        <option value="Material" {{ 'selected' if e.fishbone_category == 'Material' }}>Material</option>
+        <option value="Machine" {{ 'selected' if e.fishbone_category == 'Machine' }}>Machine</option>
+        <option value="Environment" {{ 'selected' if e.fishbone_category == 'Environment' }}>Environment</option>
+        <option value="Measurement" {{ 'selected' if e.fishbone_category == 'Measurement' }}>Measurement</option>
+      </select>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:1rem; margin-bottom:1rem">
+    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">What is our Hypothesis?</label><textarea name="hypothesis" class="file-input" style="min-height:80px">{{ e.hypothesis or '' }}</textarea></div>
+    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">What is our Action Plan?</label><textarea name="action_plan" class="file-input" style="min-height:80px">{{ e.action_plan or '' }}</textarea></div>
+  </div>
+
+  <div style="display:flex; gap:1rem; margin-bottom:1rem">
+    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">Who is responsible?</label><input type="text" name="action_owner" value="{{ e.action_owner or '' }}" class="file-input"></div>
+    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">When will it be done?</label><input type="date" name="action_due_date" value="{{ e.action_due_date or '' }}" class="file-input"></div>
+    <div style="flex:2"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">How do we know it's solved?</label><input type="text" name="success_metric" value="{{ e.success_metric or '' }}" class="file-input"></div>
+  </div>
+
+  <button type="submit">Save A3 Form</button>
+</form>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Myarra - Changeover{% endblock %}
+{% block content %}
+<h1>Changeover Analysis</h1>
+<div class="sub">{{ ev.name }} &middot; {{ ev.started_at }}</div>
+<div class="sub" style="margin-top:-1rem;color:var(--accent)">Job {{ ev.from_job_number or 'N/A' }} &rarr; Job {{ ev.to_job_number or 'N/A' }}</div>
+
+<div class="box" style="max-width:900px;margin-bottom:2rem">
+  <h2>Aggregate Time</h2>
+  <div class="stat-row"><span>Standard</span><span>{{ '%.0f'|format(ev.aggregate_standard_min) }} min</span></div>
+  <div class="stat-row"><span>Actual</span><span class="{{ 'bad' if ev.aggregate_actual_min > ev.aggregate_standard_min else 'good' }}">{{ '%.0f'|format(ev.aggregate_actual_min) }} min</span></div>
+  <div class="stat-row"><span>Variance</span><span class="{{ 'bad' if ev.aggregate_actual_min > ev.aggregate_standard_min else 'good' }}">{{ '%+.0f'|format(ev.aggregate_actual_min - ev.aggregate_standard_min) }} min</span></div>
+</div>
+
+<table>
+  <tr><th>Step</th><th>Station</th><th>Standard</th><th>Actual</th><th>Variance</th></tr>
+  {% for s in steps %}
+  <tr>
+    <td>{{ s.step_name }}{% if s.note %}<span style="display:block;font-size:0.75rem;color:var(--muted);font-style:italic">{{ s.note }}</span>{% endif %}</td>
+    <td>{{ s.station }}</td>
+    <td>{{ '%.0f'|format(s.standard_min) }}m</td>
+    <td>{{ '%.0f'|format(s.actual_min) }}m</td>
+    <td class="{{ 'bad' if s.actual_min > s.standard_min else 'good' if s.actual_min < s.standard_min else '' }}">
+      {{ '%+.0f'|format(s.actual_min - s.standard_min) }}m
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

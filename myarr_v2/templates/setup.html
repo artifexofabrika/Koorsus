@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Myarra - Setup{% endblock %}
+{% block content %}
+<h1>Plant Configuration</h1>
+<div class="sub">Build the Digital Twin</div>
+
+{% if msg %}<div class="success">{{ msg }}</div>{% endif %}
+
+<div class="grid">
+  <div class="box">
+    <h2>Current Database State</h2>
+    <div class="stat-row"><span>Lines Configured</span><span>{{ stats.lines }}</span></div>
+    <div class="stat-row"><span>SKUs / Products</span><span>{{ stats.skus }}</span></div>
+    <div class="stat-row"><span>Active Jobs</span><span>{{ stats.jobs }}</span></div>
+  </div>
+  
+  <div class="box">
+    <h2>Upload New Configuration</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1rem">Upload CSV files to initialize or overwrite the plant data.</p>
+    <form method="POST" enctype="multipart/form-data">
+      <div>
+        <label style="color:var(--muted);font-size:0.7rem;text-transform:uppercase;margin-bottom:0.2rem;display:block">1. Assets (Lines & Stations)</label>
+        <input type="file" name="assets" class="file-input" accept=".csv">
+      </div>
+      <div>
+        <label style="color:var(--muted);font-size:0.7rem;text-transform:uppercase;margin-bottom:0.2rem;display:block">2. Products (SKUs & BOM)</label>
+        <input type="file" name="skus" class="file-input" accept=".csv">
+      </div>
+      <div>
+        <label style="color:var(--muted);font-size:0.7rem;text-transform:uppercase;margin-bottom:0.2rem;display:block">3. Jobs (Production Schedule)</label>
+        <input type="file" name="jobs" class="file-input" accept=".csv">
+      </div>
+      <button type="submit">Process Uploads</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Myarra - Shift Reconciliation{% endblock %}
+{% block content %}
+<h1>Shift Reconciliation</h1>
+<div class="sub">Expected = line optimum &times; minutes available</div>
+<table>
+  <tr>
+    <th>Shift</th><th>Jobs</th><th>Filled</th><th>Expected</th><th>Gap min</th><th>Logged</th><th>Unaccounted</th><th>Performance</th><th></th>
+  </tr>
+  {% for r in rows %}
+  <tr>
+    <td>Shift {{ r.shift }}</td>
+    <td>{{ r.jobs }}</td>
+    <td>{{ '{:,}'.format(r.filled) }}</td>
+    <td>{{ '{:,.0f}'.format(r.expected) }}</td>
+    <td>{{ '%.2f'|format(r.gap) }}</td>
+    <td>{{ '%.2f'|format(r.logged) }}</td>
+    <td class="{{ 'good' if r.unacc <= 1 else 'bad' }}">{{ '%.2f'|format(r.unacc) }}</td>
+    <td>{{ '%.1f'|format(r.perf) }}%</td>
+    <td><span class="pill {{ 'pass' if r.unacc <= 1 else 'flag' }}">{{ 'reconciled' if r.unacc <= 1 else 'FLAG' }}</span></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
