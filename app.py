@@ -215,5 +215,12 @@ def documents_route():
     return jsonify(store.stats())
 
 
+
+@app.route("/favicon.ico")
+def favicon():
+    from flask import send_from_directory
+    return send_from_directory(app.root_path, "favicon.png", mimetype="image/png")
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)
