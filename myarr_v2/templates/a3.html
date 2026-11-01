@@ -1,73 +1,107 @@
 {% extends "base.html" %}
-{% block title %}A3 - {{ e.title }}{% endblock %}
+{% block title %}{{ ex.pdca_id or 'A3' }} - {{ ex.title }}{% endblock %}
 {% block content %}
-<a href="/pdca" style="font-size:0.9rem;">&larr; Back to Board</a>
-<h1>{{ e.title }} (Line {{ e.line_id or 'N/A' }})</h1>
-<div class="sub">Digital A3 Problem Solving</div>
+<style>
+  .a3 { max-width: 1200px; margin: 0 auto; background: var(--panel, #222); color: var(--text, #eee); border: 1px solid var(--border, #333); padding: 2rem; }
+  .a3 h1 { font-size: 1.3rem; margin: 0 0 0.25rem 0; color: var(--accent, #c0a878); }
+  .a3 .pdca-id { font-family: monospace; font-size: 0.85rem; color: var(--muted, #888); margin-bottom: 1.5rem; }
+  .a3 .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 2rem; font-size: 0.85rem; margin-bottom: 1.5rem; }
+  .a3 .meta .row { display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px dotted var(--border, #333); }
+  .a3 .meta .lbl { color: var(--muted, #888); }
+  .a3 .meta .val { text-align: right; }
+  .a3 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+  .a3 .cell { background: var(--bg, #111); border: 1px solid var(--border, #333); padding: 1rem; }
+  .a3 .cell h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #c0a878); margin: 0 0 0.5rem 0; }
+  .a3 .cell p { margin: 0.4rem 0; line-height: 1.5; font-size: 0.9rem; }
+  .a3 .severity { display: inline-flex; gap: 0.4rem; }
+  .a3 .sev { display: inline-block; padding: 0.1rem 0.45rem; border: 1px solid var(--border, #333); border-radius: 2px; font-size: 0.75rem; color: var(--muted, #888); }
+  .a3 .sev.on { background: var(--accent, #c0a878); color: var(--bg, #111); border-color: var(--accent, #c0a878); font-weight: 600; }
+  .a3 table.actions { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.85rem; }
+  .a3 table.actions th { text-align: left; padding: 0.4rem; border-bottom: 1px solid var(--border, #333); color: var(--muted, #888); font-weight: 500; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .a3 table.actions td { padding: 0.4rem; border-bottom: 1px dotted var(--border, #333); }
+  .a3 .priority { margin-top: 1.5rem; padding: 1rem; background: var(--bg, #111); border: 1px solid var(--border, #333); }
+  .a3 .priority h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #c0a878); margin: 0 0 0.75rem 0; }
+  .a3 .pri-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; font-size: 0.85rem; }
+  .a3 .pri-cell { text-align: center; }
+  .a3 .pri-cell .lbl { color: var(--muted, #888); font-size: 0.7rem; display: block; margin-bottom: 0.2rem; }
+  .a3 .pri-cell .val { font-size: 1.15rem; font-weight: 600; color: var(--accent, #c0a878); }
+  .a3 .pri-total { margin-top: 0.9rem; text-align: right; font-size: 1rem; color: var(--muted, #888); }
+  .a3 .pri-total strong { color: var(--accent, #c0a878); font-size: 1.5rem; }
+  .a3 .footer { margin-top: 1.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border, #333); font-size: 0.85rem; color: var(--muted, #888); }
+  .a3 .status-open { color: #d9a441; }
+  .a3 .status-done { color: #6aaa64; }
+  .a3 .status-cancelled { color: #888; text-decoration: line-through; }
+</style>
 
-<div class="box" style="display:flex; gap:2rem; margin-bottom:2rem; border-left:3px solid var(--accent)">
-  <div><span style="color:var(--muted);font-size:.65rem;text-transform:uppercase;display:block">Standard</span><span style="font-size:1.2rem;font-weight:bold;color:var(--accent)">{{ '%.0f'|format(e.standard_min) }}m</span></div>
-  <div><span style="color:var(--muted);font-size:.65rem;text-transform:uppercase;display:block">Target</span><span style="font-size:1.2rem;font-weight:bold;color:var(--accent)">{{ '%.0f'|format(e.target_goal_min) }}m</span></div>
-  <div><span style="color:var(--muted);font-size:.65rem;text-transform:uppercase;display:block">Current Avg</span>
-    {% if e.current_avg is not none %}
-      <span style="font-size:1.2rem;font-weight:bold" class="{{ 'good' if e.current_avg <= e.target_goal_min else 'bad' }}">{{ '%.0f'|format(e.current_avg) }}m</span>
-    {% else %}
-      <span style="font-size:1.2rem;font-weight:bold;color:var(--danger)">N/A</span>
-    {% endif %}
+<div class="a3">
+  <h1>{{ ex.title }}</h1>
+  <div class="pdca-id">{{ ex.pdca_id or ('A3-' ~ ex.id) }} &middot; {{ ex.department or '-' }} &middot; Line {{ ex.line_id or '-' }} &middot; {{ (ex.status or '')|upper }}</div>
+
+  <div class="meta">
+    <div class="row"><span class="lbl">Problem Severity</span><span class="severity">
+      {% for s in [1,3,5] %}<span class="sev {{ 'on' if ex.problem_severity == s else '' }}">{{ s }}</span>{% endfor %}
+    </span></div>
+    <div class="row"><span class="lbl">Start Date</span><span class="val">{{ ex.start_date or '-' }}</span></div>
+    <div class="row"><span class="lbl">PDCA Owner</span><span class="val">{{ ex.pdca_owner or ex.action_owner or '-' }}</span></div>
+    <div class="row"><span class="lbl">Mgmt / CI Sponsor</span><span class="val">{{ ex.management_sponsor or '-' }}</span></div>
+    <div class="row"><span class="lbl">Team Members</span><span class="val">{{ ex.team_members or '-' }}</span></div>
+    <div class="row"><span class="lbl">Departments</span><span class="val">{{ ex.departments_involved or '-' }}</span></div>
   </div>
+
+  <div class="split">
+    <div class="cell"><h2>Current Condition</h2><p>{{ ex.current_condition or '-' }}</p></div>
+    <div class="cell"><h2>Target Condition</h2><p>{{ ex.target_condition or '-' }}</p></div>
+  </div>
+
+  <div class="split">
+    <div class="cell">
+      <h2>Root Cause ({{ ex.fishbone_category or '5M1E' }})</h2>
+      <p>{{ ex.root_cause or '-' }}</p>
+    </div>
+    <div class="cell">
+      <h2>Action Plan</h2>
+      {% if actions %}
+      <table class="actions">
+        <tr><th>#</th><th>Step</th><th>Owner</th><th>Due</th><th>Status</th></tr>
+        {% for a in actions %}
+        <tr>
+          <td>{{ a.seq }}</td>
+          <td>{{ a.description }}</td>
+          <td>{{ a.owner or '-' }}</td>
+          <td>{{ a.due_date or '-' }}</td>
+          <td class="status-{{ a.status }}">{{ a.status }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}<p>-</p>{% endif %}
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="cell"><h2>Hypothesis</h2><p>{{ ex.hypothesis or '-' }}</p></div>
+    <div class="cell">
+      <h2>Verification &amp; Follow-up</h2>
+      <p><strong>Target date:</strong> {{ ex.target_date or '-' }}</p>
+      <p><strong>Target state reached:</strong> {{ 'Yes' if ex.target_state_reached else 'No' }}</p>
+      <p><strong>How we know it is solved:</strong> {{ ex.how_known_solved or '-' }}</p>
+      <p><strong>New problems created:</strong> {{ ex.new_problems_created or 'None' }}</p>
+    </div>
+  </div>
+
+  <div class="priority">
+    <h2>Priority Score</h2>
+    <div class="pri-grid">
+      <div class="pri-cell"><span class="lbl">Time &times; 10</span><span class="val">{{ ex.pri_time or '-' }}</span></div>
+      <div class="pri-cell"><span class="lbl">Impact &times; 30</span><span class="val">{{ ex.pri_impact or '-' }}</span></div>
+      <div class="pri-cell"><span class="lbl">Resources &times; 30</span><span class="val">{{ ex.pri_resources or '-' }}</span></div>
+      <div class="pri-cell"><span class="lbl">Magnitude &times; 30</span><span class="val">{{ ex.pri_magnitude or '-' }}</span></div>
+      <div class="pri-cell"><span class="lbl">Cost &times; 50</span><span class="val">{{ ex.pri_cost or '-' }}</span></div>
+    </div>
+    <div class="pri-total">Total: <strong>{{ priority_total }}</strong> &nbsp;<span style="font-size: 0.8rem;">(range 150–750)</span></div>
+  </div>
+
+  {% if ex.notes_on_back %}
+  <div class="footer"><strong>Notes:</strong> {{ ex.notes_on_back }}</div>
+  {% endif %}
 </div>
-
-<form method="POST" class="box" style="max-width:900px">
-  <div style="display:flex; gap:1rem; margin-bottom:1rem">
-    <div style="flex:1">
-      <label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">Problem Severity</label>
-      <select name="severity" class="file-input">
-        <option value="1" {{ 'selected' if e.severity == 1 }}>1 - Low</option>
-        <option value="3" {{ 'selected' if e.severity == 3 }}>3 - Medium</option>
-        <option value="5" {{ 'selected' if e.severity == 5 }}>5 - High</option>
-      </select>
-    </div>
-    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">Start Date</label><input type="date" name="start_date" value="{{ e.start_date }}" class="file-input"></div>
-    <div style="flex:2"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">PDCA Owner(s)</label><input type="text" name="owner" value="{{ e.owner or '' }}" class="file-input"></div>
-    <div style="flex:2"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">Mgmt/CI Sponsor</label><input type="text" name="sponsor" value="{{ e.sponsor or '' }}" class="file-input"></div>
-  </div>
-  
-  <div style="display:flex; gap:1rem; margin-bottom:1rem">
-    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">Team Members Involved</label><input type="text" name="team" value="{{ e.team or '' }}" class="file-input"></div>
-    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">Departments Involved</label><input type="text" name="departments" value="{{ e.departments or '' }}" class="file-input"></div>
-  </div>
-
-  <div style="display:flex; gap:1rem; margin-bottom:1rem">
-    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">What is our Current Condition?</label><textarea name="current_condition" class="file-input" style="min-height:80px">{{ e.current_condition or '' }}</textarea></div>
-    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">What is our Target Condition?</label><textarea name="target_condition" class="file-input" style="min-height:80px">{{ e.target_condition or '' }}</textarea></div>
-  </div>
-
-  <div style="display:flex; gap:1rem; margin-bottom:1rem">
-    <div style="flex:2"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">What is the Problem? (Root Cause)</label><textarea name="root_cause" class="file-input" style="min-height:80px">{{ e.root_cause or '' }}</textarea></div>
-    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">Fishbone Category</label>
-      <select name="fishbone_category" class="file-input">
-        <option value="">-- Select --</option>
-        <option value="Man" {{ 'selected' if e.fishbone_category == 'Man' }}>Man</option>
-        <option value="Method" {{ 'selected' if e.fishbone_category == 'Method' }}>Method</option>
-        <option value="Material" {{ 'selected' if e.fishbone_category == 'Material' }}>Material</option>
-        <option value="Machine" {{ 'selected' if e.fishbone_category == 'Machine' }}>Machine</option>
-        <option value="Environment" {{ 'selected' if e.fishbone_category == 'Environment' }}>Environment</option>
-        <option value="Measurement" {{ 'selected' if e.fishbone_category == 'Measurement' }}>Measurement</option>
-      </select>
-    </div>
-  </div>
-
-  <div style="display:flex; gap:1rem; margin-bottom:1rem">
-    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">What is our Hypothesis?</label><textarea name="hypothesis" class="file-input" style="min-height:80px">{{ e.hypothesis or '' }}</textarea></div>
-    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">What is our Action Plan?</label><textarea name="action_plan" class="file-input" style="min-height:80px">{{ e.action_plan or '' }}</textarea></div>
-  </div>
-
-  <div style="display:flex; gap:1rem; margin-bottom:1rem">
-    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">Who is responsible?</label><input type="text" name="action_owner" value="{{ e.action_owner or '' }}" class="file-input"></div>
-    <div style="flex:1"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">When will it be done?</label><input type="date" name="action_due_date" value="{{ e.action_due_date or '' }}" class="file-input"></div>
-    <div style="flex:2"><label style="color:var(--muted);font-size:.7rem;text-transform:uppercase;margin-bottom:.3rem;display:block">How do we know it's solved?</label><input type="text" name="success_metric" value="{{ e.success_metric or '' }}" class="file-input"></div>
-  </div>
-
-  <button type="submit">Save A3 Form</button>
-</form>
 {% endblock %}

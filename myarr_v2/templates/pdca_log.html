@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Myarra - PDCA Register{% endblock %}
+{% block content %}
+<h1>PDCA Register</h1>
+<div class="sub">Active first, then sorted by priority score. Click a PDCA ID for the A3.</div>
+
+<div style="margin-bottom: 1rem; font-size: 0.85rem;">
+  <a href="/pdca" style="color: var(--accent);">← Back to PDCA dashboard</a>
+</div>
+
+<table>
+  <tr>
+    <th>PDCA ID</th>
+    <th>Title</th>
+    <th>Dept</th>
+    <th>Line</th>
+    <th>Owner</th>
+    <th>Start</th>
+    <th>Target</th>
+    <th>Status</th>
+    <th>Reached</th>
+    <th style="text-align: right;">Priority</th>
+  </tr>
+  {% for r in rows %}
+  <tr onclick="window.location='/pdca/{{ r.id }}'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="color: var(--accent); text-decoration: underline; font-family: monospace; font-size: 0.8rem;">
+      {{ r.pdca_id or ('A3-' ~ r.id) }}
+    </td>
+    <td>{{ r.title or '-' }}</td>
+    <td>{{ r.department or '-' }}</td>
+    <td>{{ r.line_id or '-' }}</td>
+    <td>{{ r.pdca_owner or r.action_owner or '-' }}</td>
+    <td style="font-size: 0.85rem;">{{ r.start_date or '-' }}</td>
+    <td style="font-size: 0.85rem;">{{ r.target_date or '-' }}</td>
+    <td>
+      <span class="pill {{ 'pass' if r.status == 'done' else ('warn' if r.status == 'active' else 'flag') }}">
+        {{ (r.status or 'unknown')|upper }}
+      </span>
+    </td>
+    <td>
+      {% if r.target_state_reached %}
+        <span class="good">Yes</span>
+      {% else %}
+        <span class="caution">No</span>
+      {% endif %}
+    </td>
+    <td style="text-align: right; font-weight: 600; color: var(--accent);">
+      {{ r.priority_total }}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% if not rows %}
+<p style="color: var(--muted); margin-top: 1.5rem;">No PDCA records yet.</p>
+{% endif %}
+{% endblock %}

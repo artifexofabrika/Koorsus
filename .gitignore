@@ -1,3 +1,45 @@
+# Python
 __pycache__/
-*.pyc
-*.pem
+*.py[cod]
+*.egg-info/
+
+# Virtual environments
+jeeves-env/
+venv/
+env/
+
+# Databases (contain demo/client data)
+*.db
+*.db.bak.*
+*.sqlite
+
+# Secrets — must never be committed
+config.py
+.env
+*.secret
+*.token
+cert.pem
+key.pem
+
+# Model weights (gigabytes)
+llama.cpp/
+*.gguf
+
+# Backups and archive directories
+*.bak.*
+*.bak
+Client-Demo-backup/
+myarr_archive/
+archive/
+
+# Runtime uploads
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

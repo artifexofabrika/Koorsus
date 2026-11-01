@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Shift Detail - {{ run_date }} S{{ shift }}{% endblock %}
+{% block content %}
+<a href="/">&larr; Back to Dashboard</a>
+<h1>Shift Detail: {{ run_date }} - Shift {{ shift }}</h1>
+<div class="sub">Hour by Hour Breakdown</div>
+
+<table>
+  <tr><th>Hour</th><th>Job</th><th>Expected</th><th>Actual</th><th>Gap (min)</th><th>Downtime Log</th></tr>
+  {% for d in details %}
+  <tr>
+    <td>{{ d.period }}</td>
+    <td>{{ d.job_number }}</td>
+    <td>{{ '{:,}'.format(d.expected) }}</td>
+    <td>{{ '{:,}'.format(d.actual) }}</td>
+    <td class="{{ 'bad' if d.gap > 3 else 'good' }}">{{ '%.1f'|format(d.gap) }}</td>
+    <td>
+      {% if d.downtime %}
+        {% for dt in d.downtime %}
+          <span style="font-size:0.8rem;color:var(--muted)">{{ dt.station }}: {{ dt.reason }} ({{ dt.minutes }}m)</span><br>
+        {% endfor %}
+      {% else %}
+        <span style="color:var(--muted)">-</span>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

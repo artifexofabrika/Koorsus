@@ -4,7 +4,7 @@ Handles all SQLite connections and schema initialization.
 """
 import sqlite3
 
-DB_PATH = "/mnt/lake/metrics.db"
+DB_PATH = "/mnt/lake/myarra.db"
 
 def get_db_connection():
     """Returns a SQLite connection with row factory enabled for dict-like access."""

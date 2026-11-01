@@ -10,12 +10,32 @@
   {% for c in cards %}
   <a href="/pdca/{{ c.id }}" style="text-decoration:none; color:inherit;">
     <div class="box" style="transition: background 0.2s; height: 100%;" onmouseover="this.style.background='rgba(192, 168, 120, 0.1)'" onmouseout="this.style.background='var(--card-bg)'">
-      <h3 style="color:var(--text);margin:0 0 1rem;font-size:1.1rem">{{ c.title }} <span style="font-size:.7rem;color:var(--muted);font-weight:normal">(Line {{ c.line_id or 'N/A' }})</span></h3>
-      <p style="color:var(--muted);font-size:.85rem;line-height:1.5;margin:0 0 1rem"><strong>Problem:</strong> {{ c.problem_statement }}</p>
+      <h3 style="color:var(--text);margin:0 0 0.5rem;font-size:1.1rem">{{ c.title }} <span style="font-size:.7rem;color:var(--muted);font-weight:normal">(Line {{ c.line_id or 'N/A' }})</span></h3>
+      
+      {% if c.hypothesis %}
+      <p style="color:var(--muted);font-size:0.8rem;margin-bottom:1rem;font-style:italic">"{{ c.hypothesis }}"</p>
+      {% endif %}
+      
+      <!-- Visual Chart -->
+      <div style="margin: 1.5rem 0; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+        <div style="display: flex; align-items: flex-end; gap: 3px; height: 60px;">
+          {% for e in c.events %}
+            {% set height = (e.actual_min / 45) * 100 %}
+            {% set is_exp = e.ev_date >= c.start_date %}
+            <div style="flex: 1; height: {{ height }}%; background: {% if is_exp %}var(--success){% else %}var(--danger){% endif %}; border-radius: 2px 2px 0 0;" title="{{ e.ev_date }}: {{ e.actual_min }}m"></div>
+          {% endfor %}
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--muted); margin-top: 0.3rem;">
+          <span>Start (Baseline)</span>
+          <span>Experiment Start</span>
+        </div>
+      </div>
+
       <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem;font-size:.85rem">
-        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;margin-bottom:.2rem">Standard</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">{{ '%.0f'|format(c.standard_min) }}m</div></div>
-        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;margin-bottom:.2rem">Target</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">{{ '%.0f'|format(c.target_goal_min) }}m</div></div>
-        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;margin-bottom:.2rem">Current Avg</span>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Standard</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">{{ '%.0f'|format(c.standard_min) }}m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Baseline Avg</span><div style="font-weight:bold;font-size:1.1rem;color:var(--danger)">{% if c.baseline_avg %}{{ '%.0f'|format(c.baseline_avg) }}m{% else %}N/A{% endif %}</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Target</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">{{ '%.0f'|format(c.target_goal_min) }}m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Current Avg</span>
           {% if c.current_avg is not none %}
             <div style="font-weight:bold;font-size:1.1rem" class="{{ 'good' if c.current_avg <= c.target_goal_min else 'bad' }}">{{ '%.0f'|format(c.current_avg) }}m</div>
           {% else %}
