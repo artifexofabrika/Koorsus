@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Artifexo Fabrika</title>
+<style>
+html, body { margin: 0; padding: 0; background: #1a1a1a; }
+.artifexo-page {
+background: #1a1a1a;
+color: #d4d4d4;
+font-family: Georgia, serif;
+min-height: 100vh;
+overflow-y: auto;
+font-size: 16px;
+line-height: 1.6;
+}
+.artifexo-page, .artifexo-page * {
+word-break: normal;
+overflow-wrap: break-word;
+hyphens: none;
+box-sizing: border-box;
+}
+.hero {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+min-height: 100vh;
+text-align: center;
+padding: 2rem 1.25rem;
+}
+.hero .eyebrow {
+color: #888;
+font-size: 0.72rem;
+letter-spacing: 0.18em;
+text-transform: uppercase;
+margin-bottom: 1.25rem;
+}
+.hero h1 {
+font-size: clamp(1.5rem, 4.5vw, 2.75rem);
+color: #c0a878;
+margin-bottom: 0.75rem;
+font-weight: bold;
+letter-spacing: -0.015em;
+line-height: 1.2;
+}
+.hero p {
+font-size: clamp(0.9rem, 1.6vw, 1.05rem);
+color: #b0b0b0;
+max-width: 520px;
+margin-bottom: 2rem;
+line-height: 1.65;
+}
+.btn {
+display: inline-block;
+background: #c0a878;
+color: #1a1a1a;
+padding: 0.7rem 1.75rem;
+border-radius: 4px;
+text-decoration: none;
+font-weight: bold;
+font-size: 0.85rem;
+letter-spacing: 0.03em;
+margin: 0.4rem;
+}
+.section {
+padding: 4.5rem 1.5rem;
+max-width: 680px;
+margin: 0 auto;
+text-align: center;
+}
+.section h2 {
+font-size: clamp(1.2rem, 3vw, 1.6rem);
+color: #c0a878;
+margin-bottom: 1.35rem;
+font-weight: bold;
+line-height: 1.25;
+letter-spacing: -0.01em;
+}
+.section p {
+font-size: 0.95rem;
+color: #b0b0b0;
+line-height: 1.75;
+}
+.section p + p { margin-top: 1rem; }
+.section strong { color: #d4d4d4; font-weight: bold; }
+.pull {
+font-style: italic;
+color: #c0a878;
+font-size: 1.02rem;
+line-height: 1.65;
+margin: 1.6rem auto;
+max-width: 520px;
+}
+.features {
+display: flex;
+gap: 1.25rem;
+flex-wrap: wrap;
+justify-content: center;
+max-width: 900px;
+margin: 1.75rem auto 0;
+padding: 0 1rem;
+}
+.feature-card {
+background: #2c2c2c;
+border: 1px solid #444;
+border-radius: 6px;
+padding: 1.5rem 1.15rem;
+flex: 1 1 240px;
+min-width: 0;
+max-width: 300px;
+text-align: center;
+}
+.capabilities .feature-card {
+flex: 1 1 340px;
+max-width: 420px;
+}
+.feature-card .icon {
+font-size: 1.4rem;
+margin-bottom: 0.7rem;
+}
+.feature-card strong {
+display: block;
+color: #fff;
+margin-bottom: 0.5rem;
+font-size: 0.92rem;
+line-height: 1.3;
+}
+.feature-card span {
+color: #b0b0b0;
+line-height: 1.6;
+font-size: 0.85rem;
+}
+.card-link {
+display: block;
+margin-top: 0.7rem;
+font-size: 0.82rem;
+color: #c0a878;
+text-decoration: none;
+}
+.footnote {
+font-size: 0.78rem;
+color: #888;
+margin-top: 1.5rem;
+text-align: center;
+line-height: 1.7;
+font-style: italic;
+}
+.steps {
+max-width: 560px;
+margin: 1.75rem auto 0;
+text-align: left;
+}
+.step {
+display: flex;
+gap: 1.1rem;
+margin-bottom: 1.6rem;
+align-items: flex-start;
+}
+.step .num {
+color: #c0a878;
+font-size: 1.25rem;
+font-weight: bold;
+min-width: 1.5rem;
+line-height: 1.4;
+flex-shrink: 0;
+}
+.step .body strong {
+display: block;
+color: #fff;
+font-size: 0.95rem;
+margin-bottom: 0.25rem;
+}
+.step .body span {
+color: #b0b0b0;
+line-height: 1.6;
+font-size: 0.88rem;
+}
+.diag-callout {
+background: #2c2c2c;
+border: 1px solid #444;
+border-left: 3px solid #c0a878;
+border-radius: 4px;
+padding: 1.25rem 1.4rem;
+margin: 1.75rem 0 0;
+text-align: left;
+}
+.diag-callout p {
+font-size: 0.88rem;
+color: #b0b0b0;
+line-height: 1.7;
+margin: 0;
+}
+.diag-callout p + p { margin-top: 0.6rem; }
+.diag-callout strong { color: #c0a878; }
+.waitlist {
+max-width: 420px;
+margin: 0 auto;
+text-align: center;
+padding: 4.5rem 1.5rem;
+}
+.waitlist h2 {
+font-size: clamp(1.15rem, 2.6vw, 1.5rem);
+color: #c0a878;
+margin-bottom: 0.9rem;
+line-height: 1.25;
+}
+.waitlist p {
+color: #b0b0b0;
+margin-bottom: 1.75rem;
+font-size: 0.9rem;
+line-height: 1.6;
+}
+.waitlist form { text-align: left; }
+.waitlist input {
+width: 100%;
+padding: 0.72rem 0.85rem;
+margin-bottom: 0.75rem;
+background: #2c2c2c;
+border: 1px solid #444;
+color: #fff;
+border-radius: 4px;
+font-size: 0.9rem;
+font-family: Georgia, serif;
+}
+.waitlist button {
+width: 100%;
+padding: 0.78rem;
+background: #c0a878;
+color: #1a1a1a;
+border: none;
+border-radius: 4px;
+font-weight: bold;
+font-size: 0.9rem;
+cursor: pointer;
+}
+footer {
+text-align: center;
+padding: 2.5rem 1.5rem;
+font-size: 0.78rem;
+color: #666;
+border-top: 1px solid #333;
+margin-top: 1.5rem;
+line-height: 1.7;
+}
+footer a { color: #c0a878; text-decoration: none; }
+@media (max-width: 640px) {
+.section { padding: 3rem 1.25rem; }
+.hero { padding: 2rem 1rem; }
+.hero h1 { font-size: 1.5rem; }
+.features { gap: 0.9rem; padding: 0 0.5rem; }
+.feature-card,
+.capabilities .feature-card {
+flex: 1 1 100%;
+max-width: 100%;
+padding: 1.35rem 1rem;
+}
+.step { gap: 0.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="artifexo-page">
+
+<div class="hero">
+<div class="eyebrow">Artifexo Fabrika, Columbus, Ohio</div>
+<h1>Two platforms.<br>One appliance.<br>On your floor.</h1>
+<p>
+<strong style="color:#d4d4d4;">Koorsus</strong> answers from your documents.<br>
+<strong style="color:#d4d4d4;">Myarra</strong> measures your production.<br>
+Both run on hardware you own, with no data leaving the building.
+</p>
+<a href="#contact" class="btn">Request an assessment</a>
+</div>
+
+<div class="section">
+<h2>The problem with AI in a plant.</h2>
+<p>A confident wrong answer about lockout/tagout is a liability, not a feature.</p>
+<p>Every AI vendor will tell you their system is accurate. Most will confidently invent an answer when the document does not contain one. For a plant manager responsible for safety procedures, that is not an acceptable failure mode.</p>
+</div>
+
+<div class="section" style="max-width:900px;">
+<h2>What we build.</h2>
+<p style="margin-bottom:1.75rem;">Two systems on a single appliance. One answers questions from your documents. The other captures what happens on the floor, by voice, in the moment. Both run on hardware you own. Neither sends data anywhere.</p>
+<div class="features capabilities">
+
+<div class="feature-card" style="flex:1 1 100%;max-width:100%;text-align:left;">
+<div class="icon">&#128218;</div>
+<strong style="font-size:1.05rem;">Koorsus. The course.</strong>
+<span style="display:block;margin-top:0.35rem;color:#c0a878;font-style:italic;font-size:0.85rem;">Latin <em>cursus</em>: the path from where your plant is to where it intends to be.</span>
+<span style="display:block;margin-top:0.9rem;">Your handbooks, SOPs, procedures, and maintenance logs, ingested and indexed on hardware you own. Ask a question in plain English. The answer comes back with the source cited. If the answer is not in your documents, Koorsus says so. It does not invent.</span>
+<span style="display:block;margin-top:0.9rem;">This is not a novelty. When a line is down and the answer is in a PDF nobody has opened since 2019, Koorsus finds it in four seconds and tells you which document and which section. When the answer is not in any document, it declines, and that refusal is what makes the answers it does give trustworthy.</span>
+<img src="https://raw.githubusercontent.com/artifexofabrika/Koorsus/main/02-koorsus.png" alt="Koorsus answering a question with source citation" style="display:block;width:100%;margin-top:1.25rem;border-radius:6px;border:1px solid #444;">
+</div>
+
+<div class="feature-card" style="flex:1 1 100%;max-width:100%;text-align:left;">
+<div class="icon">&#128200;</div>
+<strong style="font-size:1.05rem;">Myarra. The measure.</strong>
+<span style="display:block;margin-top:0.35rem;color:#c0a878;font-style:italic;font-size:0.85rem;">Polish <em>miara</em>: current state, future state, and the distance between them.</span>
+<span style="display:block;margin-top:0.9rem;">What is Line 2 doing right now? How many cases has WO-2026-001 produced against its target, and how many remain? Where did the last changeover lose minutes, and at which station? Myarra captures it as it happens, by voice from the line, and shows you the answer in cases, because cases are what you sell.</span>
+<span style="display:block;margin-top:0.9rem;">Myarra shows you the unaccounted minutes that your current OEE tool cannot see. It compares each changeover component against its standard, so you can see which station helped and which station hurt. It runs PDCA experiments that close the loop weekly instead of annually.</span>
+<img src="https://raw.githubusercontent.com/artifexofabrika/Koorsus/main/01-dashboard.png" alt="Myarra dashboard" style="display:block;width:100%;margin-top:1.25rem;border-radius:6px;border:1px solid #444;">
+</div>
+
+</div>
+</div>
+
+<div class="section" style="max-width:720px;">
+<h2>The floor voice.</h2>
+<p class="pull">A line lead types four words. The dashboard updates before the shift ends.</p>
+<p>The tool that gets used is the one that fits in a pocket and takes ten seconds. Myarra is not a form. It is a Telegram message.</p>
+<p>The lead sends: <em>"running job WO-2026-001, hour 5, 7,000 units, 4 minutes down jam at the filler."</em> The bot replies with a receipt. The dashboard updates. If the count is implausible, if voice-to-text has eaten a digit and 35,022 has become 3,022, the bot refuses and asks the lead to re-say. A lost digit in a transcript is not a data point, it is a data casualty, and Myarra does not log it.</p>
+<p>When the lead is ready to end the job, the bot prompts the changeover. It walks each station, records the actual time against the standard, and if the changeover takes longer than the standard, that is what the record says. Nothing is entered twice. Nothing is entered a day late. Nothing is entered by someone who was not there.</p>
+<img src="https://raw.githubusercontent.com/artifexofabrika/Koorsus/main/03-telegram.png" alt="Telegram conversation with Myarra bot" style="display:block;width:100%;max-width:400px;margin:1.5rem auto 0;border-radius:8px;border:1px solid #444;">
+</div>
+
+<div class="section" style="max-width:720px;">
+<h2>How this works.</h2>
+<p>We do not sell software. We assess your operation, configure the appliance for your products and procedures, and install it on hardware you own. The code is open source. The data never leaves the building. The setup is one focused afternoon with your plant manager, and a line lead with a phone the next morning.</p>
+<p>The appliance is an <strong>NVIDIA Jetson</strong>: small, silent, low-power, running entirely on your network. The document platform uses <strong>ChromaDB</strong> for retrieval, and the language model is <strong>Qwen 2.5</strong>, running locally on <strong>llama.cpp</strong>. The web interface is <strong>Flask</strong>. The database is <strong>SQLite</strong>. Every component is open source. Every byte stays in your building.</p>
+<p style="margin-top:1rem;">The source is on GitHub under <strong>GPL v3</strong>. You can fork it. Your own team can maintain it. You can hire someone else entirely. The business we are in is setting it up, integrating it with your ERP, and supporting it when you need us. Not holding the source hostage.</p>
+</div>
+
+<div class="section" style="max-width:900px;">
+<h2>Beyond the floor.</h2>
+<p style="margin-bottom:1.75rem;">Koorsus and Myarra are the two systems we install at every client. On the same appliance, we can deploy additional private agents. Each runs on your equipment, under your control, with no data leaving the building.</p>
+<div class="features capabilities">
+
+<div class="feature-card">
+<div class="icon">&#9993;&#65039;</div>
+<strong>Email &amp; Communications Agent</strong>
+<span>Screens, drafts, and replies to routine mail. Manages scheduling. Runs privately, on your hardware.</span>
+</div>
+
+<div class="feature-card">
+<div class="icon">&#128172;</div>
+<strong>Customer Support Agent</strong>
+<span>Handles routine inquiries across email and messaging. Trained on your business, on your hardware.</span>
+</div>
+
+</div>
+<p class="footnote">These agents are optional. Koorsus and Myarra are the foundation.</p>
+</div>
+
+<div class="section">
+<h2>How we work.</h2>
+<div class="steps">
+<div class="step">
+<div class="num">1</div>
+<div class="body">
+<strong>Assessment</strong>
+<span>We walk your floor, review your documents, and identify where time and money are being lost.</span>
+</div>
+</div>
+<div class="step">
+<div class="num">2</div>
+<div class="body">
+<strong>Deployment</strong>
+<span>We install the hardware, ingest your documents, configure your products and procedures, and tune the system to your operation.</span>
+</div>
+</div>
+<div class="step">
+<div class="num">3</div>
+<div class="body">
+<strong>Stewardship</strong>
+<span>An optional monthly retainer keeps the system healthy and the numbers meaningful. <strong>Monitoring</strong> begins at $250 per month and covers uptime, log review, software updates, and a quarterly call. <strong>Advisory</strong> begins at $850 per month and adds weekly metric review, anomaly response, and monthly operational support. Spot work is quoted separately.</span>
+</div>
+</div>
+</div>
+</div>
+
+<div class="section" style="max-width:900px;">
+<h2>Engagements.</h2>
+<p style="margin-bottom:1.75rem;">Every operation is different. These are the starting points.</p>
+<div class="features capabilities">
+
+<div class="feature-card">
+<div class="icon">&#128202;</div>
+<strong>Operational Diagnostic</strong>
+<span style="display:block;color:#c0a878;font-weight:bold;margin:0.5rem 0;">$2,500</span>
+<span>One day on-site. Current-state assessment, 60-day improvement plan, and a future-state roadmap. No obligation beyond the diagnostic.</span>
+<a href="#diagnostic" class="card-link">See what's included &rarr;</a>
+</div>
+
+<div class="feature-card">
+<div class="icon">&#127979;</div>
+<strong>On-Site Lean Training</strong>
+<span style="display:block;color:#c0a878;font-weight:bold;margin:0.5rem 0;">$3,500</span>
+<span>An eight-hour session on your floor for up to twenty people. We teach the tools your team will use: Plan-Do-Check-Act, the A3 problem-solving sheet, root-cause analysis with the fishbone diagram, the funnel diagram, and a hands-on lean simulation to make the theory land. Your team leaves with the methods, not a binder about them.</span>
+</div>
+
+<div class="feature-card" style="border-color:#c0a878;">
+<div class="icon">&#129302;</div>
+<strong>Private AI Appliance</strong>
+<span style="display:block;color:#c0a878;font-weight:bold;margin:0.5rem 0;">Starting at $5,500 installed</span>
+<span>A self-contained system on hardware you own. Koorsus ingests your documents. Myarra captures your floor. Both run privately, with no data leaving the building. Includes the appliance, on-site setup, foundation configuration, team training, and 4 hours of support in the first 90 days. Final pricing depends on product complexity and hardware configuration. Additional support at $100/hour.</span>
+</div>
+
+<div class="feature-card">
+<div class="icon">&#128188;</div>
+<strong>Fractional Operations Leadership</strong>
+<span style="display:block;color:#c0a878;font-weight:bold;margin:0.5rem 0;">Starting at $8,000/month</span>
+<span>Ongoing oversight for companies that need senior leadership without the full-time cost. Two to three days per week on-site.</span>
+</div>
+
+</div>
+<p class="footnote">All engagements begin with a brief conversation. If we are not a fit, I will tell you.</p>
+</div>
+
+<div id="diagnostic" class="section" style="max-width:680px;">
+<h2>What the diagnostic includes.</h2>
+<p style="margin-bottom:1.75rem;">One day on-site. A written report delivered within five business days. Everything below, in a single bound document.</p>
+
+<div class="steps">
+
+<div class="step">
+<div class="num">1</div>
+<div class="body">
+<strong>Current-State Snapshot</strong>
+<span>A clear, written picture of how your operation runs today. Throughput at each constraint. Changeover times, by product family. Scrap and rework rates. Downtime, by cause. On-time delivery. You will know, for the first time, where you actually stand.</span>
+</div>
+</div>
+
+<div class="step">
+<div class="num">2</div>
+<div class="body">
+<strong>The Gap Analysis</strong>
+<span>We compare your current state to what is achievable. Not to an industry benchmark, but to your own operation's potential. The two or three constraints costing you the most. Where the losses are concentrated. Which improvements are within reach in the next thirty days.</span>
+</div>
+</div>
+
+<div class="step">
+<div class="num">3</div>
+<div class="body">
+<strong>Quick Wins: The First 30 Days</strong>
+<span>Three to five specific, low-cost actions you can take immediately. Not theory. Not best practices borrowed from a textbook. Things that fit your floor, your people, and your product.</span>
+</div>
+</div>
+
+<div class="step">
+<div class="num">4</div>
+<div class="body">
+<strong>The 60-Day Plan</strong>
+<span>A prioritized sequence of improvements for the following two months. Each item is scoped, assigned, and measurable. Written to be executed by your existing team, not to require an outside contractor.</span>
+</div>
+</div>
+
+<div class="step">
+<div class="num">5</div>
+<div class="body">
+<strong>Future-State Roadmap</strong>
+<span>Where this operation can be in six, twelve, and twenty-four months. A specific set of targets for throughput, changeover time, scrap rate, downtime, and OEE. These become the baseline for everything that follows.</span>
+</div>
+</div>
+
+<div class="step">
+<div class="num">6</div>
+<div class="body">
+<strong>What We Track From Here</strong>
+<span>The diagnostic establishes the metrics and the targets. If you choose to continue, those numbers are tracked daily by <strong>Koorsus</strong>, the course from where your plant is to where it intends to be, and read by <strong>Myarra</strong>, its measurement layer. Plan, Do, Check, Act. Not once a year in a binder, but every Monday morning, in plain English.</span>
+</div>
+</div>
+
+</div>
+
+<div class="diag-callout">
+<p><strong>Koorsus</strong> is the course: the path from where your plant is to where it intends to be.</p>
+<p><strong>Myarra</strong> is the measure: current state, future state, and the distance between them, updated every shift.</p>
+<p>Together they close the loop. Most plants work hard. Few close the loop.</p>
+</div>
+
+<p style="margin-top:1.5rem;"><strong>What we ask of you:</strong> one day of access to your floor, your numbers, and the people who run the machines. That is all.</p>
+<p><strong>What is not included:</strong> travel expenses, billed separately at cost.</p>
+<p><strong>If we are not a fit:</strong> we will say so, and the diagnostic stands on its own. There is no obligation to continue.</p>
+</div>
+
+<div class="section">
+<h2>Why it matters.</h2>
+<p class="pull">Your institutional memory is an asset. It should not live in a vendor's cloud.</p>
+<p>We build systems that stay in your building and answer only to you. The knowledge your team has accumulated over thirty years belongs on your shelf, not on someone else's server.</p>
+</div>
+
+<div id="contact" class="waitlist">
+<h2>Request an assessment.</h2>
+<p>Tell us where to reach you. We will arrange a brief conversation.</p>
+<form action="https://formspree.io/f/xdarnqnj" method="POST">
+<input type="text" name="name" placeholder="Name" required>
+<input type="email" name="email" placeholder="Email" required>
+<input type="text" name="company" placeholder="Company (optional)">
+<button type="submit">Request an assessment</button>
+</form>
+</div>
+
+<footer>
+Artifexo Fabrika, Columbus, Ohio &nbsp;|&nbsp;
+<a href="mailto:contact@artifexofabrika.com">contact@artifexofabrika.com</a>
+<br><br>
+&copy; 2026 Artifexo Fabrika. All rights reserved.
+</footer>
+
+</div>
+</body>
+</html>
