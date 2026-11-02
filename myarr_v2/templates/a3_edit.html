@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ ex.pdca_id or 'A3' }}{% endblock %}
+{% block content %}
+<style>
+  .a3-edit { max-width: 1000px; margin: 0 auto; background: var(--panel, #222); color: var(--text, #eee); border: 1px solid var(--border, #333); padding: 2rem; }
+  .a3-edit h1 { font-size: 1.2rem; margin: 0 0 0.5rem 0; color: var(--accent, #c0a878); }
+  .a3-edit .pdca-id { font-family: monospace; font-size: 0.85rem; color: var(--muted, #888); margin-bottom: 1.5rem; }
+  .a3-edit .cancel-btn { float: right; font-size: 0.85rem; color: var(--muted, #888); margin-right: 1rem; padding-top: 0.4rem; text-decoration: none; }
+  .a3-edit .field { margin-bottom: 1rem; }
+  .a3-edit label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted, #888); margin-bottom: 0.25rem; }
+  .a3-edit input[type=text], .a3-edit input[type=date], .a3-edit input[type=number], .a3-edit textarea, .a3-edit select {
+    width: 100%; padding: 0.5rem 0.7rem; background: var(--bg, #111); border: 1px solid var(--border, #333); color: var(--text, #eee); border-radius: 3px; font-family: Georgia, serif; font-size: 0.88rem; box-sizing: border-box;
+  }
+  .a3-edit textarea { min-height: 70px; resize: vertical; }
+  .a3-edit .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1rem; }
+  .a3-edit .section-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #c0a878); margin: 1.5rem 0 0.75rem 0; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border, #333); }
+  .a3-edit .pri-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
+  .a3-edit button { background: var(--accent, #c0a878); color: var(--bg, #111); border: none; padding: 0.7rem 2rem; font-weight: bold; border-radius: 4px; font-size: 0.9rem; cursor: pointer; }
+  .a3-edit .readonly { background: #2a2a2a; color: var(--muted, #888); cursor: not-allowed; }
+</style>
+
+<div class="a3-edit">
+  <a href="/pdca/{{ ex.id }}" class="cancel-btn">&larr; Back without saving</a>
+  <h1>Edit A3 — {{ ex.title }}</h1>
+  <div class="pdca-id">{{ ex.pdca_id or ('A3-' ~ ex.id) }} &middot; Created {{ (ex.created_at or '')[:10] }}</div>
+
+  <form method="POST" action="/pdca/{{ ex.id }}/edit">
+
+    <div class="section-header">Header</div>
+    <div class="field"><label>Title</label><input type="text" name="title" value="{{ ex.title or '' }}"></div>
+    <div class="split">
+      <div class="field"><label>Department</label><input type="text" name="department" value="{{ ex.department or '' }}"></div>
+      <div class="field"><label>Line</label>
+        <select name="line_id">
+          <option value="">— none —</option>
+          {% for l in lines %}<option value="{{ l.id }}" {{ 'selected' if ex.line_id == l.id else '' }}>Line {{ l.id }} — {{ l.name }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="split">
+      <div class="field"><label>Problem Severity (1 / 3 / 5)</label><input type="number" name="problem_severity" min="1" max="5" value="{{ ex.problem_severity or '' }}"></div>
+      <div class="field"><label>Start Date (read-only)</label><input type="text" value="{{ ex.start_date or '' }}" readonly class="readonly"></div>
+    </div>
+    <div class="split">
+      <div class="field"><label>PDCA Owner</label><input type="text" name="pdca_owner" value="{{ ex.pdca_owner or '' }}"></div>
+      <div class="field"><label>Management / CI Sponsor</label><input type="text" name="management_sponsor" value="{{ ex.management_sponsor or '' }}"></div>
+    </div>
+    <div class="split">
+      <div class="field"><label>Team Members</label><input type="text" name="team_members" value="{{ ex.team_members or '' }}"></div>
+      <div class="field"><label>Departments Involved</label><input type="text" name="departments_involved" value="{{ ex.departments_involved or '' }}"></div>
+    </div>
+
+    <div class="section-header">Measurement</div>
+    <div class="split">
+      <div class="field"><label>Measurement Type</label>
+        <select name="measurement_type">
+          {% for t in ['manual','changeover_sku_pair','changeover_component','line_throughput'] %}
+          <option value="{{ t }}" {{ 'selected' if ex.measurement_type == t else '' }}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field"><label>Affected SKUs (comma-separated ids)</label><input type="text" name="affected_skus" value="{{ ex.affected_skus or '' }}"></div>
+    </div>
+    <div class="field"><label>Measurement Config (JSON)</label><textarea name="measurement_config">{{ ex.measurement_config or '' }}</textarea></div>
+    <div class="split">
+      <div class="field"><label>Target Step Name (for legacy /pdca view)</label><input type="text" name="target_step_name" value="{{ ex.target_step_name or '' }}"></div>
+      <div class="field"><label>Target Date</label><input type="text" name="target_date" value="{{ ex.target_date or '' }}" placeholder="YYYY-MM-DD"></div>
+    </div>
+    <div class="split">
+      <div class="field"><label>Standard (min)</label><input type="number" step="0.1" name="standard_min" value="{{ ex.standard_min or '' }}"></div>
+      <div class="field"><label>Target Goal (min)</label><input type="number" step="0.1" name="target_goal_min" value="{{ ex.target_goal_min or '' }}"></div>
+    </div>
+
+    <div class="section-header">Body</div>
+    <div class="field"><label>Current Condition</label><textarea name="current_condition">{{ ex.current_condition or '' }}</textarea></div>
+    <div class="field"><label>Target Condition</label><textarea name="target_condition">{{ ex.target_condition or '' }}</textarea></div>
+    <div class="split">
+      <div class="field"><label>Root Cause</label><textarea name="root_cause">{{ ex.root_cause or '' }}</textarea></div>
+      <div class="field"><label>Fishbone Category (Man/Method/Material/Machine)</label><input type="text" name="fishbone_category" value="{{ ex.fishbone_category or '' }}"></div>
+    </div>
+    <div class="field"><label>Hypothesis</label><textarea name="hypothesis">{{ ex.hypothesis or '' }}</textarea></div>
+    <div class="field"><label>Action Plan (text; individual action items below)</label><textarea name="action_plan">{{ ex.action_plan or '' }}</textarea></div>
+
+    <div class="section-header">Verification</div>
+    <div class="split">
+      <div class="field"><label>Target State Reached (0 or 1)</label><input type="number" name="target_state_reached" min="0" max="1" value="{{ ex.target_state_reached or 0 }}"></div>
+      <div class="field"><label>How We Know It Is Solved</label><input type="text" name="how_known_solved" value="{{ ex.how_known_solved or '' }}"></div>
+    </div>
+    <div class="field"><label>New Problems Created</label><textarea name="new_problems_created">{{ ex.new_problems_created or '' }}</textarea></div>
+
+    <div class="section-header">Priority Score (1 / 3 / 5 each)</div>
+    <div class="pri-grid">
+      <div class="field"><label>Time × 10</label><input type="number" name="pri_time" min="1" max="5" value="{{ ex.pri_time or '' }}"></div>
+      <div class="field"><label>Impact × 30</label><input type="number" name="pri_impact" min="1" max="5" value="{{ ex.pri_impact or '' }}"></div>
+      <div class="field"><label>Resources × 30</label><input type="number" name="pri_resources" min="1" max="5" value="{{ ex.pri_resources or '' }}"></div>
+      <div class="field"><label>Magnitude × 30</label><input type="number" name="pri_magnitude" min="1" max="5" value="{{ ex.pri_magnitude or '' }}"></div>
+      <div class="field"><label>Cost × 50</label><input type="number" name="pri_cost" min="1" max="5" value="{{ ex.pri_cost or '' }}"></div>
+    </div>
+
+    <div class="section-header">Status</div>
+    <div class="split">
+      <div class="field"><label>Status</label>
+        <select name="status">
+          {% for s in ['active','done','closed'] %}
+          <option value="{{ s }}" {{ 'selected' if ex.status == s else '' }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field"><label>Close Reason (if closing as failed or abandoned)</label><input type="text" name="close_reason" value="{{ ex.close_reason or '' }}" placeholder="Failure is a learning opportunity — record why"></div>
+    </div>
+    <div class="field"><label>Notes on Back</label><textarea name="notes_on_back">{{ ex.notes_on_back or '' }}</textarea></div>
+
+    <div style="margin-top: 2rem; text-align: right;">
+      <button type="submit">Save A3</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -5,6 +5,7 @@
   .a3 { max-width: 1200px; margin: 0 auto; background: var(--panel, #222); color: var(--text, #eee); border: 1px solid var(--border, #333); padding: 2rem; }
   .a3 h1 { font-size: 1.3rem; margin: 0 0 0.25rem 0; color: var(--accent, #c0a878); }
   .a3 .pdca-id { font-family: monospace; font-size: 0.85rem; color: var(--muted, #888); margin-bottom: 1.5rem; }
+  .a3 .edit-btn { float: right; background: var(--accent, #c0a878); color: var(--bg, #111); padding: 0.4rem 1rem; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.85rem; }
   .a3 .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 2rem; font-size: 0.85rem; margin-bottom: 1.5rem; }
   .a3 .meta .row { display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px dotted var(--border, #333); }
   .a3 .meta .lbl { color: var(--muted, #888); }
@@ -17,7 +18,7 @@
   .a3 .sev { display: inline-block; padding: 0.1rem 0.45rem; border: 1px solid var(--border, #333); border-radius: 2px; font-size: 0.75rem; color: var(--muted, #888); }
   .a3 .sev.on { background: var(--accent, #c0a878); color: var(--bg, #111); border-color: var(--accent, #c0a878); font-weight: 600; }
   .a3 table.actions { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.85rem; }
-  .a3 table.actions th { text-align: left; padding: 0.4rem; border-bottom: 1px solid var(--border, #333); color: var(--muted, #888); font-weight: 500; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .a3 table.actions th { text-align: left; padding: 0.4rem; border-bottom: 1px solid var(--border, #333); color: var(--muted, #888); font-weight: 500; font-size: 0.72rem; text-transform: uppercase; }
   .a3 table.actions td { padding: 0.4rem; border-bottom: 1px dotted var(--border, #333); }
   .a3 .priority { margin-top: 1.5rem; padding: 1rem; background: var(--bg, #111); border: 1px solid var(--border, #333); }
   .a3 .priority h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #c0a878); margin: 0 0 0.75rem 0; }
@@ -25,15 +26,24 @@
   .a3 .pri-cell { text-align: center; }
   .a3 .pri-cell .lbl { color: var(--muted, #888); font-size: 0.7rem; display: block; margin-bottom: 0.2rem; }
   .a3 .pri-cell .val { font-size: 1.15rem; font-weight: 600; color: var(--accent, #c0a878); }
+  .a3 .pri-cell .contrib { font-size: 0.72rem; color: var(--muted, #888); }
   .a3 .pri-total { margin-top: 0.9rem; text-align: right; font-size: 1rem; color: var(--muted, #888); }
   .a3 .pri-total strong { color: var(--accent, #c0a878); font-size: 1.5rem; }
+  .a3 .measurement { margin-bottom: 1.5rem; padding: 1rem; background: var(--bg, #111); border: 1px solid var(--border, #333); border-left: 3px solid var(--accent, #c0a878); }
+  .a3 .measurement h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #c0a878); margin: 0 0 0.75rem 0; }
+  .a3 .measurement .trend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; font-size: 0.9rem; margin-bottom: 0.75rem; }
+  .a3 .measurement .trend .box { text-align: center; }
+  .a3 .measurement .trend .lbl { color: var(--muted, #888); font-size: 0.75rem; display: block; }
+  .a3 .measurement .trend .v { font-size: 1.5rem; font-weight: 600; color: var(--accent, #c0a878); }
+  .a3 .measurement .events { font-size: 0.8rem; color: var(--muted, #888); }
   .a3 .footer { margin-top: 1.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border, #333); font-size: 0.85rem; color: var(--muted, #888); }
   .a3 .status-open { color: #d9a441; }
   .a3 .status-done { color: #6aaa64; }
-  .a3 .status-cancelled { color: #888; text-decoration: line-through; }
+  .a3 .status-closed { color: #888; }
 </style>
 
 <div class="a3">
+  <a href="/pdca/{{ ex.id }}/edit" class="edit-btn">Edit A3</a>
   <h1>{{ ex.title }}</h1>
   <div class="pdca-id">{{ ex.pdca_id or ('A3-' ~ ex.id) }} &middot; {{ ex.department or '-' }} &middot; Line {{ ex.line_id or '-' }} &middot; {{ (ex.status or '')|upper }}</div>
 
@@ -46,6 +56,37 @@
     <div class="row"><span class="lbl">Mgmt / CI Sponsor</span><span class="val">{{ ex.management_sponsor or '-' }}</span></div>
     <div class="row"><span class="lbl">Team Members</span><span class="val">{{ ex.team_members or '-' }}</span></div>
     <div class="row"><span class="lbl">Departments</span><span class="val">{{ ex.departments_involved or '-' }}</span></div>
+  </div>
+
+  <div class="measurement">
+    <h2>Measurement &amp; Trend</h2>
+    <div style="font-size: 0.85rem; margin-bottom: 0.75rem;">
+      Type: <strong>{{ ex.measurement_type or 'manual' }}</strong>
+      {% if ex.measurement_config %}&middot; Config: <code style="font-size: 0.78rem;">{{ ex.measurement_config }}</code>{% endif %}
+    </div>
+    {% if ex.affected_skus %}
+    <div style="font-size: 0.85rem; margin-bottom: 0.75rem;">Affected SKUs: <strong>{{ ex.affected_skus }}</strong></div>
+    {% endif %}
+    {% if trend.manual %}
+      <div class="events">
+        {% if trend.note %}{{ trend.note }}<br>{% endif %}
+        Baseline: {{ '%.1f'|format(trend.baseline) if trend.baseline else '-' }} &middot;
+        Target: {{ '%.1f'|format(trend.target) if trend.target else '-' }}
+        <br><em>Manual entry. No automatic trend computation.</em>
+      </div>
+    {% else %}
+      <div class="trend">
+        <div class="box"><span class="lbl">Baseline ({{ trend.baseline_count }} events)</span><span class="v">{{ '%.1f'|format(trend.baseline) if trend.baseline else '-' }}m</span></div>
+        <div class="box"><span class="lbl">Current ({{ trend.events|length }} events)</span><span class="v">{{ '%.1f'|format(trend.current) if trend.current else '-' }}m</span></div>
+        <div class="box"><span class="lbl">Target</span><span class="v">{{ '%.1f'|format(trend.target) if trend.target else '-' }}m</span></div>
+      </div>
+      {% if trend.events %}
+      <div class="events">
+        Recent events:
+        {% for e in trend.events[-8:] %}{{ e.date }}={{ '%.0f'|format(e.value) }}m{% if not loop.last %} · {% endif %}{% endfor %}
+      </div>
+      {% endif %}
+    {% endif %}
   </div>
 
   <div class="split">
@@ -65,10 +106,8 @@
         <tr><th>#</th><th>Step</th><th>Owner</th><th>Due</th><th>Status</th></tr>
         {% for a in actions %}
         <tr>
-          <td>{{ a.seq }}</td>
-          <td>{{ a.description }}</td>
-          <td>{{ a.owner or '-' }}</td>
-          <td>{{ a.due_date or '-' }}</td>
+          <td>{{ a.seq }}</td><td>{{ a.description }}</td>
+          <td>{{ a.owner or '-' }}</td><td>{{ a.due_date or '-' }}</td>
           <td class="status-{{ a.status }}">{{ a.status }}</td>
         </tr>
         {% endfor %}
@@ -85,17 +124,20 @@
       <p><strong>Target state reached:</strong> {{ 'Yes' if ex.target_state_reached else 'No' }}</p>
       <p><strong>How we know it is solved:</strong> {{ ex.how_known_solved or '-' }}</p>
       <p><strong>New problems created:</strong> {{ ex.new_problems_created or 'None' }}</p>
+      {% if ex.status == 'closed' and ex.close_reason %}
+      <p><strong>Closed:</strong> {{ ex.close_reason }}</p>
+      {% endif %}
     </div>
   </div>
 
   <div class="priority">
-    <h2>Priority Score</h2>
+    <h2>Priority Score (inputs and total)</h2>
     <div class="pri-grid">
-      <div class="pri-cell"><span class="lbl">Time &times; 10</span><span class="val">{{ ex.pri_time or '-' }}</span></div>
-      <div class="pri-cell"><span class="lbl">Impact &times; 30</span><span class="val">{{ ex.pri_impact or '-' }}</span></div>
-      <div class="pri-cell"><span class="lbl">Resources &times; 30</span><span class="val">{{ ex.pri_resources or '-' }}</span></div>
-      <div class="pri-cell"><span class="lbl">Magnitude &times; 30</span><span class="val">{{ ex.pri_magnitude or '-' }}</span></div>
-      <div class="pri-cell"><span class="lbl">Cost &times; 50</span><span class="val">{{ ex.pri_cost or '-' }}</span></div>
+      <div class="pri-cell"><span class="lbl">Time × 10</span><span class="val">{{ ex.pri_time or '-' }}</span><div class="contrib">{{ (ex.pri_time or 0) * 10 }} pts</div></div>
+      <div class="pri-cell"><span class="lbl">Impact × 30</span><span class="val">{{ ex.pri_impact or '-' }}</span><div class="contrib">{{ (ex.pri_impact or 0) * 30 }} pts</div></div>
+      <div class="pri-cell"><span class="lbl">Resources × 30</span><span class="val">{{ ex.pri_resources or '-' }}</span><div class="contrib">{{ (ex.pri_resources or 0) * 30 }} pts</div></div>
+      <div class="pri-cell"><span class="lbl">Magnitude × 30</span><span class="val">{{ ex.pri_magnitude or '-' }}</span><div class="contrib">{{ (ex.pri_magnitude or 0) * 30 }} pts</div></div>
+      <div class="pri-cell"><span class="lbl">Cost × 50</span><span class="val">{{ ex.pri_cost or '-' }}</span><div class="contrib">{{ (ex.pri_cost or 0) * 50 }} pts</div></div>
     </div>
     <div class="pri-total">Total: <strong>{{ priority_total }}</strong> &nbsp;<span style="font-size: 0.8rem;">(range 150–750)</span></div>
   </div>
