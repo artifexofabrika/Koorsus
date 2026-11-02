@@ -2,24 +2,24 @@
 {% block title %}Edit {{ ex.pdca_id or 'A3' }}{% endblock %}
 {% block content %}
 <style>
-  .a3-edit { max-width: 1000px; margin: 0 auto; background: var(--panel, #222); color: #eee; border: 1px solid var(--border, #333); padding: 2rem; }
-  .a3-edit h1 { font-size: 1.2rem; margin: 0 0 0.5rem 0; color: var(--accent, #c0a878); }
-  .a3-edit .pdca-id { font-family: monospace; font-size: 0.85rem; color: var(--muted, #888); margin-bottom: 1.5rem; }
-  .a3-edit .cancel-btn { float: right; font-size: 0.85rem; color: var(--muted, #888); margin-right: 1rem; padding-top: 0.4rem; text-decoration: none; }
+  .a3-edit { max-width: 1000px; margin: 0 auto; background: #222222; color: #eeeeee; border: 1px solid #333333; padding: 2rem; }
+  .a3-edit h1 { font-size: 1.2rem; margin: 0 0 0.5rem 0; color: #c0a878; }
+  .a3-edit .pdca-id { font-family: monospace; font-size: 0.85rem; color: #888888; margin-bottom: 1.5rem; }
+  .a3-edit .cancel-btn { float: right; font-size: 0.85rem; color: #888888; margin-right: 1rem; padding-top: 0.4rem; text-decoration: none; }
   .a3-edit .field { margin-bottom: 1rem; }
-  .a3-edit label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted, #888); margin-bottom: 0.25rem; }
+  .a3-edit label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888888; margin-bottom: 0.25rem; }
   .a3-edit input[type=text], .a3-edit input[type=date], .a3-edit input[type=number], .a3-edit textarea, .a3-edit select {
-    width: 100%; padding: 0.5rem 0.7rem; background: var(--bg, #111); border: 1px solid var(--border, #333); color: #eee; border-radius: 3px; font-family: Georgia, serif; font-size: 0.88rem; box-sizing: border-box;
+    width: 100%; padding: 0.5rem 0.7rem; background: #111111; border: 1px solid #444444; color: #eeeeee; border-radius: 3px; font-family: Georgia, serif; font-size: 0.88rem; box-sizing: border-box;
   }
   .a3-edit textarea { min-height: 70px; resize: vertical; }
   .a3-edit .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1rem; }
-  .a3-edit .section-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #c0a878); margin: 1.5rem 0 0.75rem 0; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border, #333); }
+  .a3-edit .section-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #c0a878; margin: 1.5rem 0 0.75rem 0; padding-bottom: 0.3rem; border-bottom: 1px solid #333333; }
   .a3-edit .pri-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
-  .a3-edit button { background: var(--accent, #c0a878); color: var(--bg, #111); border: none; padding: 0.7rem 2rem; font-weight: bold; border-radius: 4px; font-size: 0.9rem; cursor: pointer; }
-  .a3-edit .readonly { background: #2a2a2a; color: var(--muted, #888); cursor: not-allowed; }
+  .a3-edit button { background: #c0a878; color: #111111; border: none; padding: 0.7rem 2rem; font-weight: bold; border-radius: 4px; font-size: 0.9rem; cursor: pointer; }
+  .a3-edit .readonly { background: #2a2a2a; color: #888888; cursor: not-allowed; }
   .a3-edit .fishbone-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
   .a3-edit .fishbone-field textarea { min-height: 90px; font-family: monospace; font-size: 0.82rem; }
-  .a3-edit .hint { font-size: 0.72rem; color: var(--muted, #888); margin-top: 0.25rem; font-style: italic; }
+  .a3-edit .hint { font-size: 0.72rem; color: #888888; margin-top: 0.25rem; font-style: italic; }
 </style>
 
 <div class="a3-edit">
@@ -66,7 +66,7 @@
     </div>
     <div class="field"><label>Measurement Config (JSON)</label><textarea name="measurement_config">{{ ex.measurement_config or '' }}</textarea></div>
     <div class="split">
-      <div class="field"><label>Target Step Name (for legacy /pdca view)</label><input type="text" name="target_step_name" value="{{ ex.target_step_name or '' }}"></div>
+      <div class="field"><label>Target Step Name (legacy)</label><input type="text" name="target_step_name" value="{{ ex.target_step_name or '' }}"></div>
       <div class="field"><label>Target Date</label><input type="text" name="target_date" value="{{ ex.target_date or '' }}" placeholder="YYYY-MM-DD"></div>
     </div>
     <div class="split">
@@ -97,7 +97,7 @@
       {% endfor %}
     </div>
 
-    <div class="field" style="margin-top:1rem;"><label>Action Plan (text summary; individual action items are managed separately)</label><textarea name="action_plan">{{ ex.action_plan or '' }}</textarea></div>
+    <div class="field" style="margin-top:1rem;"><label>Action Plan (text summary)</label><textarea name="action_plan">{{ ex.action_plan or '' }}</textarea></div>
 
     <div class="section-header">Verification</div>
     <div class="split">
@@ -124,7 +124,7 @@
           {% endfor %}
         </select>
       </div>
-      <div class="field"><label>Close Reason (if closing as failed or abandoned)</label><input type="text" name="close_reason" value="{{ ex.close_reason or '' }}" placeholder="Failure is a learning opportunity — record why"></div>
+      <div class="field"><label>Close Reason</label><input type="text" name="close_reason" value="{{ ex.close_reason or '' }}" placeholder="Failure is a learning opportunity — record why"></div>
     </div>
     <div class="field"><label>Notes on Back</label><textarea name="notes_on_back">{{ ex.notes_on_back or '' }}</textarea></div>
 

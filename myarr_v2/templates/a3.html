@@ -2,46 +2,48 @@
 {% block title %}{{ ex.pdca_id or 'A3' }} - {{ ex.title }}{% endblock %}
 {% block content %}
 <style>
-  .a3 { max-width: 1200px; margin: 0 auto; background: var(--panel, #222); color: #eee; border: 1px solid var(--border, #333); padding: 2rem; }
-  .a3 h1 { font-size: 1.3rem; margin: 0 0 0.25rem 0; color: var(--accent, #c0a878); }
-  .a3 .pdca-id { font-family: monospace; font-size: 0.85rem; color: var(--muted, #888); margin-bottom: 1.5rem; }
-  .a3 .edit-btn { float: right; background: var(--accent, #c0a878); color: var(--bg, #111); padding: 0.4rem 1rem; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.85rem; }
+  .a3 { max-width: 1200px; margin: 0 auto; background: #222222; color: #eeeeee; border: 1px solid #333333; padding: 2rem; }
+  .a3 h1 { font-size: 1.3rem; margin: 0 0 0.25rem 0; color: #c0a878; }
+  .a3 .pdca-id { font-family: monospace; font-size: 0.85rem; color: #888888; margin-bottom: 1.5rem; }
+  .a3 .edit-btn { float: right; background: #c0a878; color: #111111; padding: 0.4rem 1rem; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.85rem; }
   .a3 .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; font-size: 0.85rem; margin-bottom: 1.5rem; }
-  .a3 .meta .row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border: 1px solid var(--border, #333); background: var(--bg, #111); border-radius: 4px; color: #eee; }
-  .a3 .meta .lbl { color: var(--muted, #888); }
-  .a3 .meta .val { color: #eee; text-align: right; font-weight: 500; }
+  .a3 .meta .row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border: 1px solid #333333; background: #111111; border-radius: 4px; color: #eeeeee; }
+  .a3 .meta .lbl { color: #888888; }
+  .a3 .meta .val { color: #eeeeee; text-align: right; font-weight: 500; }
   .a3 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-  .a3 .cell { background: var(--bg, #111); border: 1px solid var(--border, #333); padding: 1rem; }
-  .a3 .cell h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #c0a878); margin: 0 0 0.5rem 0; }
-  .a3 .cell p { margin: 0.4rem 0; line-height: 1.5; font-size: 0.9rem; color: #eee; }
+  .a3 .cell { background: #111111; border: 1px solid #333333; padding: 1rem; }
+  .a3 .cell h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #c0a878; margin: 0 0 0.5rem 0; }
+  .a3 .cell p { margin: 0.4rem 0; line-height: 1.5; font-size: 0.9rem; color: #eeeeee; }
   .a3 .severity { display: inline-flex; gap: 0.4rem; }
-  .a3 .sev { display: inline-block; padding: 0.1rem 0.45rem; border: 1px solid var(--border, #333); border-radius: 2px; font-size: 0.75rem; color: var(--muted, #888); }
-  .a3 .sev.on { background: var(--accent, #c0a878); color: var(--bg, #111); border-color: var(--accent, #c0a878); font-weight: 600; }
+  .a3 .sev { display: inline-block; padding: 0.1rem 0.45rem; border: 1px solid #333333; border-radius: 2px; font-size: 0.75rem; color: #888888; }
+  .a3 .sev.on { background: #c0a878; color: #111111; border-color: #c0a878; font-weight: 600; }
   .a3 table.actions { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.85rem; }
-  .a3 table.actions th { text-align: left; padding: 0.4rem; border-bottom: 1px solid var(--border, #333); color: var(--muted, #888); font-weight: 500; font-size: 0.72rem; text-transform: uppercase; }
-  .a3 table.actions td { padding: 0.4rem; border-bottom: 1px dotted var(--border, #333); color: #eee; }
-  .a3 .priority { margin-top: 1.5rem; padding: 1rem; background: var(--bg, #111); border: 1px solid var(--border, #333); }
-  .a3 .priority h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #c0a878); margin: 0 0 0.75rem 0; }
+  .a3 table.actions th { text-align: left; padding: 0.4rem; border-bottom: 1px solid #333333; color: #888888; font-weight: 500; font-size: 0.72rem; text-transform: uppercase; }
+  .a3 table.actions td { padding: 0.4rem; border-bottom: 1px dotted #333333; color: #eeeeee; }
+  .a3 .priority { margin-top: 1.5rem; padding: 1rem; background: #111111; border: 1px solid #333333; }
+  .a3 .priority h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #c0a878; margin: 0 0 0.75rem 0; }
   .a3 .pri-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; font-size: 0.85rem; }
   .a3 .pri-cell { text-align: center; }
-  .a3 .pri-cell .lbl { color: var(--muted, #888); font-size: 0.7rem; display: block; margin-bottom: 0.2rem; }
-  .a3 .pri-cell .val { font-size: 1.15rem; font-weight: 600; color: var(--accent, #c0a878); }
-  .a3 .pri-cell .contrib { font-size: 0.72rem; color: var(--muted, #888); }
-  .a3 .pri-total { margin-top: 0.9rem; text-align: right; font-size: 1rem; color: var(--muted, #888); }
-  .a3 .pri-total strong { color: var(--accent, #c0a878); font-size: 1.5rem; }
-  .a3 .measurement { margin-bottom: 1.5rem; padding: 1rem; background: var(--bg, #111); border: 1px solid var(--border, #333); border-left: 3px solid var(--accent, #c0a878); }
-  .a3 .measurement h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #c0a878); margin: 0 0 0.75rem 0; }
+  .a3 .pri-cell .lbl { color: #888888; font-size: 0.7rem; display: block; margin-bottom: 0.2rem; }
+  .a3 .pri-cell .val { font-size: 1.15rem; font-weight: 600; color: #c0a878; }
+  .a3 .pri-cell .contrib { font-size: 0.72rem; color: #888888; }
+  .a3 .pri-total { margin-top: 0.9rem; text-align: right; font-size: 1rem; color: #888888; }
+  .a3 .pri-total strong { color: #c0a878; font-size: 1.5rem; }
+  .a3 .measurement { margin-bottom: 1.5rem; padding: 1rem; background: #111111; border: 1px solid #333333; border-left: 3px solid #c0a878; }
+  .a3 .measurement h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #c0a878; margin: 0 0 0.75rem 0; }
   .a3 .measurement .trend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; font-size: 0.9rem; margin-bottom: 0.75rem; }
   .a3 .measurement .trend .box { text-align: center; }
-  .a3 .measurement .trend .lbl { color: var(--muted, #888); font-size: 0.75rem; display: block; }
-  .a3 .measurement .trend .v { font-size: 1.5rem; font-weight: 600; color: var(--accent, #c0a878); }
-  .a3 .measurement .events { font-size: 0.8rem; color: var(--muted, #888); }
-  .a3 .fishbone { margin-bottom: 1.5rem; padding: 1rem; background: var(--bg, #111); border: 1px solid var(--border, #333); }
-  .a3 .fishbone h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #c0a878); margin: 0 0 0.75rem 0; }
-  .a3 .footer { margin-top: 1.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border, #333); font-size: 0.85rem; color: #eee; }
+  .a3 .measurement .trend .lbl { color: #888888; font-size: 0.75rem; display: block; }
+  .a3 .measurement .trend .v { font-size: 1.5rem; font-weight: 600; color: #c0a878; }
+  .a3 .measurement .events { font-size: 0.8rem; color: #888888; }
+  .a3 .fishbone { margin-bottom: 1.5rem; padding: 1rem; background: #111111; border: 1px solid #333333; }
+  .a3 .fishbone h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #c0a878; margin: 0 0 0.75rem 0; }
+  .a3 .footer { margin-top: 1.5rem; padding-top: 0.75rem; border-top: 1px solid #333333; font-size: 0.85rem; color: #eeeeee; }
   .a3 .status-open { color: #d9a441; }
   .a3 .status-done { color: #6aaa64; }
-  .a3 .status-closed { color: #888; }
+  .a3 .status-closed { color: #888888; }
+  .a3 code { color: #c0a878; }
+  .a3 strong { color: #eeeeee; }
 </style>
 
 <div class="a3">
@@ -62,12 +64,12 @@
 
   <div class="measurement">
     <h2>Measurement &amp; Trend</h2>
-    <div style="font-size: 0.85rem; margin-bottom: 0.75rem; color: #eee;">
+    <div style="font-size: 0.85rem; margin-bottom: 0.75rem; color: #eeeeee;">
       Type: <strong>{{ ex.measurement_type or 'manual' }}</strong>
       {% if ex.measurement_config %}&middot; Config: <code style="font-size: 0.78rem;">{{ ex.measurement_config }}</code>{% endif %}
     </div>
     {% if ex.affected_skus %}
-    <div style="font-size: 0.85rem; margin-bottom: 0.75rem; color: #eee;">Affected SKUs: <strong>{{ ex.affected_skus }}</strong></div>
+    <div style="font-size: 0.85rem; margin-bottom: 0.75rem; color: #eeeeee;">Affected SKUs: <strong>{{ ex.affected_skus }}</strong></div>
     {% endif %}
     {% if trend.manual %}
       <div class="events">
@@ -96,7 +98,6 @@
     <div class="cell"><h2>Target Condition</h2><p>{{ ex.target_condition or '-' }}</p></div>
   </div>
 
-  {# ---------- Fishbone Diagram 5M1E ---------- #}
   {% set has_causes = fishbone['Man'] or fishbone['Machine'] or fishbone['Method'] or fishbone['Material'] or fishbone['Measurement'] or fishbone['Environment'] %}
   <div class="fishbone">
     <h2>Fishbone Diagram (5M1E)</h2>
@@ -107,23 +108,23 @@
       {% set spine_y = 300 %}
       {% set top_y = 90 %}
       {% set bot_y = 510 %}
-      <svg viewBox="0 0 1500 600" style="width:100%;max-width:1500px;height:auto;display:block;">
-        <line x1="80" y1="{{ spine_y }}" x2="1340" y2="{{ spine_y }}" stroke="var(--accent,#c0a878)" stroke-width="3"/>
-        <polygon points="1340,{{ spine_y }} 1316,{{ spine_y - 10 }} 1316,{{ spine_y + 10 }}" fill="var(--accent,#c0a878)"/>
-        <text x="1360" y="{{ spine_y + 6 }}" fill="var(--accent,#c0a878)" font-size="14" font-weight="bold">PROBLEM</text>
+      <svg viewBox="0 0 1500 600" style="width:100%;max-width:1500px;height:auto;display:block;background:#111111;">
+        <line x1="80" y1="{{ spine_y }}" x2="1340" y2="{{ spine_y }}" stroke="#c0a878" stroke-width="3"/>
+        <polygon points="1340,{{ spine_y }} 1316,{{ spine_y - 10 }} 1316,{{ spine_y + 10 }}" fill="#c0a878"/>
+        <text x="1360" y="{{ spine_y + 6 }}" fill="#c0a878" font-size="14" font-weight="bold">PROBLEM</text>
 
         {% for cat in top_cats %}
           {% set i = loop.index0 %}
           {% set ox = rib_origins[i] %}
           {% set tx = ox - 170 %}
-          <line x1="{{ ox }}" y1="{{ spine_y }}" x2="{{ tx }}" y2="{{ top_y }}" stroke="#eee" stroke-width="2"/>
-          <text x="{{ tx }}" y="{{ top_y - 14 }}" fill="var(--accent,#c0a878)" font-size="13" font-weight="bold" text-anchor="middle">{{ cat|upper }}</text>
+          <line x1="{{ ox }}" y1="{{ spine_y }}" x2="{{ tx }}" y2="{{ top_y }}" stroke="#eeeeee" stroke-width="2"/>
+          <text x="{{ tx }}" y="{{ top_y - 14 }}" fill="#c0a878" font-size="13" font-weight="bold" text-anchor="middle">{{ cat|upper }}</text>
           {% for cause in fishbone[cat][:3] %}
             {% set t = 0.25 + loop.index0 * 0.25 %}
             {% set cx = ox + (tx - ox) * t %}
             {% set cy = spine_y + (top_y - spine_y) * t %}
-            <line x1="{{ cx }}" y1="{{ cy }}" x2="{{ cx - 22 }}" y2="{{ cy }}" stroke="#eee" stroke-width="1"/>
-            <text x="{{ cx - 28 }}" y="{{ cy + 4 }}" fill="#eee" font-size="11" text-anchor="end">{{ cause|truncate(32, True, '…') }}</text>
+            <line x1="{{ cx }}" y1="{{ cy }}" x2="{{ cx - 22 }}" y2="{{ cy }}" stroke="#eeeeee" stroke-width="1"/>
+            <text x="{{ cx - 28 }}" y="{{ cy + 4 }}" fill="#eeeeee" font-size="11" text-anchor="end">{{ cause|truncate(32, True, '…') }}</text>
           {% endfor %}
         {% endfor %}
 
@@ -131,19 +132,19 @@
           {% set i = loop.index0 %}
           {% set ox = rib_origins[i] %}
           {% set tx = ox - 170 %}
-          <line x1="{{ ox }}" y1="{{ spine_y }}" x2="{{ tx }}" y2="{{ bot_y }}" stroke="#eee" stroke-width="2"/>
-          <text x="{{ tx }}" y="{{ bot_y + 24 }}" fill="var(--accent,#c0a878)" font-size="13" font-weight="bold" text-anchor="middle">{{ cat|upper }}</text>
+          <line x1="{{ ox }}" y1="{{ spine_y }}" x2="{{ tx }}" y2="{{ bot_y }}" stroke="#eeeeee" stroke-width="2"/>
+          <text x="{{ tx }}" y="{{ bot_y + 24 }}" fill="#c0a878" font-size="13" font-weight="bold" text-anchor="middle">{{ cat|upper }}</text>
           {% for cause in fishbone[cat][:3] %}
             {% set t = 0.25 + loop.index0 * 0.25 %}
             {% set cx = ox + (tx - ox) * t %}
             {% set cy = spine_y + (bot_y - spine_y) * t %}
-            <line x1="{{ cx }}" y1="{{ cy }}" x2="{{ cx - 22 }}" y2="{{ cy }}" stroke="#eee" stroke-width="1"/>
-            <text x="{{ cx - 28 }}" y="{{ cy + 4 }}" fill="#eee" font-size="11" text-anchor="end">{{ cause|truncate(32, True, '…') }}</text>
+            <line x1="{{ cx }}" y1="{{ cy }}" x2="{{ cx - 22 }}" y2="{{ cy }}" stroke="#eeeeee" stroke-width="1"/>
+            <text x="{{ cx - 28 }}" y="{{ cy + 4 }}" fill="#eeeeee" font-size="11" text-anchor="end">{{ cause|truncate(32, True, '…') }}</text>
           {% endfor %}
         {% endfor %}
       </svg>
     {% else %}
-      <p style="color: var(--muted, #888); font-style: italic;">No causes recorded yet. Add up to three per category on the <a href="/pdca/{{ ex.id }}/edit" style="color: var(--accent);">Edit page</a>.</p>
+      <p style="color: #888888; font-style: italic;">No causes recorded yet. Add up to three per category on the <a href="/pdca/{{ ex.id }}/edit" style="color: #c0a878;">Edit page</a>.</p>
     {% endif %}
   </div>
 
