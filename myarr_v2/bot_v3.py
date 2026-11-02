@@ -7,6 +7,7 @@ STRUCTURED_PATTERNS = [
     r'^(run|running)\b',
     r'^record\b',
     r'^(end|ending|finish|finishing)\b',
+    r'^(and|en)\s+(lunch|cip|maintenance|change|job|shift|wo|work|order)',
     r'^clos\w*\b',
     r'^(start|starting|begin|beginning)\b',
     r'^change[\s-]*over\b',
