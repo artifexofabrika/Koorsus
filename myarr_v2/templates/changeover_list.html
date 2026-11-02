@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Myarra - Changeovers{% endblock %}
+{% block content %}
+<h1>Changeover Log</h1>
+<div class="sub">One row per event. Click a row to see step detail. Filter by line or by the component that changed.</div>
+
+<div style="margin: 1rem 0; font-size: 0.85rem; line-height: 1.9;">
+  <strong>Line:</strong>
+  <a href="/changeover?days={{ days }}{% if current_component %}&component={{ current_component }}{% endif %}"
+     style="color: {{ 'var(--accent)' if not current_line else 'var(--muted)' }};">All</a>
+  {% for l in lines %}
+    <span style="color: var(--border);">|</span>
+    <a href="/changeover?line={{ l.id }}&days={{ days }}{% if current_component %}&component={{ current_component }}{% endif %}"
+       style="color: {{ 'var(--accent)' if current_line == l.id else 'var(--muted)' }};">{{ l.id }} {{ l.name }}</a>
+  {% endfor %}
+</div>
+
+<div style="margin: 0 0 1rem 0; font-size: 0.85rem; line-height: 1.9;">
+  <strong>Component changed:</strong>
+  <a href="/changeover?days={{ days }}{% if current_line %}&line={{ current_line }}{% endif %}"
+     style="color: {{ 'var(--accent)' if not current_component else 'var(--muted)' }};">All</a>
+  {% for c in components %}
+    <span style="color: var(--border);">|</span>
+    <a href="/changeover?component={{ c.id }}&days={{ days }}{% if current_line %}&line={{ current_line }}{% endif %}"
+       style="color: {{ 'var(--accent)' if current_component == c.id else 'var(--muted)' }};">{{ c.name }}</a>
+  {% endfor %}
+  <span style="margin-left: 2rem;"><strong>Window:</strong>
+    {% for d in [7, 14, 30, 90] %}
+      <a href="/changeover?days={{ d }}{% if current_line %}&line={{ current_line }}{% endif %}{% if current_component %}&component={{ current_component }}{% endif %}"
+         style="color: {{ 'var(--accent)' if days == d else 'var(--muted)' }};">{{ d }}d</a>
+      {% if not loop.last %}<span style="color: var(--border);">|</span>{% endif %}
+    {% endfor %}
+  </span>
+</div>
+
+<table>
+  <tr>
+    <th>Date</th><th>Line</th><th>From</th><th>To</th><th>Components Changed</th>
+    <th style="text-align:right;">Std</th>
+    <th style="text-align:right;">Actual</th>
+    <th style="text-align:right;">Var</th>
+  </tr>
+  {% for e in events %}
+  <tr onclick="window.location='/changeover/{{ e.id }}'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">{{ (e.started_at or '')[:16].replace('T', ' ') }}</td>
+    <td style="color: var(--accent);">{{ e.line_id }} &mdash; {{ e.line_name or '' }}</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">{{ e.from_job_number }}</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">{{ e.to_job_number }}</td>
+    <td style="font-size: 0.85rem;">{{ e.components_changed or '&mdash;' }}</td>
+    <td style="text-align:right; color: var(--muted);">{{ '%.0f'|format(e.aggregate_standard_min) if e.aggregate_standard_min else '&mdash;' }}</td>
+    <td style="text-align:right;">{{ '%.0f'|format(e.aggregate_actual_min) if e.aggregate_actual_min else '&mdash;' }}</td>
+    <td style="text-align:right;" class="{{ 'good' if e.variance is not none and e.variance <= 0 else ('bad' if e.variance is not none else '') }}">
+      {% if e.variance is not none %}{{ '%+.0f'|format(e.variance) }}{% else %}&mdash;{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% if not events %}
+<p style="color: var(--muted); margin-top: 1.5rem;">No changeovers in the last {{ days }} days{% if current_line %} on Line {{ current_line }}{% endif %}{% if current_component %} changing that component{% endif %}.</p>
+{% endif %}
+{% endblock %}

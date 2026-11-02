@@ -2,16 +2,33 @@
 {% block title %}Myarra - Changeover{% endblock %}
 {% block content %}
 <h1>Changeover Analysis</h1>
-<div class="sub">{{ ev.name }} &middot; {{ ev.started_at }}</div>
+<div class="sub">{{ ev.name or 'No procedure on file' }} &middot; {{ ev.started_at }}</div>
 <div class="sub" style="margin-top:-1rem;color:var(--accent)">Job {{ ev.from_job_number or 'N/A' }} &rarr; Job {{ ev.to_job_number or 'N/A' }}</div>
 
 <div class="box" style="max-width:900px;margin-bottom:2rem">
   <h2>Aggregate Time</h2>
-  <div class="stat-row"><span>Standard</span><span>{{ '%.0f'|format(ev.aggregate_standard_min) }} min</span></div>
-  <div class="stat-row"><span>Actual</span><span class="{{ 'bad' if ev.aggregate_actual_min > ev.aggregate_standard_min else 'good' }}">{{ '%.0f'|format(ev.aggregate_actual_min) }} min</span></div>
-  <div class="stat-row"><span>Variance</span><span class="{{ 'bad' if ev.aggregate_actual_min > ev.aggregate_standard_min else 'good' }}">{{ '%+.0f'|format(ev.aggregate_actual_min - ev.aggregate_standard_min) }} min</span></div>
+  <div class="stat-row"><span>Standard</span><span>{{ '%.0f'|format(ev.aggregate_standard_min) if ev.aggregate_standard_min else '-' }} min</span></div>
+  <div class="stat-row"><span>Actual</span><span class="{{ 'bad' if ev.aggregate_standard_min and ev.aggregate_actual_min and ev.aggregate_actual_min > ev.aggregate_standard_min else 'good' }}">{{ '%.0f'|format(ev.aggregate_actual_min) if ev.aggregate_actual_min else '-' }} min</span></div>
+  <div class="stat-row"><span>Variance</span><span class="{{ 'bad' if ev.aggregate_standard_min and ev.aggregate_actual_min and ev.aggregate_actual_min > ev.aggregate_standard_min else 'good' }}">{% if ev.aggregate_standard_min and ev.aggregate_actual_min %}{{ '%+.0f'|format(ev.aggregate_actual_min - ev.aggregate_standard_min) }}{% else %}-{% endif %} min</span></div>
 </div>
 
+{% if changes %}
+<div class="box" style="max-width:900px;margin-bottom:2rem">
+  <h2>Components Changed</h2>
+  <table style="margin-top:0.5rem;">
+    <tr><th>Component</th><th>From</th><th>To</th></tr>
+    {% for c in changes %}
+    <tr>
+      <td>{{ c.component_name }}</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">{{ c.from_value or '&mdash;' }}</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">{{ c.to_value or '&mdash;' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+{% if steps %}
 <table>
   <tr><th>Step</th><th>Station</th><th>Standard</th><th>Actual</th><th>Variance</th></tr>
   {% for s in steps %}
@@ -26,4 +43,7 @@
   </tr>
   {% endfor %}
 </table>
+{% endif %}
+
+<div style="margin-top:1.5rem;"><a href="/changeover" style="color: var(--accent);">&larr; Back to changeover log</a></div>
 {% endblock %}
