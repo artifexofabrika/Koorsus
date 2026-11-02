@@ -1,27 +1,47 @@
 {% extends "base.html" %}
-{% block title %}Myarra - Shift Reconciliation{% endblock %}
+{% block title %}Myarra - Dashboard{% endblock %}
 {% block content %}
-<h1>Shift Reconciliation</h1>
-<div class="sub">Expected = line optimum &times; minutes available</div>
+<h1>Live Line Status</h1>
+<div class="sub">What is happening on the floor right now</div>
 <table>
   <tr>
-    <th>Shift</th><th>Jobs</th><th>Filled</th><th>Expected</th><th>Gap min</th><th>Logged</th><th>Unaccounted</th><th>Performance</th><th></th>
+    <th>Line</th><th>State</th><th>Details</th><th>Since</th>
   </tr>
   {% for r in rows %}
-  {% set band = 'pass' if r.unacc < 2 else ('warn' if r.unacc <= 5 else 'flag') %}
-  {% set band_text = 'good' if r.unacc < 2 else ('caution' if r.unacc <= 5 else 'bad') %}
-  {% set band_label = 'reconciled' if r.unacc < 2 else ('watch' if r.unacc <= 5 else 'FLAG') %}
-  <tr onclick="window.location='/shift/{{ r.raw_date }}/{{ r.raw_shift }}'" style="cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-    <td style="color: var(--accent); text-decoration: underline;">{{ r.shift }}</td>
-    <td>{{ r.jobs }}</td>
-    <td>{{ '{:,}'.format(r.filled) }}</td>
-    <td>{{ '{:,.0f}'.format(r.expected) }}</td>
-    <td>{{ '%.2f'|format(r.gap) }}</td>
-    <td>{{ '%.2f'|format(r.logged) }}</td>
-    <td class="{{ band_text }}">{{ '%.2f'|format(r.unacc) }}</td>
-    <td>{{ '%.1f'|format(r.perf) }}%</td>
-    <td><span class="pill {{ band }}">{{ band_label }}</span></td>
+  <tr>
+    <td style="color: var(--accent);">{{ r.line_id }} &mdash; {{ r.line_name }}</td>
+    <td>
+      {% if r.state == 'production' %}
+        <span class="pill pass">PRODUCTION</span>
+      {% elif r.state == 'changeover' %}
+        <span class="pill warn">CHANGEOVER</span>
+      {% elif r.state in ('lunch','cip','maintenance') %}
+        <span class="pill warn">{{ r.state|upper }}</span>
+      {% else %}
+        <span class="pill flag">{{ r.state|upper }}</span>
+      {% endif %}
+    </td>
+    <td>
+      {% if r.state == 'production' %}
+        <strong>{{ r.details.job_number }}</strong>
+        {% if r.details.sku_description %}&mdash; {{ r.details.sku_description }}{% endif %}<br>
+        {{ '{:,}'.format(r.details.cases) }} of {{ '{:,}'.format(r.details.tgt_cases) }} {{ case_label }} ({{ '%.1f'|format(r.details.pct) }}%)
+      {% elif r.state == 'changeover' %}
+        {{ r.details.from_job }} &rarr; {{ r.details.to_job }}
+        {% if r.details.std %}&mdash; {{ '%.0f'|format(r.elapsed_min) }} of {{ '%.0f'|format(r.details.std) }} min
+          {% if r.elapsed_min > r.details.std %}<span class="bad">(over by {{ '%.0f'|format(r.elapsed_min - r.details.std) }})</span>{% endif %}
+        {% else %}&mdash; {{ '%.0f'|format(r.elapsed_min) }} min (no standard){% endif %}
+      {% elif r.details.reason %}
+        {{ r.details.reason }}
+      {% else %}&mdash;{% endif %}
+    </td>
+    <td>
+      {% if r.started_at %}{{ r.started_at.strftime('%H:%M') }} ({{ '%.0f'|format(r.elapsed_min) }} min){% else %}&mdash;{% endif %}
+    </td>
   </tr>
   {% endfor %}
 </table>
+{% if not rows %}
+<p style="color: var(--muted); margin-top: 1.5rem;">No lines configured.</p>
+{% endif %}
 {% endblock %}

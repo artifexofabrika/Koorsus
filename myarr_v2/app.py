@@ -3,12 +3,12 @@ Myarra Web Application
 """
 from flask import Flask, render_template, request
 from db import get_db_connection, ingest_csv
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
 
 def _priority_total(e):
-    """Priority = time*10 + impact*30 + resources*30 + magnitude*30 + cost*50."""
     return (
         (e.get("pri_time") or 0) * 10 +
         (e.get("pri_impact") or 0) * 30 +
@@ -18,19 +18,96 @@ def _priority_total(e):
     )
 
 
-def _unit_label(conn):
+def _setting(conn, key, default):
     try:
-        r = conn.execute("SELECT value FROM settings WHERE key='unit_label'").fetchone()
-        return r[0] if r else "units"
+        r = conn.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+        return r[0] if r else default
     except Exception:
-        return "units"
+        return default
+
+
+def _unit_label(conn):
+    return _setting(conn, 'unit_label', 'units')
+
+
+def _case_label(conn):
+    return _setting(conn, 'case_label', 'cases')
 
 
 @app.route("/")
 def dashboard():
-    """Shift reconciliation grouped by date and shift."""
+    """Live line status: current state of every line."""
     conn = get_db_connection()
-    unit = _unit_label(conn)
+    lines = conn.execute("SELECT * FROM lines ORDER BY id").fetchall()
+    cl = _case_label(conn)
+    rows = []
+    for line in lines:
+        cur = conn.execute(
+            "SELECT * FROM line_events WHERE line_id=? AND ended_at IS NULL ORDER BY started_at DESC LIMIT 1",
+            (line['id'],)).fetchone()
+        row = {
+            'line_id': line['id'],
+            'line_name': line['name'],
+            'state': 'unknown',
+            'details': {},
+            'started_at': None,
+            'elapsed_min': 0,
+        }
+        if cur:
+            row['state'] = cur['state']
+            try:
+                started = datetime.fromisoformat(cur['started_at'])
+            except Exception:
+                started = datetime.now()
+            row['started_at'] = started
+            row['elapsed_min'] = (datetime.now() - started).total_seconds() / 60.0
+            if cur['state'] == 'production' and cur['job_id']:
+                job = conn.execute(
+                    """SELECT j.*, s.case_pack, s.part_number, s.description
+                       FROM jobs j LEFT JOIN skus s ON s.id=j.sku_id
+                       WHERE j.id=?""", (cur['job_id'],)).fetchone()
+                if job:
+                    cp = job['case_pack'] or 1
+                    units = conn.execute(
+                        "SELECT SUM(units_filled) FROM hourly_runs WHERE job_id=?",
+                        (job['id'],)).fetchone()[0] or 0
+                    cases = int(units // cp)
+                    tgt_units = job['target_quantity'] or 0
+                    tgt_cases = int(tgt_units // cp)
+                    pct = (units / tgt_units * 100) if tgt_units else 0
+                    row['details'] = {
+                        'job_number': job['job_number'],
+                        'sku_description': job['description'] or '',
+                        'cases': cases,
+                        'tgt_cases': tgt_cases,
+                        'pct': pct,
+                    }
+            elif cur['state'] == 'changeover' and cur['co_event_id']:
+                cev = conn.execute(
+                    "SELECT * FROM co_events WHERE id=?", (cur['co_event_id'],)).fetchone()
+                if cev:
+                    std = None
+                    if cev['procedure_id']:
+                        pr = conn.execute(
+                            "SELECT aggregate_standard_min FROM co_procedures_v2 WHERE id=?",
+                            (cev['procedure_id'],)).fetchone()
+                        std = pr['aggregate_standard_min'] if pr else None
+                    row['details'] = {
+                        'from_job': cev['from_job_number'],
+                        'to_job': cev['to_job_number'],
+                        'std': std,
+                    }
+            elif cur['reason']:
+                row['details'] = {'reason': cur['reason']}
+        rows.append(row)
+    conn.close()
+    return render_template("dashboard.html", rows=rows, case_label=cl)
+
+
+@app.route("/reconciliation")
+def reconciliation():
+    """Shift reconciliation view grouped by Date and Shift."""
+    conn = get_db_connection()
     out = []
 
     shifts = conn.execute("""
@@ -44,7 +121,6 @@ def dashboard():
     for sh in shifts:
         shift_val = sh["shift"]
         run_date = sh["run_date"]
-
         runs = conn.execute("""
             SELECT r.id, r.units_filled, r.duration_min, r.line_id,
                    j.sku_id, j.id AS job_id
@@ -52,12 +128,9 @@ def dashboard():
             JOIN jobs j ON r.job_id = j.id
             WHERE r.shift=? AND date(r.recorded_at) = ?
         """, (shift_val, run_date)).fetchall()
-
         if not runs:
             continue
-
         filled = sum(r["units_filled"] for r in runs)
-
         expected = 0
         for r in runs:
             rate = conn.execute(
@@ -65,16 +138,13 @@ def dashboard():
                 (r["line_id"], r["sku_id"])).fetchone()
             rpm = rate["ideal_rate"] if rate else 600.0
             expected += (rpm * r["duration_min"] / 60.0)
-
         total_minutes = sum(r["duration_min"] for r in runs)
         avg_rpm = (expected / total_minutes) if total_minutes else 600.0
         gap = (expected - filled) / avg_rpm if avg_rpm else 0.0
-
         run_ids = ",".join(str(r["id"]) for r in runs)
         logged = conn.execute(
             f"SELECT COALESCE(SUM(minutes),0) FROM downtime_events WHERE run_id IN ({run_ids})"
         ).fetchone()[0]
-
         out.append({
             "shift": f"{run_date} - S{shift_val}",
             "raw_date": run_date,
@@ -88,7 +158,7 @@ def dashboard():
             "perf": (filled / expected) * 100.0 if expected else 0.0
         })
     conn.close()
-    return render_template("dashboard.html", rows=out, unit=unit)
+    return render_template("reconciliation.html", rows=out)
 
 
 @app.route("/changeover")
@@ -103,7 +173,6 @@ def changeover_view():
     if not ev:
         conn.close()
         return "No changeover data found."
-
     steps = conn.execute("""
         SELECT s.step_name, s.station, s.standard_min, es.actual_min, es.note
         FROM co_event_steps es JOIN co_steps_v2 s ON s.id = es.step_id
@@ -117,12 +186,10 @@ def changeover_view():
 def pdca_view():
     conn = get_db_connection()
     exps = conn.execute("""
-        SELECT * FROM experiments
-        WHERE status='active'
+        SELECT * FROM experiments WHERE status='active'
         ORDER BY department, line_id
     """).fetchall()
     groups = {}
-
     for e in exps:
         e_dict = dict(e)
         baseline_avg = conn.execute("""
@@ -145,37 +212,30 @@ def pdca_view():
             WHERE s.step_name = ?
             ORDER BY ev.started_at ASC
         """, (e["target_step_name"],)).fetchall()
-
         e_dict["baseline_avg"] = baseline_avg
         e_dict["current_avg"] = exp_avg
         e_dict["events"] = [dict(ev) for ev in events]
         e_dict["priority_total"] = _priority_total(e_dict)
-
         dept = e["department"] or "Production"
         if dept not in groups:
             groups[dept] = []
         groups[dept].append(e_dict)
-
     for dept in groups:
         groups[dept].sort(key=lambda x: x["priority_total"], reverse=True)
-
     conn.close()
     return render_template("pdca.html", groups=groups)
 
 
 @app.route("/pdca/log")
 def pdca_log():
-    """Flat register: all PDCAs, active first, then sorted by priority."""
     conn = get_db_connection()
     rows_raw = conn.execute("SELECT * FROM experiments").fetchall()
     conn.close()
-
     rows = []
     for e in rows_raw:
         d = dict(e)
         d["priority_total"] = _priority_total(d)
         rows.append(d)
-
     rows.sort(key=lambda r: (0 if (r.get("status") or "") == "active" else 1,
                              -(r["priority_total"] or 0)))
     return render_template("pdca_log.html", rows=rows)
@@ -210,7 +270,6 @@ def setup():
                     count = ingest_csv(file, table_name)
                     results.append(f"{table_name}: {count} rows inserted")
         msg = "Upload complete. " + " | ".join(results) if results else "No files were selected."
-
     conn = get_db_connection()
     stats = {
         "lines": conn.execute("SELECT COUNT(*) FROM lines").fetchone()[0],
@@ -230,7 +289,6 @@ def admin_view():
         role = request.form.get("role")
         line_id = request.form.get("line_id")
         tg_id = request.form.get("telegram_id")
-
         if name and tg_id:
             try:
                 conn.execute(
@@ -240,7 +298,6 @@ def admin_view():
                 msg = f"User {name} added successfully."
             except Exception as e:
                 msg = f"Error: {e}"
-
     users = conn.execute("SELECT * FROM users WHERE active=1").fetchall()
     conn.close()
     return render_template("admin.html", users=users, msg=msg)
@@ -258,7 +315,6 @@ def shift_detail(run_date, shift):
         WHERE date(r.recorded_at) = ? AND r.shift = ?
         ORDER BY r.period
     """, (run_date, shift)).fetchall()
-
     details = []
     for r in runs:
         rate = conn.execute(
@@ -267,11 +323,9 @@ def shift_detail(run_date, shift):
         rpm = rate["ideal_rate"] if rate else 600.0
         expected = rpm * r["duration_min"] / 60.0
         gap = (expected - r["units_filled"]) / (rpm / 60.0) if rpm else 0.0
-
         dts = conn.execute(
             "SELECT station, reason, minutes FROM downtime_events WHERE run_id=?",
             (r["id"],)).fetchall()
-
         details.append({
             "period": r["period"],
             "job_number": r["job_number"],
@@ -280,13 +334,17 @@ def shift_detail(run_date, shift):
             "gap": gap,
             "downtime": [
                 {"station": d["station"], "reason": d["reason"],
-                 "minutes": round(d["minutes"], 1)}
-                for d in dts
-            ]
+                 "minutes": round(d["minutes"], 1)} for d in dts]
         })
     conn.close()
     return render_template("shift_detail.html", run_date=run_date, shift=shift,
                            details=details, unit=unit)
+
+
+@app.route("/favicon.ico")
+def favicon():
+    from flask import send_from_directory
+    return send_from_directory(app.root_path, "favicon.png", mimetype="image/png")
 
 
 if __name__ == "__main__":

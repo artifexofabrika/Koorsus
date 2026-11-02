@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Myarra - Shift Reconciliation{% endblock %}
+{% block content %}
+<h1>Shift Reconciliation</h1>
+<div class="sub">Expected = line optimum &times; minutes available</div>
+<table>
+  <tr>
+    <th>Shift</th><th>Jobs</th><th>Filled</th><th>Expected</th><th>Gap min</th><th>Logged</th><th>Unaccounted</th><th>Performance</th><th></th>
+  </tr>
+  {% for r in rows %}
+  {% set band = 'pass' if r.unacc < 2 else ('warn' if r.unacc <= 5 else 'flag') %}
+  {% set band_text = 'good' if r.unacc < 2 else ('caution' if r.unacc <= 5 else 'bad') %}
+  {% set band_label = 'reconciled' if r.unacc < 2 else ('watch' if r.unacc <= 5 else 'FLAG') %}
+  <tr onclick="window.location='/shift/{{ r.raw_date }}/{{ r.raw_shift }}'" style="cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+    <td style="color: var(--accent); text-decoration: underline;">{{ r.shift }}</td>
+    <td>{{ r.jobs }}</td>
+    <td>{{ '{:,}'.format(r.filled) }}</td>
+    <td>{{ '{:,.0f}'.format(r.expected) }}</td>
+    <td>{{ '%.2f'|format(r.gap) }}</td>
+    <td>{{ '%.2f'|format(r.logged) }}</td>
+    <td class="{{ band_text }}">{{ '%.2f'|format(r.unacc) }}</td>
+    <td>{{ '%.1f'|format(r.perf) }}%</td>
+    <td><span class="pill {{ band }}">{{ band_label }}</span></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
