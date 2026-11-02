@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Myarra - {{ job.job_number }}{% endblock %}
+{% block content %}
+<h1>{{ job.job_number }}</h1>
+<div class="sub">{{ job.sku_description or '' }} &middot; Line {{ job.line_id }} ({{ job.line_name or '' }})</div>
+
+<div class="box" style="max-width:900px;margin-bottom:2rem;">
+  <div class="stat-row"><span>Status</span><span>{{ job.status|upper }}</span></div>
+  <div class="stat-row"><span>Target</span><span>{{ '{:,}'.format(tgt_cases) }} {{ case_label }}</span></div>
+  <div class="stat-row"><span>Produced</span><span>{{ '{:,}'.format(cases) }} {{ case_label }}</span></div>
+  <div class="stat-row"><span>Progress</span><span class="{{ 'good' if pct >= 100 else '' }}">{{ '%.1f'|format(pct) }}%</span></div>
+</div>
+
+<table>
+  <tr>
+    <th>Date</th><th>Shift</th><th>Hour</th>
+    <th style="text-align:right;">Expected</th>
+    <th style="text-align:right;">Actual</th>
+    <th style="text-align:right;">Gap min</th>
+    <th>Downtime</th>
+  </tr>
+  {% for d in details %}
+  <tr>
+    <td style="font-size: 0.85rem;">{{ d.date }}</td>
+    <td>S{{ d.shift }}</td>
+    <td>{{ d.period }}</td>
+    <td style="text-align:right; color: var(--muted);">{{ '{:,.0f}'.format(d.expected) }}</td>
+    <td style="text-align:right;">{{ '{:,}'.format(d.actual) }}</td>
+    <td style="text-align:right;">{{ '%.2f'|format(d.gap) }}</td>
+    <td>{% for dt in d.downtime %}{{ dt.station }}: {{ dt.reason }} ({{ dt.minutes }}m){% if not loop.last %}, {% endif %}{% endfor %}{% if not d.downtime %}—{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<div style="margin-top:1.5rem;"><a href="/reconciliation" style="color: var(--accent);">&larr; Back to reconciliation</a></div>
+{% endblock %}

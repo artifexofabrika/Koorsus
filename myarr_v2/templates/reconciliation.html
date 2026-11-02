@@ -1,27 +1,54 @@
 {% extends "base.html" %}
-{% block title %}Myarra - Shift Reconciliation{% endblock %}
+{% block title %}Myarra - Job Reconciliation{% endblock %}
 {% block content %}
-<h1>Shift Reconciliation</h1>
-<div class="sub">Expected = line optimum &times; minutes available</div>
+<h1>Job Reconciliation</h1>
+<div class="sub">One row per work order. Click a job for hour-by-hour detail.</div>
+
+<div style="margin: 1rem 0; font-size: 0.85rem; line-height: 1.9;">
+  <strong>Line:</strong>
+  <a href="/reconciliation?days={{ days }}" style="color: {{ 'var(--accent)' if not current_line else 'var(--muted)' }};">All</a>
+  {% for l in lines %}
+    <span style="color: var(--border);">|</span>
+    <a href="/reconciliation?line={{ l.id }}&days={{ days }}"
+       style="color: {{ 'var(--accent)' if current_line == l.id else 'var(--muted)' }};">{{ l.id }} {{ l.name }}</a>
+  {% endfor %}
+  <span style="margin-left: 2rem;"><strong>Window:</strong>
+    {% for d in [1, 3, 7, 30] %}
+      <a href="/reconciliation?days={{ d }}{% if current_line %}&line={{ current_line }}{% endif %}"
+         style="color: {{ 'var(--accent)' if days == d else 'var(--muted)' }};">{{ d }}d</a>
+      {% if not loop.last %}<span style="color: var(--border);">|</span>{% endif %}
+    {% endfor %}
+  </span>
+</div>
+
 <table>
   <tr>
-    <th>Shift</th><th>Jobs</th><th>Filled</th><th>Expected</th><th>Gap min</th><th>Logged</th><th>Unaccounted</th><th>Performance</th><th></th>
+    <th>Date</th><th>Shift</th><th>Line</th><th>Job</th><th>SKU</th>
+    <th style="text-align:right;">{{ case_label|capitalize }}</th>
+    <th style="text-align:right;">Expected</th>
+    <th style="text-align:right;">Variance</th>
+    <th style="text-align:right;">Perf</th>
+    <th>Status</th>
   </tr>
   {% for r in rows %}
-  {% set band = 'pass' if r.unacc < 2 else ('warn' if r.unacc <= 5 else 'flag') %}
-  {% set band_text = 'good' if r.unacc < 2 else ('caution' if r.unacc <= 5 else 'bad') %}
-  {% set band_label = 'reconciled' if r.unacc < 2 else ('watch' if r.unacc <= 5 else 'FLAG') %}
-  <tr onclick="window.location='/shift/{{ r.raw_date }}/{{ r.raw_shift }}'" style="cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-    <td style="color: var(--accent); text-decoration: underline;">{{ r.shift }}</td>
-    <td>{{ r.jobs }}</td>
-    <td>{{ '{:,}'.format(r.filled) }}</td>
-    <td>{{ '{:,.0f}'.format(r.expected) }}</td>
-    <td>{{ '%.2f'|format(r.gap) }}</td>
-    <td>{{ '%.2f'|format(r.logged) }}</td>
-    <td class="{{ band_text }}">{{ '%.2f'|format(r.unacc) }}</td>
-    <td>{{ '%.1f'|format(r.perf) }}%</td>
-    <td><span class="pill {{ band }}">{{ band_label }}</span></td>
+  <tr onclick="window.location='/job/{{ r.job_number }}'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">{{ r.last_date }}</td>
+    <td style="font-size: 0.85rem;">{{ r.shift_display }}</td>
+    <td style="color: var(--accent);">{{ r.line_id }} &mdash; {{ r.line_name or '' }}</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">{{ r.job_number }}</td>
+    <td>{{ r.sku_description or '' }}</td>
+    <td style="text-align:right; font-weight: 600;">{{ '{:,}'.format(r.cases) }}</td>
+    <td style="text-align:right; color: var(--muted);">{{ '{:,}'.format(r.tgt_cases) }}</td>
+    <td style="text-align:right;" class="{{ 'good' if r.variance >= 0 else 'bad' }}">{{ '{:+,}'.format(r.variance) }}</td>
+    <td style="text-align:right;">{{ '%.1f'|format(r.perf) }}%</td>
+    <td><span class="pill {{ 'pass' if r.status == 'running' else ('warn' if r.status == 'paused' else 'flag') }}">{{ r.status|upper }}</span></td>
   </tr>
   {% endfor %}
 </table>
+
+{% if not rows %}
+<p style="color: var(--muted); margin-top: 1.5rem;">No jobs in the last {{ days }} days{% if current_line %} on Line {{ current_line }}{% endif %}.</p>
+{% endif %}
 {% endblock %}
