@@ -317,6 +317,31 @@ def _resume_prior(conn, line_id, cur, user, context='lunch'):
     return f"{context} ended. Line {line_id} IDLE."
 
 
+def _log_changeover_changes(conn, event_id, from_sku_id, to_sku_id):
+    """Compare BOMs and write a row to co_event_changes for each changed component."""
+    try:
+        if not (from_sku_id and to_sku_id):
+            return
+        def bom(sku_id):
+            return {r['component_type_id']: r['component_value']
+                    for r in conn.execute(
+                        "SELECT component_type_id, component_value FROM sku_bom WHERE sku_id=?",
+                        (sku_id,))}
+        fb = bom(from_sku_id)
+        tb = bom(to_sku_id)
+        now = datetime.now().isoformat()
+        for ct_id in set(fb.keys()) | set(tb.keys()):
+            fv = fb.get(ct_id)
+            tv = tb.get(ct_id)
+            if fv != tv:
+                conn.execute(
+                    "INSERT INTO co_event_changes (event_id, component_type_id, from_value, to_value, created_at) VALUES (?,?,?,?,?)",
+                    (event_id, ct_id, fv, tv, now))
+    except sqlite3.OperationalError:
+        # co_event_changes table missing; changeover still recorded, just no component detail
+        pass
+
+
 def _start_changeover_to(conn, s, from_job_id, to_job_id, user):
     fj = dict(conn.execute("SELECT * FROM jobs WHERE id=?", (from_job_id,)).fetchone())
     tj = dict(conn.execute("SELECT * FROM jobs WHERE id=?", (to_job_id,)).fetchone())
@@ -331,6 +356,8 @@ def _start_changeover_to(conn, s, from_job_id, to_job_id, user):
          fj['id'], tj['id'], 'telegram'))
     conn.commit()
     co_id = cur.lastrowid
+    _log_changeover_changes(conn, co_id, fj['sku_id'], tj['sku_id'])
+    conn.commit()
     _transition_line(conn, fj['line_id'], 'changeover', co_event_id=co_id,
                      user_id=user['id'] if user else None)
     s.set('active_changeover_id', co_id); s.set('active_job_id', None)
