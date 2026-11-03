@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Myarra - Changeover</title>
+  <link rel="icon" type="image/png" href="/demo/static/favicon.png">
+  <link rel="stylesheet" href="/demo/static/style.css">
+</head>
+<body><div style="position:sticky;top:0;z-index:9999;background:#c0a878;color:#1a1a1a;padding:0.55rem 1rem;font-family:Georgia,serif;font-size:0.85rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.3);">Static demo of Myarra &middot; <a href="/demo/" style="color:#1a1a1a;text-decoration:underline;">Tour</a> &middot; The live appliance records production in real time.</div>
+  <nav>
+    <a href="/demo/">Dashboard</a> | <a href="/demo/reconciliation">Reconciliation</a> | <a href="/demo/changeover">Changeover</a> | <a href="/demo/pdca">PDCA</a> | <a href="/demo/admin">Admin</a> | <a href="/demo/setup">Setup</a>
+  </nav>
+  <br>
+  
+<h1>Changeover Analysis</h1>
+<div class="sub">Line 5: 9-&gt;10 &middot; 2026-10-09T16:00:00</div>
+<div class="sub" style="margin-top:-1rem;color:var(--accent)">Job WO-2026-025 &rarr; Job WO-2026-026</div>
+
+<div class="box" style="max-width:900px;margin-bottom:2rem">
+  <h2>Aggregate Time</h2>
+  <div class="stat-row"><span>Standard</span><span>40 min</span></div>
+  <div class="stat-row"><span>Actual</span><span class="good">34 min</span></div>
+  <div class="stat-row"><span>Variance</span><span class="good">-6 min</span></div>
+</div>
+
+
+
+
+<table>
+  <tr><th>Step</th><th>Station</th><th>Standard</th><th>Actual</th><th>Variance</th></tr>
+  
+  <tr>
+    <td>Change jar</td>
+    <td>unscrambler</td>
+    <td>6m</td>
+    <td>7m</td>
+    <td class="bad">
+      +1m
+    </td>
+  </tr>
+  
+  <tr>
+    <td>Change cap</td>
+    <td>capper</td>
+    <td>4m</td>
+    <td>3m</td>
+    <td class="good">
+      -1m
+    </td>
+  </tr>
+  
+  <tr>
+    <td>Change brush</td>
+    <td>inserter</td>
+    <td>3m</td>
+    <td>3m</td>
+    <td class="bad">
+      +0m
+    </td>
+  </tr>
+  
+  <tr>
+    <td>Change basket</td>
+    <td>inserter</td>
+    <td>3m</td>
+    <td>2m</td>
+    <td class="good">
+      -1m
+    </td>
+  </tr>
+  
+  <tr>
+    <td>Change formulation</td>
+    <td>filler</td>
+    <td>10m</td>
+    <td>10m</td>
+    <td class="good">
+      -0m
+    </td>
+  </tr>
+  
+  <tr>
+    <td>Verify</td>
+    <td>line</td>
+    <td>6m</td>
+    <td>5m</td>
+    <td class="good">
+      -1m
+    </td>
+  </tr>
+  
+  <tr>
+    <td>Startup</td>
+    <td>line</td>
+    <td>8m</td>
+    <td>7m</td>
+    <td class="good">
+      -1m
+    </td>
+  </tr>
+  
+</table>
+
+
+<div style="margin-top:1.5rem;"><a href="/demo/changeover" style="color: var(--accent);">&larr; Back to changeover log</a></div>
+
+  <footer>Myarra is the measure. Most plants work hard. Few close the loop.</footer>
+<script>document.addEventListener("submit",function(e){e.preventDefault();alert("Static demo - forms are not functional. The live appliance accepts uploads and edits.");},true);</script></body>
+</html>

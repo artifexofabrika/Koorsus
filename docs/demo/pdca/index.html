@@ -1,0 +1,377 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Myarra - PDCA</title>
+  <link rel="icon" type="image/png" href="/demo/static/favicon.png">
+  <link rel="stylesheet" href="/demo/static/style.css">
+</head>
+<body><div style="position:sticky;top:0;z-index:9999;background:#c0a878;color:#1a1a1a;padding:0.55rem 1rem;font-family:Georgia,serif;font-size:0.85rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.3);">Static demo of Myarra &middot; <a href="/demo/" style="color:#1a1a1a;text-decoration:underline;">Tour</a> &middot; The live appliance records production in real time.</div>
+  <nav>
+    <a href="/demo/">Dashboard</a> | <a href="/demo/reconciliation">Reconciliation</a> | <a href="/demo/changeover">Changeover</a> | <a href="/demo/pdca">PDCA</a> | <a href="/demo/admin">Admin</a> | <a href="/demo/setup">Setup</a>
+  </nav>
+  <br>
+  
+<h1>Lean Planning Board</h1>
+<div class="sub">Active PDCA Experiments</div>
+
+
+  <h2 style="color:var(--accent);margin-top:2rem;margin-bottom:1rem;border-bottom:1px solid var(--border);padding-bottom:.5rem">Production</h2>
+  <div class="grid">
+  
+  <a href="/demo/pdca/1" style="text-decoration:none; color:inherit;">
+    <div class="box" style="transition: background 0.2s; height: 100%;" onmouseover="this.style.background='rgba(192, 168, 120, 0.1)'" onmouseout="this.style.background='var(--card-bg)'">
+      <h3 style="color:var(--text);margin:0 0 0.5rem;font-size:1.1rem">Pre-stage case parts on shadow board <span style="font-size:.7rem;color:var(--muted);font-weight:normal">(Line 1)</span></h3>
+      
+      
+      
+      <!-- Visual Chart -->
+      <div style="margin: 1.5rem 0; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+        <div style="display: flex; align-items: flex-end; gap: 3px; height: 60px;">
+          
+            
+            
+            <div style="flex: 1; height: 29.333333333333332%; background: var(--danger); border-radius: 2px 2px 0 0;" title="2026-10-08: 13.2m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 26.88888888888889%; background: var(--danger); border-radius: 2px 2px 0 0;" title="2026-10-09: 12.1m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 32.44444444444444%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-13: 14.6m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 28.22222222222222%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-14: 12.7m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 34.44444444444444%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-18: 15.5m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 22.444444444444443%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-19: 10.1m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 21.11111111111111%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-23: 9.5m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 30.44444444444444%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-24: 13.7m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 28.888888888888886%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-28: 13.0m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 32.666666666666664%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-29: 14.7m"></div>
+          
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--muted); margin-top: 0.3rem;">
+          <span>Start (Baseline)</span>
+          <span>Experiment Start</span>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem;font-size:.85rem">
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Standard</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">12m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Baseline Avg</span><div style="font-weight:bold;font-size:1.1rem;color:var(--danger)">13m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Target</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">8m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Current Avg</span>
+          
+            <div style="font-weight:bold;font-size:1.1rem" class="bad">13m</div>
+          
+        </div>
+      </div>
+    </div>
+  </a>
+  
+  <a href="/demo/pdca/5" style="text-decoration:none; color:inherit;">
+    <div class="box" style="transition: background 0.2s; height: 100%;" onmouseover="this.style.background='rgba(192, 168, 120, 0.1)'" onmouseout="this.style.background='var(--card-bg)'">
+      <h3 style="color:var(--text);margin:0 0 0.5rem;font-size:1.1rem">Reduce formulation flush time <span style="font-size:.7rem;color:var(--muted);font-weight:normal">(Line 2)</span></h3>
+      
+      
+      
+      <!-- Visual Chart -->
+      <div style="margin: 1.5rem 0; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+        <div style="display: flex; align-items: flex-end; gap: 3px; height: 60px;">
+          
+            
+            
+            <div style="flex: 1; height: 19.555555555555557%; background: var(--danger); border-radius: 2px 2px 0 0;" title="2026-10-08: 8.8m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 18.88888888888889%; background: var(--danger); border-radius: 2px 2px 0 0;" title="2026-10-09: 8.5m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 21.555555555555554%; background: var(--danger); border-radius: 2px 2px 0 0;" title="2026-10-09: 9.7m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 26.0%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-13: 11.7m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 25.333333333333336%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-14: 11.4m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 16.88888888888889%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-14: 7.6m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 26.666666666666668%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-18: 12.0m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 16.0%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-19: 7.2m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 27.333333333333336%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-19: 12.3m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 22.0%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-23: 9.9m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 18.666666666666668%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-24: 8.4m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 18.88888888888889%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-24: 8.5m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 15.555555555555555%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-28: 7.0m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 27.555555555555557%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-29: 12.4m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 30.66666666666667%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-29: 13.8m"></div>
+          
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--muted); margin-top: 0.3rem;">
+          <span>Start (Baseline)</span>
+          <span>Experiment Start</span>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem;font-size:.85rem">
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Standard</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">10m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Baseline Avg</span><div style="font-weight:bold;font-size:1.1rem;color:var(--danger)">9m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Target</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">7m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Current Avg</span>
+          
+            <div style="font-weight:bold;font-size:1.1rem" class="bad">10m</div>
+          
+        </div>
+      </div>
+    </div>
+  </a>
+  
+  <a href="/demo/pdca/2" style="text-decoration:none; color:inherit;">
+    <div class="box" style="transition: background 0.2s; height: 100%;" onmouseover="this.style.background='rgba(192, 168, 120, 0.1)'" onmouseout="this.style.background='var(--card-bg)'">
+      <h3 style="color:var(--text);margin:0 0 0.5rem;font-size:1.1rem">Pre-load label roll before end of run <span style="font-size:.7rem;color:var(--muted);font-weight:normal">(Line 3)</span></h3>
+      
+      
+      
+      <!-- Visual Chart -->
+      <div style="margin: 1.5rem 0; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+        <div style="display: flex; align-items: flex-end; gap: 3px; height: 60px;">
+          
+            
+            
+            <div style="flex: 1; height: 17.333333333333336%; background: var(--danger); border-radius: 2px 2px 0 0;" title="2026-10-07: 7.8m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 13.111111111111112%; background: var(--danger); border-radius: 2px 2px 0 0;" title="2026-10-08: 5.9m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 17.555555555555557%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-12: 7.9m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 16.444444444444446%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-13: 7.4m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 16.22222222222222%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-17: 7.3m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 13.333333333333334%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-18: 6.0m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 15.11111111111111%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-22: 6.8m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 9.555555555555555%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-23: 4.3m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 10.666666666666666%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-27: 4.8m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 15.11111111111111%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-28: 6.8m"></div>
+          
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--muted); margin-top: 0.3rem;">
+          <span>Start (Baseline)</span>
+          <span>Experiment Start</span>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem;font-size:.85rem">
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Standard</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">6m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Baseline Avg</span><div style="font-weight:bold;font-size:1.1rem;color:var(--danger)">7m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Target</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">4m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Current Avg</span>
+          
+            <div style="font-weight:bold;font-size:1.1rem" class="bad">6m</div>
+          
+        </div>
+      </div>
+    </div>
+  </a>
+  
+  <a href="/demo/pdca/3" style="text-decoration:none; color:inherit;">
+    <div class="box" style="transition: background 0.2s; height: 100%;" onmouseover="this.style.background='rgba(192, 168, 120, 0.1)'" onmouseout="this.style.background='var(--card-bg)'">
+      <h3 style="color:var(--text);margin:0 0 0.5rem;font-size:1.1rem">Reduce seamer parts retrieval time <span style="font-size:.7rem;color:var(--muted);font-weight:normal">(Line 3)</span></h3>
+      
+      
+      
+      <!-- Visual Chart -->
+      <div style="margin: 1.5rem 0; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+        <div style="display: flex; align-items: flex-end; gap: 3px; height: 60px;">
+          
+            
+            
+            <div style="flex: 1; height: 15.555555555555555%; background: var(--danger); border-radius: 2px 2px 0 0;" title="2026-10-07: 7.0m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 19.11111111111111%; background: var(--danger); border-radius: 2px 2px 0 0;" title="2026-10-08: 8.6m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 24.22222222222222%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-12: 10.9m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 23.111111111111114%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-13: 10.4m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 23.555555555555554%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-17: 10.6m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 24.22222222222222%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-18: 10.9m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 18.88888888888889%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-22: 8.5m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 17.77777777777778%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-23: 8.0m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 19.11111111111111%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-27: 8.6m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 13.999999999999998%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-28: 6.3m"></div>
+          
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--muted); margin-top: 0.3rem;">
+          <span>Start (Baseline)</span>
+          <span>Experiment Start</span>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem;font-size:.85rem">
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Standard</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">8m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Baseline Avg</span><div style="font-weight:bold;font-size:1.1rem;color:var(--danger)">8m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Target</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">5m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Current Avg</span>
+          
+            <div style="font-weight:bold;font-size:1.1rem" class="bad">9m</div>
+          
+        </div>
+      </div>
+    </div>
+  </a>
+  
+  <a href="/demo/pdca/4" style="text-decoration:none; color:inherit;">
+    <div class="box" style="transition: background 0.2s; height: 100%;" onmouseover="this.style.background='rgba(192, 168, 120, 0.1)'" onmouseout="this.style.background='var(--card-bg)'">
+      <h3 style="color:var(--text);margin:0 0 0.5rem;font-size:1.1rem">Standardize jar changeover <span style="font-size:.7rem;color:var(--muted);font-weight:normal">(Line 5)</span></h3>
+      
+      
+      
+      <!-- Visual Chart -->
+      <div style="margin: 1.5rem 0; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+        <div style="display: flex; align-items: flex-end; gap: 3px; height: 60px;">
+          
+            
+            
+            <div style="flex: 1; height: 15.333333333333336%; background: var(--danger); border-radius: 2px 2px 0 0;" title="2026-10-09: 6.9m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 12.88888888888889%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-14: 5.8m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 12.666666666666668%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-19: 5.7m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 10.666666666666666%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-24: 4.8m"></div>
+          
+            
+            
+            <div style="flex: 1; height: 15.11111111111111%; background: var(--success); border-radius: 2px 2px 0 0;" title="2026-10-29: 6.8m"></div>
+          
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--muted); margin-top: 0.3rem;">
+          <span>Start (Baseline)</span>
+          <span>Experiment Start</span>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem;font-size:.85rem">
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Standard</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">6m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Baseline Avg</span><div style="font-weight:bold;font-size:1.1rem;color:var(--danger)">7m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Target</span><div style="font-weight:bold;font-size:1.1rem;color:var(--accent)">4m</div></div>
+        <div style="text-align:center"><span style="display:block;color:var(--muted);font-size:.65rem;text-transform:uppercase;">Current Avg</span>
+          
+            <div style="font-weight:bold;font-size:1.1rem" class="bad">6m</div>
+          
+        </div>
+      </div>
+    </div>
+  </a>
+  
+  </div>
+
+
+  <footer>Myarra is the measure. Most plants work hard. Few close the loop.</footer>
+<script>document.addEventListener("submit",function(e){e.preventDefault();alert("Static demo - forms are not functional. The live appliance accepts uploads and edits.");},true);</script></body>
+</html>

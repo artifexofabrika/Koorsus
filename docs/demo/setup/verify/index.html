@@ -1,0 +1,351 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Myarra - Verify</title>
+  <link rel="icon" type="image/png" href="/demo/static/favicon.png">
+  <link rel="stylesheet" href="/demo/static/style.css">
+</head>
+<body><div style="position:sticky;top:0;z-index:9999;background:#c0a878;color:#1a1a1a;padding:0.55rem 1rem;font-family:Georgia,serif;font-size:0.85rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.3);">Static demo of Myarra &middot; <a href="/demo/" style="color:#1a1a1a;text-decoration:underline;">Tour</a> &middot; The live appliance records production in real time.</div>
+  <nav>
+    <a href="/demo/">Dashboard</a> | <a href="/demo/reconciliation">Reconciliation</a> | <a href="/demo/changeover">Changeover</a> | <a href="/demo/pdca">PDCA</a> | <a href="/demo/admin">Admin</a> | <a href="/demo/setup">Setup</a>
+  </nav>
+  <br>
+  
+<h1>Verify</h1>
+<div class="sub">What landed, and anything obviously broken</div>
+
+
+<div style="background: #2a3a2a; border-left: 3px solid #7ac97a; padding: 1rem 1.25rem; border-radius: 4px; margin: 1.5rem 0;">
+  <p style="color: #a0e0a0; font-size: 0.9rem; margin: 0;">No warnings. Every SKU has a rate and a BOM, every procedure has steps, every job points at a real SKU, every line has SKUs.</p>
+</div>
+
+
+<h2 style="margin-top: 2rem;">Checklist</h2>
+<table>
+  <tr><th style="width: 40%;">Table</th><th style="text-align: right;">Rows</th><th style="width: 12%; text-align: center;">Status</th></tr>
+  
+  <tr>
+    <td>Lines <span style="color: #666; font-size: 0.8rem; font-family: monospace;">(lines)</span></td>
+    <td style="text-align: right;">5</td>
+    <td style="text-align: center;">
+      <span style="color: #7ac97a;">&#10003;</span>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>SKUs <span style="color: #666; font-size: 0.8rem; font-family: monospace;">(skus)</span></td>
+    <td style="text-align: right;">10</td>
+    <td style="text-align: center;">
+      <span style="color: #7ac97a;">&#10003;</span>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>Component types <span style="color: #666; font-size: 0.8rem; font-family: monospace;">(component_types)</span></td>
+    <td style="text-align: right;">12</td>
+    <td style="text-align: center;">
+      <span style="color: #7ac97a;">&#10003;</span>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>SKU BOM <span style="color: #666; font-size: 0.8rem; font-family: monospace;">(sku_bom)</span></td>
+    <td style="text-align: right;">40</td>
+    <td style="text-align: center;">
+      <span style="color: #7ac97a;">&#10003;</span>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>Line-SKU rates <span style="color: #666; font-size: 0.8rem; font-family: monospace;">(line_sku_rates)</span></td>
+    <td style="text-align: right;">10</td>
+    <td style="text-align: center;">
+      <span style="color: #7ac97a;">&#10003;</span>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>Changeover procedures <span style="color: #666; font-size: 0.8rem; font-family: monospace;">(co_procedures_v2)</span></td>
+    <td style="text-align: right;">10</td>
+    <td style="text-align: center;">
+      <span style="color: #7ac97a;">&#10003;</span>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>Changeover steps <span style="color: #666; font-size: 0.8rem; font-family: monospace;">(co_steps_v2)</span></td>
+    <td style="text-align: right;">62</td>
+    <td style="text-align: center;">
+      <span style="color: #7ac97a;">&#10003;</span>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>Jobs <span style="color: #666; font-size: 0.8rem; font-family: monospace;">(jobs)</span></td>
+    <td style="text-align: right;">30</td>
+    <td style="text-align: center;">
+      <span style="color: #7ac97a;">&#10003;</span>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>Users <span style="color: #666; font-size: 0.8rem; font-family: monospace;">(users)</span></td>
+    <td style="text-align: right;">1</td>
+    <td style="text-align: center;">
+      <span style="color: #7ac97a;">&#10003;</span>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>Settings <span style="color: #666; font-size: 0.8rem; font-family: monospace;">(settings)</span></td>
+    <td style="text-align: right;">10</td>
+    <td style="text-align: center;">
+      <span style="color: #7ac97a;">&#10003;</span>
+    </td>
+  </tr>
+  
+</table>
+
+<h2 style="margin-top: 2.5rem;">Previews</h2>
+<div class="sub" style="text-align: left; margin-bottom: 1rem;">The three most recently inserted rows in each table.</div>
+
+
+
+<h3 style="margin-top: 2rem; color: #c0a878; font-size: 0.9rem;">Lines <span style="color: #666; font-family: monospace; font-size: 0.8rem;">lines, 5 rows</span></h3>
+<div style="overflow-x: auto;">
+<table style="font-size: 0.8rem;">
+  <tr>
+    <th>id</th><th>name</th><th>format_type</th>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">5</td><td style="font-family: monospace;">Jewelry Cleaner Jars</td><td style="font-family: monospace;">jewelry</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">4</td><td style="font-family: monospace;">Beverage Cans 16oz</td><td style="font-family: monospace;">beverage</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">3</td><td style="font-family: monospace;">Beverage Cans 12oz</td><td style="font-family: monospace;">beverage</td>
+  </tr>
+  
+</table>
+</div>
+
+
+
+<h3 style="margin-top: 2rem; color: #c0a878; font-size: 0.9rem;">SKUs <span style="color: #666; font-family: monospace; font-size: 0.8rem;">skus, 10 rows</span></h3>
+<div style="overflow-x: auto;">
+<table style="font-size: 0.8rem;">
+  <tr>
+    <th>id</th><th>part_number</th><th>description</th><th>case_pack</th><th>active</th>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">10</td><td style="font-family: monospace;">JWL-CLN-UN</td><td style="font-family: monospace;">Jewelry Cleaner Unscented 4oz</td><td style="font-family: monospace;">12</td><td style="font-family: monospace;">1</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">9</td><td style="font-family: monospace;">JWL-CLN-LV</td><td style="font-family: monospace;">Jewelry Cleaner Lavender 4oz</td><td style="font-family: monospace;">12</td><td style="font-family: monospace;">1</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">8</td><td style="font-family: monospace;">BEV-STO-16</td><td style="font-family: monospace;">Stout 16oz Can</td><td style="font-family: monospace;">24</td><td style="font-family: monospace;">1</td>
+  </tr>
+  
+</table>
+</div>
+
+
+
+<h3 style="margin-top: 2rem; color: #c0a878; font-size: 0.9rem;">Component types <span style="color: #666; font-family: monospace; font-size: 0.8rem;">component_types, 12 rows</span></h3>
+<div style="overflow-x: auto;">
+<table style="font-size: 0.8rem;">
+  <tr>
+    <th>id</th><th>name</th><th>is_serial</th><th>default_swap_min</th>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">12</td><td style="font-family: monospace;">basket</td><td style="font-family: monospace;">0</td><td style="font-family: monospace;">3.0</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">11</td><td style="font-family: monospace;">brush</td><td style="font-family: monospace;">0</td><td style="font-family: monospace;">3.0</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">10</td><td style="font-family: monospace;">cap</td><td style="font-family: monospace;">0</td><td style="font-family: monospace;">4.0</td>
+  </tr>
+  
+</table>
+</div>
+
+
+
+<h3 style="margin-top: 2rem; color: #c0a878; font-size: 0.9rem;">SKU BOM <span style="color: #666; font-family: monospace; font-size: 0.8rem;">sku_bom, 40 rows</span></h3>
+<div style="overflow-x: auto;">
+<table style="font-size: 0.8rem;">
+  <tr>
+    <th>sku_id</th><th>component_type_id</th><th>component_value</th>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">10</td><td style="font-family: monospace;">12</td><td style="font-family: monospace;">blk-bk</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">10</td><td style="font-family: monospace;">11</td><td style="font-family: monospace;">sm-br</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">10</td><td style="font-family: monospace;">10</td><td style="font-family: monospace;">blk-cap</td>
+  </tr>
+  
+</table>
+</div>
+
+
+
+<h3 style="margin-top: 2rem; color: #c0a878; font-size: 0.9rem;">Line-SKU rates <span style="color: #666; font-family: monospace; font-size: 0.8rem;">line_sku_rates, 10 rows</span></h3>
+<div style="overflow-x: auto;">
+<table style="font-size: 0.8rem;">
+  <tr>
+    <th>line_id</th><th>sku_id</th><th>ideal_rate</th>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">5</td><td style="font-family: monospace;">10</td><td style="font-family: monospace;">4000.0</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">5</td><td style="font-family: monospace;">9</td><td style="font-family: monospace;">4000.0</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">4</td><td style="font-family: monospace;">8</td><td style="font-family: monospace;">24000.0</td>
+  </tr>
+  
+</table>
+</div>
+
+
+
+<h3 style="margin-top: 2rem; color: #c0a878; font-size: 0.9rem;">Changeover procedures <span style="color: #666; font-family: monospace; font-size: 0.8rem;">co_procedures_v2, 10 rows</span></h3>
+<div style="overflow-x: auto;">
+<table style="font-size: 0.8rem;">
+  <tr>
+    <th>id</th><th>line_id</th><th>from_sku_id</th><th>to_sku_id</th><th>name</th><th>aggregate_standard_min</th>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">10</td><td style="font-family: monospace;">5</td><td style="font-family: monospace;">10</td><td style="font-family: monospace;">9</td><td style="font-family: monospace;">Line 5: 10-&gt;9</td><td style="font-family: monospace;">40.0</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">9</td><td style="font-family: monospace;">5</td><td style="font-family: monospace;">9</td><td style="font-family: monospace;">10</td><td style="font-family: monospace;">Line 5: 9-&gt;10</td><td style="font-family: monospace;">40.0</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">8</td><td style="font-family: monospace;">4</td><td style="font-family: monospace;">8</td><td style="font-family: monospace;">7</td><td style="font-family: monospace;">Line 4: 8-&gt;7</td><td style="font-family: monospace;">40.0</td>
+  </tr>
+  
+</table>
+</div>
+
+
+
+<h3 style="margin-top: 2rem; color: #c0a878; font-size: 0.9rem;">Changeover steps <span style="color: #666; font-family: monospace; font-size: 0.8rem;">co_steps_v2, 62 rows</span></h3>
+<div style="overflow-x: auto;">
+<table style="font-size: 0.8rem;">
+  <tr>
+    <th>id</th><th>procedure_id</th><th>seq</th><th>step_name</th><th>station</th><th>standard_min</th>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">62</td><td style="font-family: monospace;">10</td><td style="font-family: monospace;">7</td><td style="font-family: monospace;">Startup</td><td style="font-family: monospace;">line</td><td style="font-family: monospace;">8.0</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">61</td><td style="font-family: monospace;">10</td><td style="font-family: monospace;">6</td><td style="font-family: monospace;">Verify</td><td style="font-family: monospace;">line</td><td style="font-family: monospace;">6.0</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">60</td><td style="font-family: monospace;">10</td><td style="font-family: monospace;">5</td><td style="font-family: monospace;">Change formulation</td><td style="font-family: monospace;">filler</td><td style="font-family: monospace;">10.0</td>
+  </tr>
+  
+</table>
+</div>
+
+
+
+<h3 style="margin-top: 2rem; color: #c0a878; font-size: 0.9rem;">Jobs <span style="color: #666; font-family: monospace; font-size: 0.8rem;">jobs, 30 rows</span></h3>
+<div style="overflow-x: auto;">
+<table style="font-size: 0.8rem;">
+  <tr>
+    <th>id</th><th>job_number</th><th>customer_id</th><th>sku_id</th><th>line_id</th><th>target_quantity</th><th>scheduled_start</th><th>scheduled_end</th><th>actual_start</th><th>actual_end</th><th>status</th><th>handover_notes</th>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">30</td><td style="font-family: monospace;">WO-2026-030</td><td style="font-family: monospace;">None</td><td style="font-family: monospace;">10</td><td style="font-family: monospace;">5</td><td style="font-family: monospace;">54885</td><td style="font-family: monospace;">2026-11-01T07:00:00</td><td style="font-family: monospace;">2026-11-01T15:00:00</td><td style="font-family: monospace;">None</td><td style="font-family: monospace;">None</td><td style="font-family: monospace;">running</td><td style="font-family: monospace;">None</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">29</td><td style="font-family: monospace;">WO-2026-029</td><td style="font-family: monospace;">None</td><td style="font-family: monospace;">9</td><td style="font-family: monospace;">5</td><td style="font-family: monospace;">61125</td><td style="font-family: monospace;">2026-10-27T07:00:00</td><td style="font-family: monospace;">2026-10-27T23:00:00</td><td style="font-family: monospace;">None</td><td style="font-family: monospace;">2026-10-27T23:00:00</td><td style="font-family: monospace;">completed</td><td style="font-family: monospace;">None</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">28</td><td style="font-family: monospace;">WO-2026-028</td><td style="font-family: monospace;">None</td><td style="font-family: monospace;">10</td><td style="font-family: monospace;">5</td><td style="font-family: monospace;">59550</td><td style="font-family: monospace;">2026-10-22T07:00:00</td><td style="font-family: monospace;">2026-10-22T23:00:00</td><td style="font-family: monospace;">None</td><td style="font-family: monospace;">2026-10-22T23:00:00</td><td style="font-family: monospace;">completed</td><td style="font-family: monospace;">None</td>
+  </tr>
+  
+</table>
+</div>
+
+
+
+<h3 style="margin-top: 2rem; color: #c0a878; font-size: 0.9rem;">Users <span style="color: #666; font-family: monospace; font-size: 0.8rem;">users, 1 rows</span></h3>
+<div style="overflow-x: auto;">
+<table style="font-size: 0.8rem;">
+  <tr>
+    <th>id</th><th>name</th><th>role</th><th>line_id</th><th>telegram_id</th><th>active</th>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">1</td><td style="font-family: monospace;">Randy Wolf</td><td style="font-family: monospace;">Admin</td><td style="font-family: monospace;">1</td><td style="font-family: monospace;">7451582244</td><td style="font-family: monospace;">1</td>
+  </tr>
+  
+</table>
+</div>
+
+
+
+<h3 style="margin-top: 2rem; color: #c0a878; font-size: 0.9rem;">Settings <span style="color: #666; font-family: monospace; font-size: 0.8rem;">settings, 10 rows</span></h3>
+<div style="overflow-x: auto;">
+<table style="font-size: 0.8rem;">
+  <tr>
+    <th>key</th><th>value</th><th>description</th>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">lunch_minutes</td><td style="font-family: monospace;">30</td><td style="font-family: monospace;">Lunch duration per shift</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">shift_3_end</td><td style="font-family: monospace;">07:00</td><td style="font-family: monospace;">S3 end time (next day)</td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace;">shift_3_start</td><td style="font-family: monospace;">23:00</td><td style="font-family: monospace;">S3 start time</td>
+  </tr>
+  
+</table>
+</div>
+
+
+
+<p style="margin-top: 2rem;"><a href="/demo/setup" style="color: #c0a878;">&larr; Back to Setup</a></p>
+
+  <footer>Myarra is the measure. Most plants work hard. Few close the loop.</footer>
+<script>document.addEventListener("submit",function(e){e.preventDefault();alert("Static demo - forms are not functional. The live appliance accepts uploads and edits.");},true);</script></body>
+</html>

@@ -1,0 +1,472 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Myarra - Changeovers</title>
+  <link rel="icon" type="image/png" href="/demo/static/favicon.png">
+  <link rel="stylesheet" href="/demo/static/style.css">
+</head>
+<body><div style="position:sticky;top:0;z-index:9999;background:#c0a878;color:#1a1a1a;padding:0.55rem 1rem;font-family:Georgia,serif;font-size:0.85rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.3);">Static demo of Myarra &middot; <a href="/demo/" style="color:#1a1a1a;text-decoration:underline;">Tour</a> &middot; The live appliance records production in real time.</div>
+  <nav>
+    <a href="/demo/">Dashboard</a> | <a href="/demo/reconciliation">Reconciliation</a> | <a href="/demo/changeover">Changeover</a> | <a href="/demo/pdca">PDCA</a> | <a href="/demo/admin">Admin</a> | <a href="/demo/setup">Setup</a>
+  </nav>
+  <br>
+  
+<h1>Changeover Log</h1>
+<div class="sub">One row per event. Click a row to see step detail. Filter by line or by the component that changed.</div>
+
+<div style="margin: 1rem 0; font-size: 0.85rem; line-height: 1.9;">
+  <strong>Line:</strong>
+  <a href="/demo/changeover?days=30"
+     style="color: var(--accent);">All</a>
+  
+    <span style="color: var(--border);">|</span>
+    <a href="/demo/changeover?line=1&days=30"
+       style="color: var(--muted);">1 Cosmetics Compacts</a>
+  
+    <span style="color: var(--border);">|</span>
+    <a href="/demo/changeover?line=2&days=30"
+       style="color: var(--muted);">2 Cosmetics Foundation</a>
+  
+    <span style="color: var(--border);">|</span>
+    <a href="/demo/changeover?line=3&days=30"
+       style="color: var(--muted);">3 Beverage Cans 12oz</a>
+  
+    <span style="color: var(--border);">|</span>
+    <a href="/demo/changeover?line=4&days=30"
+       style="color: var(--muted);">4 Beverage Cans 16oz</a>
+  
+    <span style="color: var(--border);">|</span>
+    <a href="/demo/changeover?line=5&days=30"
+       style="color: var(--muted);">5 Jewelry Cleaner Jars</a>
+  
+</div>
+
+<div style="margin: 0 0 1rem 0; font-size: 0.85rem; line-height: 1.9;">
+  <strong>Component changed:</strong>
+  <a href="/demo/changeover?days=30"
+     style="color: var(--accent);">All</a>
+  
+    <span style="color: var(--border);">|</span>
+    <a href="/demo/changeover?component=1&days=30"
+       style="color: var(--muted);">case</a>
+  
+    <span style="color: var(--border);">|</span>
+    <a href="/demo/changeover?component=2&days=30"
+       style="color: var(--muted);">formulation</a>
+  
+    <span style="color: var(--border);">|</span>
+    <a href="/demo/changeover?component=7&days=30"
+       style="color: var(--muted);">label</a>
+  
+  <span style="margin-left: 2rem;"><strong>Window:</strong>
+    
+      <a href="/demo/changeover?days=7"
+         style="color: var(--muted);">7d</a>
+      <span style="color: var(--border);">|</span>
+    
+      <a href="/demo/changeover?days=14"
+         style="color: var(--muted);">14d</a>
+      <span style="color: var(--border);">|</span>
+    
+      <a href="/demo/changeover?days=30"
+         style="color: var(--accent);">30d</a>
+      <span style="color: var(--border);">|</span>
+    
+      <a href="/demo/changeover?days=90"
+         style="color: var(--muted);">90d</a>
+      
+    
+  </span>
+</div>
+
+<table>
+  <tr>
+    <th>Date</th><th>Line</th><th>From</th><th>To</th><th>Components Changed</th>
+    <th style="text-align:right;">Std</th>
+    <th style="text-align:right;">Actual</th>
+    <th style="text-align:right;">Var</th>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/10'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-29 16:00</td>
+    <td style="color: var(--accent);">2 &mdash; Cosmetics Foundation</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-011</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-012</td>
+    <td style="font-size: 0.85rem;">case, formulation</td>
+    <td style="text-align:right; color: var(--muted);">53</td>
+    <td style="text-align:right;">45</td>
+    <td style="text-align:right;" class="good">
+      -8
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/25'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-29 16:00</td>
+    <td style="color: var(--accent);">5 &mdash; Jewelry Cleaner Jars</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-029</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-030</td>
+    <td style="font-size: 0.85rem;">&amp;mdash;</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">37</td>
+    <td style="text-align:right;" class="good">
+      -3
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/5'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-28 16:00</td>
+    <td style="color: var(--accent);">1 &mdash; Cosmetics Compacts</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-005</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-006</td>
+    <td style="font-size: 0.85rem;">case, formulation</td>
+    <td style="text-align:right; color: var(--muted);">53</td>
+    <td style="text-align:right;">52</td>
+    <td style="text-align:right;" class="good">
+      -1
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/20'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-28 16:00</td>
+    <td style="color: var(--accent);">4 &mdash; Beverage Cans 16oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-023</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-024</td>
+    <td style="font-size: 0.85rem;">label</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">36</td>
+    <td style="text-align:right;" class="good">
+      -4
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/15'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-27 16:00</td>
+    <td style="color: var(--accent);">3 &mdash; Beverage Cans 12oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-017</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-018</td>
+    <td style="font-size: 0.85rem;">label</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">38</td>
+    <td style="text-align:right;" class="good">
+      -2
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/9'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-24 16:00</td>
+    <td style="color: var(--accent);">2 &mdash; Cosmetics Foundation</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-010</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-011</td>
+    <td style="font-size: 0.85rem;">case, formulation</td>
+    <td style="text-align:right; color: var(--muted);">53</td>
+    <td style="text-align:right;">54</td>
+    <td style="text-align:right;" class="bad">
+      +1
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/24'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-24 16:00</td>
+    <td style="color: var(--accent);">5 &mdash; Jewelry Cleaner Jars</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-028</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-029</td>
+    <td style="font-size: 0.85rem;">&amp;mdash;</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">34</td>
+    <td style="text-align:right;" class="good">
+      -6
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/4'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-23 16:00</td>
+    <td style="color: var(--accent);">1 &mdash; Cosmetics Compacts</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-004</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-005</td>
+    <td style="font-size: 0.85rem;">case, formulation</td>
+    <td style="text-align:right; color: var(--muted);">53</td>
+    <td style="text-align:right;">52</td>
+    <td style="text-align:right;" class="good">
+      -1
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/19'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-23 16:00</td>
+    <td style="color: var(--accent);">4 &mdash; Beverage Cans 16oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-022</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-023</td>
+    <td style="font-size: 0.85rem;">label</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">37</td>
+    <td style="text-align:right;" class="good">
+      -3
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/14'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-22 16:00</td>
+    <td style="color: var(--accent);">3 &mdash; Beverage Cans 12oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-016</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-017</td>
+    <td style="font-size: 0.85rem;">label</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">45</td>
+    <td style="text-align:right;" class="bad">
+      +5
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/8'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-19 16:00</td>
+    <td style="color: var(--accent);">2 &mdash; Cosmetics Foundation</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-009</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-010</td>
+    <td style="font-size: 0.85rem;">case, formulation</td>
+    <td style="text-align:right; color: var(--muted);">53</td>
+    <td style="text-align:right;">50</td>
+    <td style="text-align:right;" class="good">
+      -3
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/23'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-19 16:00</td>
+    <td style="color: var(--accent);">5 &mdash; Jewelry Cleaner Jars</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-027</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-028</td>
+    <td style="font-size: 0.85rem;">&amp;mdash;</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">51</td>
+    <td style="text-align:right;" class="bad">
+      +11
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/3'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-18 16:00</td>
+    <td style="color: var(--accent);">1 &mdash; Cosmetics Compacts</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-003</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-004</td>
+    <td style="font-size: 0.85rem;">case, formulation</td>
+    <td style="text-align:right; color: var(--muted);">53</td>
+    <td style="text-align:right;">52</td>
+    <td style="text-align:right;" class="good">
+      -1
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/18'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-18 16:00</td>
+    <td style="color: var(--accent);">4 &mdash; Beverage Cans 16oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-021</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-022</td>
+    <td style="font-size: 0.85rem;">label</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">47</td>
+    <td style="text-align:right;" class="bad">
+      +7
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/13'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-17 16:00</td>
+    <td style="color: var(--accent);">3 &mdash; Beverage Cans 12oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-015</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-016</td>
+    <td style="font-size: 0.85rem;">label</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">48</td>
+    <td style="text-align:right;" class="bad">
+      +8
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/7'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-14 16:00</td>
+    <td style="color: var(--accent);">2 &mdash; Cosmetics Foundation</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-008</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-009</td>
+    <td style="font-size: 0.85rem;">case, formulation</td>
+    <td style="text-align:right; color: var(--muted);">53</td>
+    <td style="text-align:right;">47</td>
+    <td style="text-align:right;" class="good">
+      -6
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/22'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-14 16:00</td>
+    <td style="color: var(--accent);">5 &mdash; Jewelry Cleaner Jars</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-026</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-027</td>
+    <td style="font-size: 0.85rem;">&amp;mdash;</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">47</td>
+    <td style="text-align:right;" class="bad">
+      +7
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/2'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-13 16:00</td>
+    <td style="color: var(--accent);">1 &mdash; Cosmetics Compacts</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-002</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-003</td>
+    <td style="font-size: 0.85rem;">case, formulation</td>
+    <td style="text-align:right; color: var(--muted);">53</td>
+    <td style="text-align:right;">62</td>
+    <td style="text-align:right;" class="bad">
+      +9
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/17'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-13 16:00</td>
+    <td style="color: var(--accent);">4 &mdash; Beverage Cans 16oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-020</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-021</td>
+    <td style="font-size: 0.85rem;">label</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">44</td>
+    <td style="text-align:right;" class="bad">
+      +4
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/12'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-12 16:00</td>
+    <td style="color: var(--accent);">3 &mdash; Beverage Cans 12oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-014</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-015</td>
+    <td style="font-size: 0.85rem;">label</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">51</td>
+    <td style="text-align:right;" class="bad">
+      +11
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/6'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-09 16:00</td>
+    <td style="color: var(--accent);">2 &mdash; Cosmetics Foundation</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-007</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-008</td>
+    <td style="font-size: 0.85rem;">case, formulation</td>
+    <td style="text-align:right; color: var(--muted);">53</td>
+    <td style="text-align:right;">56</td>
+    <td style="text-align:right;" class="bad">
+      +3
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/21'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-09 16:00</td>
+    <td style="color: var(--accent);">5 &mdash; Jewelry Cleaner Jars</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-025</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-026</td>
+    <td style="font-size: 0.85rem;">&amp;mdash;</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">34</td>
+    <td style="text-align:right;" class="good">
+      -6
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/1'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-08 16:00</td>
+    <td style="color: var(--accent);">1 &mdash; Cosmetics Compacts</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-001</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-002</td>
+    <td style="font-size: 0.85rem;">case, formulation</td>
+    <td style="text-align:right; color: var(--muted);">53</td>
+    <td style="text-align:right;">54</td>
+    <td style="text-align:right;" class="bad">
+      +1
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/16'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-08 16:00</td>
+    <td style="color: var(--accent);">4 &mdash; Beverage Cans 16oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-019</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-020</td>
+    <td style="font-size: 0.85rem;">label</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">35</td>
+    <td style="text-align:right;" class="good">
+      -5
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/changeover/11'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-07 16:00</td>
+    <td style="color: var(--accent);">3 &mdash; Beverage Cans 12oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-013</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-014</td>
+    <td style="font-size: 0.85rem;">label</td>
+    <td style="text-align:right; color: var(--muted);">40</td>
+    <td style="text-align:right;">43</td>
+    <td style="text-align:right;" class="bad">
+      +3
+    </td>
+  </tr>
+  
+</table>
+
+
+
+  <footer>Myarra is the measure. Most plants work hard. Few close the loop.</footer>
+<script>document.addEventListener("submit",function(e){e.preventDefault();alert("Static demo - forms are not functional. The live appliance accepts uploads and edits.");},true);</script></body>
+</html>

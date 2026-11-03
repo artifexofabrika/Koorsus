@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Myarra - Setup</title>
+  <link rel="icon" type="image/png" href="/demo/static/favicon.png">
+  <link rel="stylesheet" href="/demo/static/style.css">
+</head>
+<body><div style="position:sticky;top:0;z-index:9999;background:#c0a878;color:#1a1a1a;padding:0.55rem 1rem;font-family:Georgia,serif;font-size:0.85rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.3);">Static demo of Myarra &middot; <a href="/demo/" style="color:#1a1a1a;text-decoration:underline;">Tour</a> &middot; The live appliance records production in real time.</div>
+  <nav>
+    <a href="/demo/">Dashboard</a> | <a href="/demo/reconciliation">Reconciliation</a> | <a href="/demo/changeover">Changeover</a> | <a href="/demo/pdca">PDCA</a> | <a href="/demo/admin">Admin</a> | <a href="/demo/setup">Setup</a>
+  </nav>
+  <br>
+  
+<h1>Setup</h1>
+<p style="margin-top: 0.75rem;"><a href="/demo/setup/verify" style="color: #c0a878;">Verify loaded data &rarr;</a></p>
+
+<div class="sub">Configure the appliance for a new installation</div>
+
+<div style="background: #2c2c2c; padding: 1.25rem 1.5rem; border-radius: 6px; margin: 1.5rem 0; border-left: 3px solid #c0a878;">
+  <h2 style="color: #c0a878; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 0.75rem 0;">Workflow</h2>
+  <ol style="color: #b0b0b0; font-size: 0.9rem; line-height: 1.9; margin: 0; padding-left: 1.4rem;">
+    <li>Download the templates below.</li>
+    <li>Fill them in with your plant's data (Excel, Numbers, Google Sheets — anything that saves as CSV).</li>
+    <li>Upload them back in the Upload section.</li>
+    <li>All templates are processed in dependency order, regardless of the order you select them.</li>
+    <li>Read the Upload Report to confirm what landed and fix any rows that failed.</li>
+  </ol>
+</div>
+
+<h2>Templates</h2>
+<div class="sub" style="text-align: left; margin-bottom: 1rem;">Each template contains the column headers and two example rows showing the format. Column order in your upload does not matter, but the column names must match exactly.</div>
+
+<table>
+  <tr>
+    <th style="width: 22%;">File</th>
+    <th>What it contains</th>
+    <th style="width: 14%; text-align: right;"></th>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace; font-size: 0.85rem;">lines.csv</td>
+    <td style="font-size: 0.85rem;">Lines in the plant</td>
+    <td style="text-align: right;">
+      <a href="/demo/setup/download/lines.csv" style="color: #c0a878; text-decoration: none; font-size: 0.85rem;">Download &rarr;</a>
+    </td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace; font-size: 0.85rem;">skus.csv</td>
+    <td style="font-size: 0.85rem;">SKUs and part numbers. case_pack is units per case.</td>
+    <td style="text-align: right;">
+      <a href="/demo/setup/download/skus.csv" style="color: #c0a878; text-decoration: none; font-size: 0.85rem;">Download &rarr;</a>
+    </td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace; font-size: 0.85rem;">component_types.csv</td>
+    <td style="font-size: 0.85rem;">BOM component types. is_serial=1 means the component always changes (e.g. formulation).</td>
+    <td style="text-align: right;">
+      <a href="/demo/setup/download/component_types.csv" style="color: #c0a878; text-decoration: none; font-size: 0.85rem;">Download &rarr;</a>
+    </td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace; font-size: 0.85rem;">sku_bom.csv</td>
+    <td style="font-size: 0.85rem;">Bill of materials per SKU. One row per component per SKU.</td>
+    <td style="text-align: right;">
+      <a href="/demo/setup/download/sku_bom.csv" style="color: #c0a878; text-decoration: none; font-size: 0.85rem;">Download &rarr;</a>
+    </td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace; font-size: 0.85rem;">line_sku_rates.csv</td>
+    <td style="font-size: 0.85rem;">Ideal production rate per line per SKU, in units per HOUR.</td>
+    <td style="text-align: right;">
+      <a href="/demo/setup/download/line_sku_rates.csv" style="color: #c0a878; text-decoration: none; font-size: 0.85rem;">Download &rarr;</a>
+    </td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace; font-size: 0.85rem;">co_procedures.csv</td>
+    <td style="font-size: 0.85rem;">Changeover procedures: line, from-SKU, to-SKU, standard minutes.</td>
+    <td style="text-align: right;">
+      <a href="/demo/setup/download/co_procedures.csv" style="color: #c0a878; text-decoration: none; font-size: 0.85rem;">Download &rarr;</a>
+    </td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace; font-size: 0.85rem;">co_steps.csv</td>
+    <td style="font-size: 0.85rem;">Steps per changeover procedure. Identified by line + from + to.</td>
+    <td style="text-align: right;">
+      <a href="/demo/setup/download/co_steps.csv" style="color: #c0a878; text-decoration: none; font-size: 0.85rem;">Download &rarr;</a>
+    </td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace; font-size: 0.85rem;">jobs.csv</td>
+    <td style="font-size: 0.85rem;">Weekly schedule. Uploaded again each week; existing job numbers are updated.</td>
+    <td style="text-align: right;">
+      <a href="/demo/setup/download/jobs.csv" style="color: #c0a878; text-decoration: none; font-size: 0.85rem;">Download &rarr;</a>
+    </td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace; font-size: 0.85rem;">users.csv</td>
+    <td style="font-size: 0.85rem;">Line leads and managers. telegram_id maps to a Telegram account.</td>
+    <td style="text-align: right;">
+      <a href="/demo/setup/download/users.csv" style="color: #c0a878; text-decoration: none; font-size: 0.85rem;">Download &rarr;</a>
+    </td>
+  </tr>
+  
+  <tr>
+    <td style="font-family: monospace; font-size: 0.85rem;">settings.csv</td>
+    <td style="font-size: 0.85rem;">Configuration: unit label, shift times, lunch duration.</td>
+    <td style="text-align: right;">
+      <a href="/demo/setup/download/settings.csv" style="color: #c0a878; text-decoration: none; font-size: 0.85rem;">Download &rarr;</a>
+    </td>
+  </tr>
+  
+</table>
+
+<h2 style="margin-top: 2.5rem;">Current database</h2>
+<div class="sub" style="text-align: left; margin-bottom: 1rem;">What is loaded right now.</div>
+<table>
+  <tr><th>Table</th><th style="text-align: right;">Rows</th></tr>
+  <tr><td>Lines</td><td style="text-align: right;">5</td></tr>
+  <tr><td>SKUs</td><td style="text-align: right;">10</td></tr>
+  <tr><td>Jobs</td><td style="text-align: right;">30</td></tr>
+</table>
+
+<h2 style="margin-top: 2.5rem;">Upload</h2>
+
+
+<div class="sub" style="text-align: left; margin-bottom: 1rem;">
+  Upload any combination of templates. Files are processed in dependency order: settings, component types, lines, SKUs, BOMs, rates, procedures, steps, jobs, users.
+</div>
+
+<form method="POST" enctype="multipart/form-data" style="max-width: 900px; text-align: left;">
+  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem 2rem; margin-bottom: 1.5rem;">
+    
+    <div>
+      <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">lines.csv</label>
+      <input type="file" name="lines" accept=".csv" style="color: #b0b0b0; font-size: 0.85rem; width: 100%;">
+    </div>
+    
+    <div>
+      <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">skus.csv</label>
+      <input type="file" name="skus" accept=".csv" style="color: #b0b0b0; font-size: 0.85rem; width: 100%;">
+    </div>
+    
+    <div>
+      <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">component_types.csv</label>
+      <input type="file" name="component_types" accept=".csv" style="color: #b0b0b0; font-size: 0.85rem; width: 100%;">
+    </div>
+    
+    <div>
+      <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">sku_bom.csv</label>
+      <input type="file" name="sku_bom" accept=".csv" style="color: #b0b0b0; font-size: 0.85rem; width: 100%;">
+    </div>
+    
+    <div>
+      <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">line_sku_rates.csv</label>
+      <input type="file" name="line_sku_rates" accept=".csv" style="color: #b0b0b0; font-size: 0.85rem; width: 100%;">
+    </div>
+    
+    <div>
+      <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">co_procedures.csv</label>
+      <input type="file" name="co_procedures" accept=".csv" style="color: #b0b0b0; font-size: 0.85rem; width: 100%;">
+    </div>
+    
+    <div>
+      <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">co_steps.csv</label>
+      <input type="file" name="co_steps" accept=".csv" style="color: #b0b0b0; font-size: 0.85rem; width: 100%;">
+    </div>
+    
+    <div>
+      <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">jobs.csv</label>
+      <input type="file" name="jobs" accept=".csv" style="color: #b0b0b0; font-size: 0.85rem; width: 100%;">
+    </div>
+    
+    <div>
+      <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">users.csv</label>
+      <input type="file" name="users" accept=".csv" style="color: #b0b0b0; font-size: 0.85rem; width: 100%;">
+    </div>
+    
+    <div>
+      <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">settings.csv</label>
+      <input type="file" name="settings" accept=".csv" style="color: #b0b0b0; font-size: 0.85rem; width: 100%;">
+    </div>
+    
+  </div>
+  <button type="submit" style="background: #c0a878; color: #1a1a1a; border: none; padding: 0.7rem 2rem; font-weight: bold; border-radius: 4px; font-size: 0.9rem; cursor: pointer;">Upload</button>
+    <div style="margin-top: 1.5rem; padding: 1rem; background: #2c2c2c; border-left: 3px solid #c97a7a; border-radius: 4px;">
+      <label style="display: flex; align-items: flex-start; gap: 0.5rem; color: #b0b0b0; font-size: 0.85rem; cursor: pointer;">
+        <input type="checkbox" name="full_replace" style="margin-top: 0.25rem;">
+        <span><strong style="color: #c97a7a;">Full replace for changeover steps.</strong> When checked, uploading co_steps.csv replaces <em>all</em> steps for each procedure in the CSV. Leave unchecked to add or update only the (procedure, seq) rows in the file. Unchecked is safer: steps not in the CSV are kept.</span>
+      </label>
+    </div>
+  </form>
+
+
+
+  <footer>Myarra is the measure. Most plants work hard. Few close the loop.</footer>
+<script>document.addEventListener("submit",function(e){e.preventDefault();alert("Static demo - forms are not functional. The live appliance accepts uploads and edits.");},true);</script></body>
+</html>

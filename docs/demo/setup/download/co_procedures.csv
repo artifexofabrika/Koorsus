@@ -1,0 +1,3 @@
+line_id,from_sku_part_number,to_sku_part_number,name,aggregate_standard_min
+1,COS-CMP-RS,COS-CMP-SD,Cosmetics Rose to Sand,40
+1,COS-CMP-SD,COS-CMP-RS,Cosmetics Sand to Rose,40

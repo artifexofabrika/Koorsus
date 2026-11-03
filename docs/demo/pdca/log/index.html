@@ -1,0 +1,177 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Myarra - PDCA Register</title>
+  <link rel="icon" type="image/png" href="/demo/static/favicon.png">
+  <link rel="stylesheet" href="/demo/static/style.css">
+</head>
+<body><div style="position:sticky;top:0;z-index:9999;background:#c0a878;color:#1a1a1a;padding:0.55rem 1rem;font-family:Georgia,serif;font-size:0.85rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.3);">Static demo of Myarra &middot; <a href="/demo/" style="color:#1a1a1a;text-decoration:underline;">Tour</a> &middot; The live appliance records production in real time.</div>
+  <nav>
+    <a href="/demo/">Dashboard</a> | <a href="/demo/reconciliation">Reconciliation</a> | <a href="/demo/changeover">Changeover</a> | <a href="/demo/pdca">PDCA</a> | <a href="/demo/admin">Admin</a> | <a href="/demo/setup">Setup</a>
+  </nav>
+  <br>
+  
+<h1>PDCA Register</h1>
+<div class="sub">Active first, then sorted by priority score. Click a PDCA ID for the A3.</div>
+
+<div style="margin-bottom: 1rem; font-size: 0.85rem;">
+  <a href="/demo/pdca" style="color: var(--accent);">← Back to PDCA dashboard</a>
+</div>
+
+<table>
+  <tr>
+    <th>PDCA ID</th>
+    <th>Title</th>
+    <th>Dept</th>
+    <th>Line</th>
+    <th>Owner</th>
+    <th>Start</th>
+    <th>Target</th>
+    <th>Status</th>
+    <th>Reached</th>
+    <th style="text-align: right;">Priority</th>
+  </tr>
+  
+  <tr onclick="window.location='/pdca/1'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="color: var(--accent); text-decoration: underline; font-family: monospace; font-size: 0.8rem;">
+      A3-1
+    </td>
+    <td>Pre-stage case parts on shadow board</td>
+    <td>Production</td>
+    <td>1</td>
+    <td>-</td>
+    <td style="font-size: 0.85rem;">2026-10-10</td>
+    <td style="font-size: 0.85rem;">-</td>
+    <td>
+      <span class="pill warn">
+        ACTIVE
+      </span>
+    </td>
+    <td>
+      
+        <span class="caution">No</span>
+      
+    </td>
+    <td style="text-align: right; font-weight: 600; color: var(--accent);">
+      0
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/pdca/2'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="color: var(--accent); text-decoration: underline; font-family: monospace; font-size: 0.8rem;">
+      A3-2
+    </td>
+    <td>Pre-load label roll before end of run</td>
+    <td>Production</td>
+    <td>3</td>
+    <td>-</td>
+    <td style="font-size: 0.85rem;">2026-10-10</td>
+    <td style="font-size: 0.85rem;">-</td>
+    <td>
+      <span class="pill warn">
+        ACTIVE
+      </span>
+    </td>
+    <td>
+      
+        <span class="caution">No</span>
+      
+    </td>
+    <td style="text-align: right; font-weight: 600; color: var(--accent);">
+      0
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/pdca/3'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="color: var(--accent); text-decoration: underline; font-family: monospace; font-size: 0.8rem;">
+      A3-3
+    </td>
+    <td>Reduce seamer parts retrieval time</td>
+    <td>Production</td>
+    <td>3</td>
+    <td>-</td>
+    <td style="font-size: 0.85rem;">2026-10-10</td>
+    <td style="font-size: 0.85rem;">-</td>
+    <td>
+      <span class="pill warn">
+        ACTIVE
+      </span>
+    </td>
+    <td>
+      
+        <span class="caution">No</span>
+      
+    </td>
+    <td style="text-align: right; font-weight: 600; color: var(--accent);">
+      0
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/pdca/4'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="color: var(--accent); text-decoration: underline; font-family: monospace; font-size: 0.8rem;">
+      A3-4
+    </td>
+    <td>Standardize jar changeover</td>
+    <td>Production</td>
+    <td>5</td>
+    <td>-</td>
+    <td style="font-size: 0.85rem;">2026-10-10</td>
+    <td style="font-size: 0.85rem;">-</td>
+    <td>
+      <span class="pill warn">
+        ACTIVE
+      </span>
+    </td>
+    <td>
+      
+        <span class="caution">No</span>
+      
+    </td>
+    <td style="text-align: right; font-weight: 600; color: var(--accent);">
+      0
+    </td>
+  </tr>
+  
+  <tr onclick="window.location='/pdca/5'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="color: var(--accent); text-decoration: underline; font-family: monospace; font-size: 0.8rem;">
+      A3-5
+    </td>
+    <td>Reduce formulation flush time</td>
+    <td>Production</td>
+    <td>2</td>
+    <td>-</td>
+    <td style="font-size: 0.85rem;">2026-10-10</td>
+    <td style="font-size: 0.85rem;">-</td>
+    <td>
+      <span class="pill warn">
+        ACTIVE
+      </span>
+    </td>
+    <td>
+      
+        <span class="caution">No</span>
+      
+    </td>
+    <td style="text-align: right; font-weight: 600; color: var(--accent);">
+      0
+    </td>
+  </tr>
+  
+</table>
+
+
+
+  <footer>Myarra is the measure. Most plants work hard. Few close the loop.</footer>
+<script>document.addEventListener("submit",function(e){e.preventDefault();alert("Static demo - forms are not functional. The live appliance accepts uploads and edits.");},true);</script></body>
+</html>

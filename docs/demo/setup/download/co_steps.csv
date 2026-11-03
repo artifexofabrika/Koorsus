@@ -1,0 +1,3 @@
+line_id,from_sku_part_number,to_sku_part_number,seq,step_name,station,standard_min
+1,COS-CMP-RS,COS-CMP-SD,1,Change case,case_feeder,12
+1,COS-CMP-RS,COS-CMP-SD,2,Change formulation,filler,10

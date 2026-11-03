@@ -1,0 +1,529 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Myarra - Job Reconciliation</title>
+  <link rel="icon" type="image/png" href="/demo/static/favicon.png">
+  <link rel="stylesheet" href="/demo/static/style.css">
+</head>
+<body><div style="position:sticky;top:0;z-index:9999;background:#c0a878;color:#1a1a1a;padding:0.55rem 1rem;font-family:Georgia,serif;font-size:0.85rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.3);">Static demo of Myarra &middot; <a href="/demo/" style="color:#1a1a1a;text-decoration:underline;">Tour</a> &middot; The live appliance records production in real time.</div>
+  <nav>
+    <a href="/demo/">Dashboard</a> | <a href="/demo/reconciliation">Reconciliation</a> | <a href="/demo/changeover">Changeover</a> | <a href="/demo/pdca">PDCA</a> | <a href="/demo/admin">Admin</a> | <a href="/demo/setup">Setup</a>
+  </nav>
+  <br>
+  
+<h1>Job Reconciliation</h1>
+<div class="sub">One row per work order. Click a job for hour-by-hour detail.</div>
+
+<div style="margin: 1rem 0; font-size: 0.85rem; line-height: 1.9;">
+  <strong>Line:</strong>
+  <a href="/demo/reconciliation?days=30" style="color: var(--accent);">All</a>
+  
+    <span style="color: var(--border);">|</span>
+    <a href="/demo/reconciliation?line=1&days=30"
+       style="color: var(--muted);">1 Cosmetics Compacts</a>
+  
+    <span style="color: var(--border);">|</span>
+    <a href="/demo/reconciliation?line=2&days=30"
+       style="color: var(--muted);">2 Cosmetics Foundation</a>
+  
+    <span style="color: var(--border);">|</span>
+    <a href="/demo/reconciliation?line=3&days=30"
+       style="color: var(--muted);">3 Beverage Cans 12oz</a>
+  
+    <span style="color: var(--border);">|</span>
+    <a href="/demo/reconciliation?line=4&days=30"
+       style="color: var(--muted);">4 Beverage Cans 16oz</a>
+  
+    <span style="color: var(--border);">|</span>
+    <a href="/demo/reconciliation?line=5&days=30"
+       style="color: var(--muted);">5 Jewelry Cleaner Jars</a>
+  
+  <span style="margin-left: 2rem;"><strong>Window:</strong>
+    
+      <a href="/demo/reconciliation?days=1"
+         style="color: var(--muted);">1d</a>
+      <span style="color: var(--border);">|</span>
+    
+      <a href="/demo/reconciliation?days=3"
+         style="color: var(--muted);">3d</a>
+      <span style="color: var(--border);">|</span>
+    
+      <a href="/demo/reconciliation?days=7"
+         style="color: var(--muted);">7d</a>
+      <span style="color: var(--border);">|</span>
+    
+      <a href="/demo/reconciliation?days=30"
+         style="color: var(--accent);">30d</a>
+      
+    
+  </span>
+</div>
+
+<table>
+  <tr>
+    <th>Date</th><th>Shift</th><th>Line</th><th>Job</th><th>SKU</th>
+    <th style="text-align:right;">Cases</th>
+    <th style="text-align:right;">Expected</th>
+    <th style="text-align:right;">Variance</th>
+    <th style="text-align:right;">Perf</th>
+    <th>Status</th>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-030'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-11-03</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">5 &mdash; Jewelry Cleaner Jars</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-030</td>
+    <td>Jewelry Cleaner Unscented 4oz</td>
+    <td style="text-align:right; font-weight: 600;">2,711</td>
+    <td style="text-align:right; color: var(--muted);">4,573</td>
+    <td style="text-align:right;" class="bad">-1,862</td>
+    <td style="text-align:right;">59.3%</td>
+    <td><span class="pill pass">RUNNING</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-024'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-11-03</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">4 &mdash; Beverage Cans 16oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-024</td>
+    <td>Stout 16oz Can</td>
+    <td style="text-align:right; font-weight: 600;">10,045</td>
+    <td style="text-align:right; color: var(--muted);">15,493</td>
+    <td style="text-align:right;" class="bad">-5,448</td>
+    <td style="text-align:right;">64.8%</td>
+    <td><span class="pill pass">RUNNING</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-018'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-11-03</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">3 &mdash; Beverage Cans 12oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-018</td>
+    <td>Stout 12oz Can</td>
+    <td style="text-align:right; font-weight: 600;">10,802</td>
+    <td style="text-align:right; color: var(--muted);">19,284</td>
+    <td style="text-align:right;" class="bad">-8,482</td>
+    <td style="text-align:right;">56.0%</td>
+    <td><span class="pill pass">RUNNING</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-012'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-11-03</td>
+    <td style="font-size: 0.85rem;">S1-S2</td>
+    <td style="color: var(--accent);">2 &mdash; Cosmetics Foundation</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-012</td>
+    <td>Foundation Natural 1oz</td>
+    <td style="text-align:right; font-weight: 600;">5,957</td>
+    <td style="text-align:right; color: var(--muted);">9,623</td>
+    <td style="text-align:right;" class="bad">-3,666</td>
+    <td style="text-align:right;">61.9%</td>
+    <td><span class="pill pass">RUNNING</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-006'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-11-03</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">1 &mdash; Cosmetics Compacts</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-006</td>
+    <td>Compact Sand 0.25oz</td>
+    <td style="text-align:right; font-weight: 600;">5,511</td>
+    <td style="text-align:right; color: var(--muted);">9,346</td>
+    <td style="text-align:right;" class="bad">-3,835</td>
+    <td style="text-align:right;">59.0%</td>
+    <td><span class="pill pass">RUNNING</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-029'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-27</td>
+    <td style="font-size: 0.85rem;">S1-S2</td>
+    <td style="color: var(--accent);">5 &mdash; Jewelry Cleaner Jars</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-029</td>
+    <td>Jewelry Cleaner Lavender 4oz</td>
+    <td style="text-align:right; font-weight: 600;">4,182</td>
+    <td style="text-align:right; color: var(--muted);">5,093</td>
+    <td style="text-align:right;" class="bad">-911</td>
+    <td style="text-align:right;">82.1%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-011'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-27</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">2 &mdash; Cosmetics Foundation</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-011</td>
+    <td>Foundation Champagne 1oz</td>
+    <td style="text-align:right; font-weight: 600;">2,608</td>
+    <td style="text-align:right; color: var(--muted);">3,183</td>
+    <td style="text-align:right;" class="bad">-575</td>
+    <td style="text-align:right;">81.9%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-023'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-26</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">4 &mdash; Beverage Cans 16oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-023</td>
+    <td>Hazy IPA 16oz Can</td>
+    <td style="text-align:right; font-weight: 600;">6,263</td>
+    <td style="text-align:right; color: var(--muted);">7,669</td>
+    <td style="text-align:right;" class="bad">-1,406</td>
+    <td style="text-align:right;">81.7%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-005'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-26</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">1 &mdash; Cosmetics Compacts</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-005</td>
+    <td>Compact Rose 0.25oz</td>
+    <td style="text-align:right; font-weight: 600;">3,754</td>
+    <td style="text-align:right; color: var(--muted);">4,423</td>
+    <td style="text-align:right;" class="bad">-669</td>
+    <td style="text-align:right;">84.9%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-017'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-25</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">3 &mdash; Beverage Cans 12oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-017</td>
+    <td>Hazy IPA 12oz Can</td>
+    <td style="text-align:right; font-weight: 600;">9,394</td>
+    <td style="text-align:right; color: var(--muted);">11,477</td>
+    <td style="text-align:right;" class="bad">-2,083</td>
+    <td style="text-align:right;">81.8%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-028'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-22</td>
+    <td style="font-size: 0.85rem;">S1-S2</td>
+    <td style="color: var(--accent);">5 &mdash; Jewelry Cleaner Jars</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-028</td>
+    <td>Jewelry Cleaner Unscented 4oz</td>
+    <td style="text-align:right; font-weight: 600;">4,168</td>
+    <td style="text-align:right; color: var(--muted);">4,962</td>
+    <td style="text-align:right;" class="bad">-794</td>
+    <td style="text-align:right;">84.0%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-010'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-22</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">2 &mdash; Cosmetics Foundation</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-010</td>
+    <td>Foundation Natural 1oz</td>
+    <td style="text-align:right; font-weight: 600;">2,595</td>
+    <td style="text-align:right; color: var(--muted);">3,193</td>
+    <td style="text-align:right;" class="bad">-598</td>
+    <td style="text-align:right;">81.3%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-022'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-21</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">4 &mdash; Beverage Cans 16oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-022</td>
+    <td>Stout 16oz Can</td>
+    <td style="text-align:right; font-weight: 600;">6,190</td>
+    <td style="text-align:right; color: var(--muted);">7,378</td>
+    <td style="text-align:right;" class="bad">-1,188</td>
+    <td style="text-align:right;">83.9%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-004'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-21</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">1 &mdash; Cosmetics Compacts</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-004</td>
+    <td>Compact Sand 0.25oz</td>
+    <td style="text-align:right; font-weight: 600;">3,710</td>
+    <td style="text-align:right; color: var(--muted);">4,557</td>
+    <td style="text-align:right;" class="bad">-847</td>
+    <td style="text-align:right;">81.4%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-016'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-20</td>
+    <td style="font-size: 0.85rem;">S1-S2</td>
+    <td style="color: var(--accent);">3 &mdash; Beverage Cans 12oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-016</td>
+    <td>Stout 12oz Can</td>
+    <td style="text-align:right; font-weight: 600;">18,706</td>
+    <td style="text-align:right; color: var(--muted);">22,804</td>
+    <td style="text-align:right;" class="bad">-4,098</td>
+    <td style="text-align:right;">82.0%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-027'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-17</td>
+    <td style="font-size: 0.85rem;">S1-S2</td>
+    <td style="color: var(--accent);">5 &mdash; Jewelry Cleaner Jars</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-027</td>
+    <td>Jewelry Cleaner Lavender 4oz</td>
+    <td style="text-align:right; font-weight: 600;">4,198</td>
+    <td style="text-align:right; color: var(--muted);">4,950</td>
+    <td style="text-align:right;" class="bad">-752</td>
+    <td style="text-align:right;">84.8%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-009'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-17</td>
+    <td style="font-size: 0.85rem;">S1-S2</td>
+    <td style="color: var(--accent);">2 &mdash; Cosmetics Foundation</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-009</td>
+    <td>Foundation Champagne 1oz</td>
+    <td style="text-align:right; font-weight: 600;">5,202</td>
+    <td style="text-align:right; color: var(--muted);">6,403</td>
+    <td style="text-align:right;" class="bad">-1,201</td>
+    <td style="text-align:right;">81.3%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-021'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-16</td>
+    <td style="font-size: 0.85rem;">S1-S2</td>
+    <td style="color: var(--accent);">4 &mdash; Beverage Cans 16oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-021</td>
+    <td>Hazy IPA 16oz Can</td>
+    <td style="text-align:right; font-weight: 600;">12,576</td>
+    <td style="text-align:right; color: var(--muted);">15,181</td>
+    <td style="text-align:right;" class="bad">-2,605</td>
+    <td style="text-align:right;">82.8%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-003'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-16</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">1 &mdash; Cosmetics Compacts</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-003</td>
+    <td>Compact Rose 0.25oz</td>
+    <td style="text-align:right; font-weight: 600;">3,728</td>
+    <td style="text-align:right; color: var(--muted);">4,592</td>
+    <td style="text-align:right;" class="bad">-864</td>
+    <td style="text-align:right;">81.2%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-015'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-15</td>
+    <td style="font-size: 0.85rem;">S1-S2</td>
+    <td style="color: var(--accent);">3 &mdash; Beverage Cans 12oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-015</td>
+    <td>Hazy IPA 12oz Can</td>
+    <td style="text-align:right; font-weight: 600;">18,850</td>
+    <td style="text-align:right; color: var(--muted);">22,196</td>
+    <td style="text-align:right;" class="bad">-3,346</td>
+    <td style="text-align:right;">84.9%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-026'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-12</td>
+    <td style="font-size: 0.85rem;">S1-S2</td>
+    <td style="color: var(--accent);">5 &mdash; Jewelry Cleaner Jars</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-026</td>
+    <td>Jewelry Cleaner Unscented 4oz</td>
+    <td style="text-align:right; font-weight: 600;">4,159</td>
+    <td style="text-align:right; color: var(--muted);">5,076</td>
+    <td style="text-align:right;" class="bad">-917</td>
+    <td style="text-align:right;">81.9%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-008'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-12</td>
+    <td style="font-size: 0.85rem;">S1-S2</td>
+    <td style="color: var(--accent);">2 &mdash; Cosmetics Foundation</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-008</td>
+    <td>Foundation Natural 1oz</td>
+    <td style="text-align:right; font-weight: 600;">5,202</td>
+    <td style="text-align:right; color: var(--muted);">6,206</td>
+    <td style="text-align:right;" class="bad">-1,004</td>
+    <td style="text-align:right;">83.8%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-020'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-11</td>
+    <td style="font-size: 0.85rem;">S1-S2</td>
+    <td style="color: var(--accent);">4 &mdash; Beverage Cans 16oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-020</td>
+    <td>Stout 16oz Can</td>
+    <td style="text-align:right; font-weight: 600;">12,447</td>
+    <td style="text-align:right; color: var(--muted);">15,383</td>
+    <td style="text-align:right;" class="bad">-2,936</td>
+    <td style="text-align:right;">80.9%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-002'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-11</td>
+    <td style="font-size: 0.85rem;">S1-S2</td>
+    <td style="color: var(--accent);">1 &mdash; Cosmetics Compacts</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-002</td>
+    <td>Compact Sand 0.25oz</td>
+    <td style="text-align:right; font-weight: 600;">7,500</td>
+    <td style="text-align:right; color: var(--muted);">8,949</td>
+    <td style="text-align:right;" class="bad">-1,449</td>
+    <td style="text-align:right;">83.8%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-014'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-10</td>
+    <td style="font-size: 0.85rem;">S1-S2</td>
+    <td style="color: var(--accent);">3 &mdash; Beverage Cans 12oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-014</td>
+    <td>Stout 12oz Can</td>
+    <td style="text-align:right; font-weight: 600;">18,648</td>
+    <td style="text-align:right; color: var(--muted);">22,202</td>
+    <td style="text-align:right;" class="bad">-3,554</td>
+    <td style="text-align:right;">84.0%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-025'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-07</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">5 &mdash; Jewelry Cleaner Jars</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-025</td>
+    <td>Jewelry Cleaner Lavender 4oz</td>
+    <td style="text-align:right; font-weight: 600;">2,077</td>
+    <td style="text-align:right; color: var(--muted);">2,504</td>
+    <td style="text-align:right;" class="bad">-427</td>
+    <td style="text-align:right;">83.0%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-007'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-07</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">2 &mdash; Cosmetics Foundation</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-007</td>
+    <td>Foundation Champagne 1oz</td>
+    <td style="text-align:right; font-weight: 600;">2,608</td>
+    <td style="text-align:right; color: var(--muted);">3,160</td>
+    <td style="text-align:right;" class="bad">-552</td>
+    <td style="text-align:right;">82.5%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-019'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-06</td>
+    <td style="font-size: 0.85rem;">S1-S2</td>
+    <td style="color: var(--accent);">4 &mdash; Beverage Cans 16oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-019</td>
+    <td>Hazy IPA 16oz Can</td>
+    <td style="text-align:right; font-weight: 600;">12,485</td>
+    <td style="text-align:right; color: var(--muted);">14,783</td>
+    <td style="text-align:right;" class="bad">-2,298</td>
+    <td style="text-align:right;">84.5%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-001'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-06</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">1 &mdash; Cosmetics Compacts</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-001</td>
+    <td>Compact Rose 0.25oz</td>
+    <td style="text-align:right; font-weight: 600;">3,747</td>
+    <td style="text-align:right; color: var(--muted);">4,422</td>
+    <td style="text-align:right;" class="bad">-675</td>
+    <td style="text-align:right;">84.7%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+  <tr onclick="window.location='/job/WO-2026-013'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">2026-10-05</td>
+    <td style="font-size: 0.85rem;">S1</td>
+    <td style="color: var(--accent);">3 &mdash; Beverage Cans 12oz</td>
+    <td style="font-family: monospace; font-size: 0.82rem;">WO-2026-013</td>
+    <td>Hazy IPA 12oz Can</td>
+    <td style="text-align:right; font-weight: 600;">9,383</td>
+    <td style="text-align:right; color: var(--muted);">11,614</td>
+    <td style="text-align:right;" class="bad">-2,231</td>
+    <td style="text-align:right;">80.8%</td>
+    <td><span class="pill flag">COMPLETED</span></td>
+  </tr>
+  
+</table>
+
+
+
+  <footer>Myarra is the measure. Most plants work hard. Few close the loop.</footer>
+<script>document.addEventListener("submit",function(e){e.preventDefault();alert("Static demo - forms are not functional. The live appliance accepts uploads and edits.");},true);</script></body>
+</html>

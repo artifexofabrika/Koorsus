@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Edit A3</title>
+  <link rel="icon" type="image/png" href="/demo/static/favicon.png">
+  <link rel="stylesheet" href="/demo/static/style.css">
+</head>
+<body><div style="position:sticky;top:0;z-index:9999;background:#c0a878;color:#1a1a1a;padding:0.55rem 1rem;font-family:Georgia,serif;font-size:0.85rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.3);">Static demo of Myarra &middot; <a href="/demo/" style="color:#1a1a1a;text-decoration:underline;">Tour</a> &middot; The live appliance records production in real time.</div>
+  <nav>
+    <a href="/demo/">Dashboard</a> | <a href="/demo/reconciliation">Reconciliation</a> | <a href="/demo/changeover">Changeover</a> | <a href="/demo/pdca">PDCA</a> | <a href="/demo/admin">Admin</a> | <a href="/demo/setup">Setup</a>
+  </nav>
+  <br>
+  
+<style>
+  .a3-edit { max-width: 1000px; margin: 0 auto; background: #222222; color: #eeeeee; border: 1px solid #333333; padding: 2rem; }
+  .a3-edit h1 { font-size: 1.2rem; margin: 0 0 0.5rem 0; color: #c0a878; }
+  .a3-edit .pdca-id { font-family: monospace; font-size: 0.85rem; color: #888888; margin-bottom: 1.5rem; }
+  .a3-edit .cancel-btn { float: right; font-size: 0.85rem; color: #888888; margin-right: 1rem; padding-top: 0.4rem; text-decoration: none; }
+  .a3-edit .field { margin-bottom: 1rem; }
+  .a3-edit label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888888; margin-bottom: 0.25rem; }
+  .a3-edit input[type=text], .a3-edit input[type=date], .a3-edit input[type=number], .a3-edit textarea, .a3-edit select {
+    width: 100%; padding: 0.5rem 0.7rem; background: #111111; border: 1px solid #444444; color: #eeeeee; border-radius: 3px; font-family: Georgia, serif; font-size: 0.88rem; box-sizing: border-box;
+  }
+  .a3-edit textarea { min-height: 70px; resize: vertical; }
+  .a3-edit .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1rem; }
+  .a3-edit .section-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #c0a878; margin: 1.5rem 0 0.75rem 0; padding-bottom: 0.3rem; border-bottom: 1px solid #333333; }
+  .a3-edit .pri-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
+  .a3-edit button { background: #c0a878; color: #111111; border: none; padding: 0.7rem 2rem; font-weight: bold; border-radius: 4px; font-size: 0.9rem; cursor: pointer; }
+  .a3-edit .readonly { background: #2a2a2a; color: #888888; cursor: not-allowed; }
+  .a3-edit .fishbone-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+  .a3-edit .fishbone-field textarea { min-height: 90px; font-family: monospace; font-size: 0.82rem; }
+  .a3-edit .hint { font-size: 0.72rem; color: #888888; margin-top: 0.25rem; font-style: italic; }
+</style>
+
+<div class="a3-edit">
+  <a href="/demo/pdca/4" class="cancel-btn">&larr; Back without saving</a>
+  <h1>Edit A3 — Standardize jar changeover</h1>
+  <div class="pdca-id">A3-4 &middot; Created </div>
+
+  <form method="POST" action="#">
+
+    <div class="section-header">Header</div>
+    <div class="field"><label>Title</label><input type="text" name="title" value="Standardize jar changeover"></div>
+    <div class="split">
+      <div class="field"><label>Department</label><input type="text" name="department" value="Production"></div>
+      <div class="field"><label>Line</label>
+        <select name="line_id">
+          <option value="">— none —</option>
+          <option value="1" >Line 1 — Cosmetics Compacts</option><option value="2" >Line 2 — Cosmetics Foundation</option><option value="3" >Line 3 — Beverage Cans 12oz</option><option value="4" >Line 4 — Beverage Cans 16oz</option><option value="5" selected>Line 5 — Jewelry Cleaner Jars</option>
+        </select>
+      </div>
+    </div>
+    <div class="split">
+      <div class="field"><label>Problem Severity (1 / 3 / 5)</label><input type="number" name="problem_severity" min="1" max="5" value=""></div>
+      <div class="field"><label>Start Date (read-only)</label><input type="text" value="2026-10-10" readonly class="readonly"></div>
+    </div>
+    <div class="split">
+      <div class="field"><label>PDCA Owner</label><input type="text" name="pdca_owner" value=""></div>
+      <div class="field"><label>Management / CI Sponsor</label><input type="text" name="management_sponsor" value=""></div>
+    </div>
+    <div class="split">
+      <div class="field"><label>Team Members</label><input type="text" name="team_members" value=""></div>
+      <div class="field"><label>Departments Involved</label><input type="text" name="departments_involved" value=""></div>
+    </div>
+
+    <div class="section-header">Measurement</div>
+    <div class="split">
+      <div class="field"><label>Measurement Type</label>
+        <select name="measurement_type">
+          
+          <option value="manual" >manual</option>
+          
+          <option value="changeover_sku_pair" >changeover_sku_pair</option>
+          
+          <option value="changeover_component" >changeover_component</option>
+          
+          <option value="line_throughput" >line_throughput</option>
+          
+        </select>
+      </div>
+      <div class="field"><label>Affected SKUs (comma-separated ids)</label><input type="text" name="affected_skus" value=""></div>
+    </div>
+    <div class="field"><label>Measurement Config (JSON)</label><textarea name="measurement_config"></textarea></div>
+    <div class="split">
+      <div class="field"><label>Target Step Name (legacy)</label><input type="text" name="target_step_name" value="Change jar"></div>
+      <div class="field"><label>Target Date</label><input type="text" name="target_date" value="" placeholder="YYYY-MM-DD"></div>
+    </div>
+    <div class="split">
+      <div class="field"><label>Standard (min)</label><input type="number" step="0.1" name="standard_min" value="6.0"></div>
+      <div class="field"><label>Target Goal (min)</label><input type="number" step="0.1" name="target_goal_min" value="4.0"></div>
+    </div>
+
+    <div class="section-header">Body</div>
+    <div class="field"><label>Current Condition</label><textarea name="current_condition"></textarea></div>
+    <div class="field"><label>Target Condition</label><textarea name="target_condition"></textarea></div>
+    <div class="field"><label>Hypothesis</label><textarea name="hypothesis"></textarea></div>
+
+    <div class="section-header">Root Cause — Fishbone (5M1E)</div>
+    <div class="field"><label>Primary Category</label>
+      <select name="fishbone_category">
+        <option value="">— none —</option>
+        <option value="Man" >Man</option><option value="Machine" >Machine</option><option value="Method" selected>Method</option><option value="Material" >Material</option><option value="Measurement" >Measurement</option><option value="Environment" >Environment</option>
+      </select>
+    </div>
+    <div class="field"><label>Root Cause Summary (free text)</label><textarea name="root_cause"></textarea></div>
+    <div class="hint">One cause per line. Top 3 causes per category are kept — additional lines are ignored on save.</div>
+    <div class="fishbone-grid">
+      
+      <div class="field fishbone-field">
+        <label>Man</label>
+        <textarea name="fishbone_Man"></textarea>
+      </div>
+      
+      <div class="field fishbone-field">
+        <label>Machine</label>
+        <textarea name="fishbone_Machine"></textarea>
+      </div>
+      
+      <div class="field fishbone-field">
+        <label>Method</label>
+        <textarea name="fishbone_Method"></textarea>
+      </div>
+      
+      <div class="field fishbone-field">
+        <label>Material</label>
+        <textarea name="fishbone_Material"></textarea>
+      </div>
+      
+      <div class="field fishbone-field">
+        <label>Measurement</label>
+        <textarea name="fishbone_Measurement"></textarea>
+      </div>
+      
+      <div class="field fishbone-field">
+        <label>Environment</label>
+        <textarea name="fishbone_Environment"></textarea>
+      </div>
+      
+    </div>
+
+    <div class="field" style="margin-top:1rem;"><label>Action Plan (text summary)</label><textarea name="action_plan"></textarea></div>
+
+    <div class="section-header">Verification</div>
+    <div class="split">
+      <div class="field"><label>Target State Reached (0 or 1)</label><input type="number" name="target_state_reached" min="0" max="1" value="0"></div>
+      <div class="field"><label>How We Know It Is Solved</label><input type="text" name="how_known_solved" value=""></div>
+    </div>
+    <div class="field"><label>New Problems Created</label><textarea name="new_problems_created"></textarea></div>
+
+    <div class="section-header">Priority Score (1 / 3 / 5 each)</div>
+    <div class="pri-grid">
+      <div class="field"><label>Time × 10</label><input type="number" name="pri_time" min="1" max="5" value=""></div>
+      <div class="field"><label>Impact × 30</label><input type="number" name="pri_impact" min="1" max="5" value=""></div>
+      <div class="field"><label>Resources × 30</label><input type="number" name="pri_resources" min="1" max="5" value=""></div>
+      <div class="field"><label>Magnitude × 30</label><input type="number" name="pri_magnitude" min="1" max="5" value=""></div>
+      <div class="field"><label>Cost × 50</label><input type="number" name="pri_cost" min="1" max="5" value=""></div>
+    </div>
+
+    <div class="section-header">Status</div>
+    <div class="split">
+      <div class="field"><label>Status</label>
+        <select name="status">
+          
+          <option value="active" selected>active</option>
+          
+          <option value="done" >done</option>
+          
+          <option value="closed" >closed</option>
+          
+        </select>
+      </div>
+      <div class="field"><label>Close Reason</label><input type="text" name="close_reason" value="" placeholder="Failure is a learning opportunity — record why"></div>
+    </div>
+    <div class="field"><label>Notes on Back</label><textarea name="notes_on_back"></textarea></div>
+
+    <div style="margin-top: 2rem; text-align: right;">
+      <button type="submit">Save A3</button>
+    </div>
+  </form>
+</div>
+
+  <footer>Myarra is the measure. Most plants work hard. Few close the loop.</footer>
+<script>document.addEventListener("submit",function(e){e.preventDefault();alert("Static demo - forms are not functional. The live appliance accepts uploads and edits.");},true);</script></body>
+</html>
