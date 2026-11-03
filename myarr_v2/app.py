@@ -3,7 +3,7 @@ Myarra Web Application
 """
 from flask import Flask, render_template, request, redirect, url_for, Response
 from db import get_db_connection, ingest_csv
-from onboarding import TEMPLATES, generate_csv
+from onboarding import TEMPLATES, generate_csv, ingest_template, INGEST_ORDER
 from datetime import datetime, timedelta
 import json
 
@@ -440,22 +440,39 @@ def pdca_edit(exp_id):
 @app.route("/setup", methods=["GET", "POST"])
 def setup():
     msg = None
+    reports = []
     if request.method == "POST":
-        results = []
-        file_map = {"assets": "lines", "skus": "skus", "jobs": "jobs"}
-        for field_name, table_name in file_map.items():
-            if field_name in request.files:
-                file = request.files[field_name]
-                if file.filename != '':
-                    count = ingest_csv(file, table_name)
-                    results.append(f"{table_name}: {count} rows inserted")
-        msg = "Upload complete. " + " | ".join(results) if results else "No files were selected."
+        conn = get_db_connection()
+        try:
+            for tname in INGEST_ORDER:
+                if tname not in request.files:
+                    continue
+                file = request.files[tname]
+                if not file or not file.filename:
+                    continue
+                result = ingest_template(conn, tname, file)
+                result["template"] = tname
+                reports.append(result)
+        finally:
+            conn.close()
+        if reports:
+            total_failed = sum(r["failed"] for r in reports)
+            if total_failed == 0:
+                msg = f"Upload complete. All rows succeeded across {len(reports)} template(s)."
+            else:
+                msg = f"Upload complete with errors. {total_failed} row(s) failed across {len(reports)} template(s). See report below."
+        else:
+            msg = "No files were selected."
+
     conn = get_db_connection()
-    stats = {"lines": conn.execute("SELECT COUNT(*) FROM lines").fetchone()[0],
-             "skus": conn.execute("SELECT COUNT(*) FROM skus").fetchone()[0],
-             "jobs": conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]}
+    stats = {
+        "lines": conn.execute("SELECT COUNT(*) FROM lines").fetchone()[0],
+        "skus":  conn.execute("SELECT COUNT(*) FROM skus").fetchone()[0],
+        "jobs":  conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0],
+    }
     conn.close()
-    return render_template("setup.html", stats=stats, msg=msg, templates=TEMPLATES)
+    return render_template("setup.html", stats=stats, msg=msg,
+                           templates=TEMPLATES, reports=reports)
 
 
 @app.route("/setup/download/<name>")

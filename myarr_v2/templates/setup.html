@@ -9,13 +9,14 @@
   <ol style="color: #b0b0b0; font-size: 0.9rem; line-height: 1.9; margin: 0; padding-left: 1.4rem;">
     <li>Download the templates below.</li>
     <li>Fill them in with your plant's data (Excel, Numbers, Google Sheets — anything that saves as CSV).</li>
-    <li>Upload them back here. Full upload support for all ten templates arrives in Stage 2.</li>
-    <li>Confirm the data landed correctly on the Verify page (Stage 3).</li>
+    <li>Upload them back in the Upload section.</li>
+    <li>All templates are processed in dependency order, regardless of the order you select them.</li>
+    <li>Read the Upload Report to confirm what landed and fix any rows that failed.</li>
   </ol>
 </div>
 
 <h2>Templates</h2>
-<div class="sub" style="text-align: left; margin-bottom: 1rem;">Each template contains the column headers and two example rows showing the format. Download, open in a spreadsheet, replace the examples with your data.</div>
+<div class="sub" style="text-align: left; margin-bottom: 1rem;">Each template contains the column headers and two example rows showing the format. Column order in your upload does not matter, but the column names must match exactly.</div>
 
 <table>
   <tr>
@@ -37,9 +38,7 @@
 <h2 style="margin-top: 2.5rem;">Current database</h2>
 <div class="sub" style="text-align: left; margin-bottom: 1rem;">What is loaded right now.</div>
 <table>
-  <tr>
-    <th>Table</th><th style="text-align: right;">Rows</th>
-  </tr>
+  <tr><th>Table</th><th style="text-align: right;">Rows</th></tr>
   <tr><td>Lines</td><td style="text-align: right;">{{ stats.lines }}</td></tr>
   <tr><td>SKUs</td><td style="text-align: right;">{{ stats.skus }}</td></tr>
   <tr><td>Jobs</td><td style="text-align: right;">{{ stats.jobs }}</td></tr>
@@ -51,22 +50,53 @@
 {% endif %}
 
 <div class="sub" style="text-align: left; margin-bottom: 1rem;">
-  The current upload form supports <strong>lines</strong>, <strong>skus</strong>, and <strong>jobs</strong>. Stage 2 will expand this to accept all ten templates in one form submission.
+  Upload any combination of templates. Files are processed in dependency order: settings, component types, lines, SKUs, BOMs, rates, procedures, steps, jobs, users.
 </div>
 
-<form method="POST" enctype="multipart/form-data" style="max-width: 600px; text-align: left;">
-  <div style="margin-bottom: 1rem;">
-    <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">Assets (lines.csv)</label>
-    <input type="file" name="assets" accept=".csv" style="color: #b0b0b0;">
-  </div>
-  <div style="margin-bottom: 1rem;">
-    <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">SKUs (skus.csv)</label>
-    <input type="file" name="skus" accept=".csv" style="color: #b0b0b0;">
-  </div>
-  <div style="margin-bottom: 1rem;">
-    <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">Jobs (jobs.csv)</label>
-    <input type="file" name="jobs" accept=".csv" style="color: #b0b0b0;">
+<form method="POST" enctype="multipart/form-data" style="max-width: 900px; text-align: left;">
+  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem 2rem; margin-bottom: 1.5rem;">
+    {% for tname, t in templates.items() %}
+    <div>
+      <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">{{ t.filename }}</label>
+      <input type="file" name="{{ tname }}" accept=".csv" style="color: #b0b0b0; font-size: 0.85rem; width: 100%;">
+    </div>
+    {% endfor %}
   </div>
   <button type="submit" style="background: #c0a878; color: #1a1a1a; border: none; padding: 0.7rem 2rem; font-weight: bold; border-radius: 4px; font-size: 0.9rem; cursor: pointer;">Upload</button>
 </form>
+
+{% if reports %}
+<h2 style="margin-top: 2.5rem;">Upload Report</h2>
+<table>
+  <tr>
+    <th>Template</th>
+    <th style="text-align: right;">Uploaded</th>
+    <th style="text-align: right;">Succeeded</th>
+    <th style="text-align: right;">Failed</th>
+    <th>Errors</th>
+  </tr>
+  {% for r in reports %}
+  <tr>
+    <td style="font-family: monospace; font-size: 0.85rem;">{{ r.template }}.csv</td>
+    <td style="text-align: right;">{{ r.uploaded }}</td>
+    <td style="text-align: right;" class="{{ 'good' if r.failed == 0 else '' }}">{{ r.succeeded }}</td>
+    <td style="text-align: right;" class="{{ 'bad' if r.failed > 0 else '' }}">{{ r.failed }}</td>
+    <td style="font-size: 0.82rem;">
+      {% if r.errors %}
+      <ul style="margin: 0; padding-left: 1.2rem;">
+        {% for e in r.errors[:20] %}
+        <li>line {{ e.line }}: {{ e.message }}</li>
+        {% endfor %}
+        {% if r.errors|length > 20 %}
+        <li style="color: #888;">... and {{ r.errors|length - 20 }} more</li>
+        {% endif %}
+      </ul>
+      {% else %}
+      <span class="good">ok</span>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
 {% endblock %}
