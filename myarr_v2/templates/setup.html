@@ -1,37 +1,72 @@
 {% extends "base.html" %}
 {% block title %}Myarra - Setup{% endblock %}
 {% block content %}
-<h1>Plant Configuration</h1>
-<div class="sub">Build the Digital Twin</div>
+<h1>Setup</h1>
+<div class="sub">Configure the appliance for a new installation</div>
 
-{% if msg %}<div class="success">{{ msg }}</div>{% endif %}
-
-<div class="grid">
-  <div class="box">
-    <h2>Current Database State</h2>
-    <div class="stat-row"><span>Lines Configured</span><span>{{ stats.lines }}</span></div>
-    <div class="stat-row"><span>SKUs / Products</span><span>{{ stats.skus }}</span></div>
-    <div class="stat-row"><span>Active Jobs</span><span>{{ stats.jobs }}</span></div>
-  </div>
-  
-  <div class="box">
-    <h2>Upload New Configuration</h2>
-    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1rem">Upload CSV files to initialize or overwrite the plant data.</p>
-    <form method="POST" enctype="multipart/form-data">
-      <div>
-        <label style="color:var(--muted);font-size:0.7rem;text-transform:uppercase;margin-bottom:0.2rem;display:block">1. Assets (Lines & Stations)</label>
-        <input type="file" name="assets" class="file-input" accept=".csv">
-      </div>
-      <div>
-        <label style="color:var(--muted);font-size:0.7rem;text-transform:uppercase;margin-bottom:0.2rem;display:block">2. Products (SKUs & BOM)</label>
-        <input type="file" name="skus" class="file-input" accept=".csv">
-      </div>
-      <div>
-        <label style="color:var(--muted);font-size:0.7rem;text-transform:uppercase;margin-bottom:0.2rem;display:block">3. Jobs (Production Schedule)</label>
-        <input type="file" name="jobs" class="file-input" accept=".csv">
-      </div>
-      <button type="submit">Process Uploads</button>
-    </form>
-  </div>
+<div style="background: #2c2c2c; padding: 1.25rem 1.5rem; border-radius: 6px; margin: 1.5rem 0; border-left: 3px solid #c0a878;">
+  <h2 style="color: #c0a878; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 0.75rem 0;">Workflow</h2>
+  <ol style="color: #b0b0b0; font-size: 0.9rem; line-height: 1.9; margin: 0; padding-left: 1.4rem;">
+    <li>Download the templates below.</li>
+    <li>Fill them in with your plant's data (Excel, Numbers, Google Sheets — anything that saves as CSV).</li>
+    <li>Upload them back here. Full upload support for all ten templates arrives in Stage 2.</li>
+    <li>Confirm the data landed correctly on the Verify page (Stage 3).</li>
+  </ol>
 </div>
+
+<h2>Templates</h2>
+<div class="sub" style="text-align: left; margin-bottom: 1rem;">Each template contains the column headers and two example rows showing the format. Download, open in a spreadsheet, replace the examples with your data.</div>
+
+<table>
+  <tr>
+    <th style="width: 22%;">File</th>
+    <th>What it contains</th>
+    <th style="width: 14%; text-align: right;"></th>
+  </tr>
+  {% for name, t in templates.items() %}
+  <tr>
+    <td style="font-family: monospace; font-size: 0.85rem;">{{ t.filename }}</td>
+    <td style="font-size: 0.85rem;">{{ t.description }}</td>
+    <td style="text-align: right;">
+      <a href="/setup/download/{{ name }}" style="color: #c0a878; text-decoration: none; font-size: 0.85rem;">Download &rarr;</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2 style="margin-top: 2.5rem;">Current database</h2>
+<div class="sub" style="text-align: left; margin-bottom: 1rem;">What is loaded right now.</div>
+<table>
+  <tr>
+    <th>Table</th><th style="text-align: right;">Rows</th>
+  </tr>
+  <tr><td>Lines</td><td style="text-align: right;">{{ stats.lines }}</td></tr>
+  <tr><td>SKUs</td><td style="text-align: right;">{{ stats.skus }}</td></tr>
+  <tr><td>Jobs</td><td style="text-align: right;">{{ stats.jobs }}</td></tr>
+</table>
+
+<h2 style="margin-top: 2.5rem;">Upload</h2>
+{% if msg %}
+<p style="color: #c0a878; padding: 0.75rem 1rem; background: #2c2c2c; border-radius: 4px; margin-bottom: 1rem;">{{ msg }}</p>
+{% endif %}
+
+<div class="sub" style="text-align: left; margin-bottom: 1rem;">
+  The current upload form supports <strong>lines</strong>, <strong>skus</strong>, and <strong>jobs</strong>. Stage 2 will expand this to accept all ten templates in one form submission.
+</div>
+
+<form method="POST" enctype="multipart/form-data" style="max-width: 600px; text-align: left;">
+  <div style="margin-bottom: 1rem;">
+    <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">Assets (lines.csv)</label>
+    <input type="file" name="assets" accept=".csv" style="color: #b0b0b0;">
+  </div>
+  <div style="margin-bottom: 1rem;">
+    <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">SKUs (skus.csv)</label>
+    <input type="file" name="skus" accept=".csv" style="color: #b0b0b0;">
+  </div>
+  <div style="margin-bottom: 1rem;">
+    <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.25rem;">Jobs (jobs.csv)</label>
+    <input type="file" name="jobs" accept=".csv" style="color: #b0b0b0;">
+  </div>
+  <button type="submit" style="background: #c0a878; color: #1a1a1a; border: none; padding: 0.7rem 2rem; font-weight: bold; border-radius: 4px; font-size: 0.9rem; cursor: pointer;">Upload</button>
+</form>
 {% endblock %}

@@ -1,8 +1,9 @@
 """
 Myarra Web Application
 """
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, Response
 from db import get_db_connection, ingest_csv
+from onboarding import TEMPLATES, generate_csv
 from datetime import datetime, timedelta
 import json
 
@@ -236,7 +237,6 @@ def changeover_list():
     line_filter = request.args.get('line', type=int)
     component_filter = request.args.get('component', type=int)
     days = request.args.get('days', default=30, type=int)
-
     sql = """
         SELECT e.id, e.line_id, l.name as line_name,
             e.from_job_number, e.to_job_number, e.started_at,
@@ -258,7 +258,6 @@ def changeover_list():
         sql += " AND e.id IN (SELECT event_id FROM co_event_changes WHERE component_type_id = ?)"
         params.append(component_filter)
     sql += " ORDER BY e.started_at DESC"
-
     raw = conn.execute(sql, params).fetchall()
     events = []
     for r in raw:
@@ -267,7 +266,6 @@ def changeover_list():
         actual = r['aggregate_actual_min']
         r['variance'] = (actual - std) if (std is not None and actual is not None) else None
         events.append(r)
-
     components = conn.execute("""
         SELECT DISTINCT ct.id, ct.name
         FROM co_event_changes cec
@@ -457,7 +455,20 @@ def setup():
              "skus": conn.execute("SELECT COUNT(*) FROM skus").fetchone()[0],
              "jobs": conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]}
     conn.close()
-    return render_template("setup.html", stats=stats, msg=msg)
+    return render_template("setup.html", stats=stats, msg=msg, templates=TEMPLATES)
+
+
+@app.route("/setup/download/<name>")
+def setup_download(name):
+    if name not in TEMPLATES:
+        return "Template not found", 404
+    csv_text = generate_csv(name)
+    t = TEMPLATES[name]
+    return Response(
+        csv_text,
+        mimetype='text/csv; charset=utf-8',
+        headers={'Content-Disposition': f'attachment; filename="{t["filename"]}"'}
+    )
 
 
 @app.route("/admin", methods=["GET", "POST"])
