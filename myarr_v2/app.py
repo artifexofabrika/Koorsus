@@ -453,7 +453,7 @@ def setup():
                 file = request.files[tname]
                 if not file or not file.filename:
                     continue
-                result = ingest_template(conn, tname, file)
+                result = ingest_template(conn, tname, file, full_replace=(request.form.get('full_replace') == 'on'))
                 result["template"] = tname
                 reports.append(result)
         finally:

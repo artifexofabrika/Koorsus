@@ -65,7 +65,13 @@
     {% endfor %}
   </div>
   <button type="submit" style="background: #c0a878; color: #1a1a1a; border: none; padding: 0.7rem 2rem; font-weight: bold; border-radius: 4px; font-size: 0.9rem; cursor: pointer;">Upload</button>
-</form>
+    <div style="margin-top: 1.5rem; padding: 1rem; background: #2c2c2c; border-left: 3px solid #c97a7a; border-radius: 4px;">
+      <label style="display: flex; align-items: flex-start; gap: 0.5rem; color: #b0b0b0; font-size: 0.85rem; cursor: pointer;">
+        <input type="checkbox" name="full_replace" style="margin-top: 0.25rem;">
+        <span><strong style="color: #c97a7a;">Full replace for changeover steps.</strong> When checked, uploading co_steps.csv replaces <em>all</em> steps for each procedure in the CSV. Leave unchecked to add or update only the (procedure, seq) rows in the file. Unchecked is safer: steps not in the CSV are kept.</span>
+      </label>
+    </div>
+  </form>
 
 {% if reports %}
 <h2 style="margin-top: 2.5rem;">Upload Report</h2>

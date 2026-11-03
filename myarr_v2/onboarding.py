@@ -339,10 +339,14 @@ def _ingest_co_procedures(conn, rows, errors):
     return succeeded
 
 
-def _ingest_co_steps(conn, rows, errors):
-    """Delete-then-insert per procedure. If any row for a procedure fails, that
-    procedure's existing steps are left untouched and all its uploaded rows are
-    reported as failed, so no partial replacement occurs."""
+def _ingest_co_steps(conn, rows, errors, full_replace=False):
+    """Per-procedure step ingestion.
+
+    Default (full_replace=False): delete only the (procedure_id, seq) rows
+    present in the CSV, then insert. Steps not mentioned are left alone.
+    With full_replace=True: delete ALL steps for each procedure in the CSV,
+    then insert. Opt-in, protected by a checkbox on /setup.
+    If any row in a group is invalid, that procedure is left untouched."""
     groups = {}
     for idx, row in enumerate(rows, start=2):
         lid = _int_or_none(row.get('line_id'))
@@ -388,10 +392,14 @@ def _ingest_co_steps(conn, rows, errors):
             step_tuples.append((seq, step_name, station, std))
 
         if group_failed:
-            # Leave existing steps untouched for this procedure
             continue
 
-        conn.execute("DELETE FROM co_steps_v2 WHERE procedure_id=?", (proc_id,))
+        if full_replace:
+            conn.execute("DELETE FROM co_steps_v2 WHERE procedure_id=?", (proc_id,))
+        else:
+            for seq, _, _, _ in step_tuples:
+                conn.execute("DELETE FROM co_steps_v2 WHERE procedure_id=? AND seq=?",
+                             (proc_id, seq))
         for seq, step_name, station, std in step_tuples:
             conn.execute(
                 "INSERT INTO co_steps_v2 (procedure_id, seq, step_name, station, standard_min) VALUES (?,?,?,?,?)",
@@ -467,7 +475,7 @@ _HANDLERS = {
 
 # ---------- Public entry point ----------
 
-def ingest_template(conn, template_name, file_stream):
+def ingest_template(conn, template_name, file_stream, full_replace=False):
     """Ingest one template. Returns dict with uploaded, succeeded, failed, errors."""
     if template_name not in TEMPLATES:
         return {'uploaded': 0, 'succeeded': 0, 'failed': 0,
@@ -509,7 +517,10 @@ def ingest_template(conn, template_name, file_stream):
     errors = []
     handler = _HANDLERS[template_name]
     try:
-        succeeded = handler(conn, rows, errors)
+        if template_name == 'co_steps':
+            succeeded = handler(conn, rows, errors, full_replace=full_replace)
+        else:
+            succeeded = handler(conn, rows, errors)
         conn.commit()
     except Exception as e:
         try:
