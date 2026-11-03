@@ -185,4 +185,34 @@ Nothing else in flight. The day closed at a clean rest-stop.
     of this file is that the next instance reads 150 lines instead of
     60,000 tokens.
 
+
+## 9. EVENING ADDENDUM — ONBOARDING COMPLETE
+
+As of commit d0dd67f, onboarding is complete. Supersedes Section 7.
+
+Done since this delta was first written:
+  - Stage 3: /setup/verify. New verify.py (Flask Blueprint) and
+    templates/setup_verify.html. Checklist with per-table counts, sanity
+    warnings (SKU without rate or BOM, procedure without steps, job
+    referencing unknown SKU, line without SKUs), three-row previews.
+    Verified: warning fired on a deliberately deleted rate row; counts
+    match the pristine database.
+  - co_steps guard: _ingest_co_steps now takes full_replace=False.
+    Default (checkbox unchecked): delete only the (procedure_id, seq)
+    rows present in the CSV, then insert. Steps not mentioned are kept.
+    Checked: delete ALL steps for each procedure in the CSV, then insert.
+    Both paths tested live: 6 steps -> 6 unchecked, 6 -> 2 checked.
+    Database reseeded to pristine (62|10|6) after the test.
+  - The "assets" field-name item in Section 4 is resolved: setup.html
+    names file inputs by template name via INGEST_ORDER. No action.
+
+Commits pushed: 4ba2174 (Stage 3), d0dd67f (co_steps guard).
+
+Remaining before first client: nothing in onboarding. The reprioritized
+list stands; the next item is query-level reporting (text-to-SQL over the
+data lake).
+
+Operational note: git push from the Jetson prompts for username
+artifexofabrika plus a personal access token each time. Expect the prompt.
+
 END OF DELTA.
