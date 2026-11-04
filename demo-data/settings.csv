@@ -1,0 +1,11 @@
+key,value,description
+case_label,cases,Display label for cases
+lunch_minutes,30,Lunch duration per shift
+rate_label,containers per hour,Rate unit display
+shift_1_end,15:00,S1 end time
+shift_1_start,07:00,S1 start time
+shift_2_end,23:00,S2 end time
+shift_2_start,15:00,S2 start time
+shift_3_end,07:00,S3 end time (next day)
+shift_3_start,23:00,S3 start time
+unit_label,containers,What a single output unit is called

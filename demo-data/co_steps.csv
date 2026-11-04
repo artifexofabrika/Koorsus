@@ -1,0 +1,63 @@
+line_id,from_sku_part_number,to_sku_part_number,seq,step_name,station,standard_min
+1,COS-CMP-RS,COS-CMP-SD,1,Change case,case_feeder,14.0
+1,COS-CMP-RS,COS-CMP-SD,2,Change formulation,filler,12.0
+1,COS-CMP-RS,COS-CMP-SD,3,Change shrink,shrink_wrap,7.0
+1,COS-CMP-RS,COS-CMP-SD,4,Change box,boxer,10.0
+1,COS-CMP-RS,COS-CMP-SD,5,Verify,line,9.0
+1,COS-CMP-RS,COS-CMP-SD,6,Startup,line,13.0
+1,COS-CMP-SD,COS-CMP-RS,1,Change case,case_feeder,14.0
+1,COS-CMP-SD,COS-CMP-RS,2,Change formulation,filler,12.0
+1,COS-CMP-SD,COS-CMP-RS,3,Change shrink,shrink_wrap,7.0
+1,COS-CMP-SD,COS-CMP-RS,4,Change box,boxer,10.0
+1,COS-CMP-SD,COS-CMP-RS,5,Verify,line,9.0
+1,COS-CMP-SD,COS-CMP-RS,6,Startup,line,13.0
+2,COS-FDN-CH,COS-FDN-NA,1,Change case,case_feeder,14.0
+2,COS-FDN-CH,COS-FDN-NA,2,Change formulation,filler,12.0
+2,COS-FDN-CH,COS-FDN-NA,3,Change shrink,shrink_wrap,7.0
+2,COS-FDN-CH,COS-FDN-NA,4,Change box,boxer,10.0
+2,COS-FDN-CH,COS-FDN-NA,5,Verify,line,9.0
+2,COS-FDN-CH,COS-FDN-NA,6,Startup,line,13.0
+2,COS-FDN-NA,COS-FDN-CH,1,Change case,case_feeder,14.0
+2,COS-FDN-NA,COS-FDN-CH,2,Change formulation,filler,12.0
+2,COS-FDN-NA,COS-FDN-CH,3,Change shrink,shrink_wrap,7.0
+2,COS-FDN-NA,COS-FDN-CH,4,Change box,boxer,10.0
+2,COS-FDN-NA,COS-FDN-CH,5,Verify,line,9.0
+2,COS-FDN-NA,COS-FDN-CH,6,Startup,line,13.0
+3,BEV-IPA-12,BEV-STO-12,1,Change can,depalletizer,16.0
+3,BEV-IPA-12,BEV-STO-12,2,Verify seam,seamer,10.0
+3,BEV-IPA-12,BEV-STO-12,3,Change label,labeler,9.0
+3,BEV-IPA-12,BEV-STO-12,4,Change pak,packer,8.0
+3,BEV-IPA-12,BEV-STO-12,5,Verify,line,7.0
+3,BEV-IPA-12,BEV-STO-12,6,Startup,line,8.0
+3,BEV-STO-12,BEV-IPA-12,1,Change can,depalletizer,16.0
+3,BEV-STO-12,BEV-IPA-12,2,Verify seam,seamer,10.0
+3,BEV-STO-12,BEV-IPA-12,3,Change label,labeler,9.0
+3,BEV-STO-12,BEV-IPA-12,4,Change pak,packer,8.0
+3,BEV-STO-12,BEV-IPA-12,5,Verify,line,7.0
+3,BEV-STO-12,BEV-IPA-12,6,Startup,line,8.0
+4,BEV-IPA-16,BEV-STO-16,1,Change can,depalletizer,16.0
+4,BEV-IPA-16,BEV-STO-16,2,Verify seam,seamer,10.0
+4,BEV-IPA-16,BEV-STO-16,3,Change label,labeler,9.0
+4,BEV-IPA-16,BEV-STO-16,4,Change pak,packer,8.0
+4,BEV-IPA-16,BEV-STO-16,5,Verify,line,7.0
+4,BEV-IPA-16,BEV-STO-16,6,Startup,line,8.0
+4,BEV-STO-16,BEV-IPA-16,1,Change can,depalletizer,16.0
+4,BEV-STO-16,BEV-IPA-16,2,Verify seam,seamer,10.0
+4,BEV-STO-16,BEV-IPA-16,3,Change label,labeler,9.0
+4,BEV-STO-16,BEV-IPA-16,4,Change pak,packer,8.0
+4,BEV-STO-16,BEV-IPA-16,5,Verify,line,7.0
+4,BEV-STO-16,BEV-IPA-16,6,Startup,line,8.0
+5,JWL-CLN-LV,JWL-CLN-UN,1,Change jar,unscrambler,8.0
+5,JWL-CLN-LV,JWL-CLN-UN,2,Change cap,capper,5.0
+5,JWL-CLN-LV,JWL-CLN-UN,3,Change brush,inserter,4.0
+5,JWL-CLN-LV,JWL-CLN-UN,4,Change basket,inserter,4.0
+5,JWL-CLN-LV,JWL-CLN-UN,5,Change formulation,filler,12.0
+5,JWL-CLN-LV,JWL-CLN-UN,6,Verify,line,6.0
+5,JWL-CLN-LV,JWL-CLN-UN,7,Startup,line,6.0
+5,JWL-CLN-UN,JWL-CLN-LV,1,Change jar,unscrambler,8.0
+5,JWL-CLN-UN,JWL-CLN-LV,2,Change cap,capper,5.0
+5,JWL-CLN-UN,JWL-CLN-LV,3,Change brush,inserter,4.0
+5,JWL-CLN-UN,JWL-CLN-LV,4,Change basket,inserter,4.0
+5,JWL-CLN-UN,JWL-CLN-LV,5,Change formulation,filler,12.0
+5,JWL-CLN-UN,JWL-CLN-LV,6,Verify,line,6.0
+5,JWL-CLN-UN,JWL-CLN-LV,7,Startup,line,6.0

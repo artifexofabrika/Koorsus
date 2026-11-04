@@ -1,0 +1,11 @@
+line_id,from_sku_part_number,to_sku_part_number,name,aggregate_standard_min
+1,COS-CMP-RS,COS-CMP-SD,Line 1: 1->2,65.0
+1,COS-CMP-SD,COS-CMP-RS,Line 1: 2->1,65.0
+2,COS-FDN-CH,COS-FDN-NA,Line 2: 3->4,65.0
+2,COS-FDN-NA,COS-FDN-CH,Line 2: 4->3,65.0
+3,BEV-IPA-12,BEV-STO-12,Line 3: 5->6,58.0
+3,BEV-STO-12,BEV-IPA-12,Line 3: 6->5,58.0
+4,BEV-IPA-16,BEV-STO-16,Line 4: 7->8,58.0
+4,BEV-STO-16,BEV-IPA-16,Line 4: 8->7,58.0
+5,JWL-CLN-LV,JWL-CLN-UN,Line 5: 9->10,45.0
+5,JWL-CLN-UN,JWL-CLN-LV,Line 5: 10->9,45.0

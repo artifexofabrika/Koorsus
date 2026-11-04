@@ -1,0 +1,13 @@
+name,is_serial,default_swap_min
+case,0,12.0
+formulation,1,10.0
+shrink,0,5.0
+box,0,8.0
+can,0,12.0
+seam,0,8.0
+label,0,6.0
+pak,0,5.0
+jar,0,6.0
+cap,0,4.0
+brush,0,3.0
+basket,0,3.0
