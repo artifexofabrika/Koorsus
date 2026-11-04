@@ -11,6 +11,8 @@ app = Flask(__name__)
 
 from verify import verify_bp
 app.register_blueprint(verify_bp)
+from admin_ops import admin_ops_bp
+app.register_blueprint(admin_ops_bp)
 
 FISHBONE_CATEGORIES = ['Man', 'Machine', 'Method', 'Material', 'Measurement', 'Environment']
 FISHBONE_MAX_PER_CATEGORY = 3

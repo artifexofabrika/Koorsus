@@ -2,7 +2,13 @@
 {% block title %}Myarra - Setup{% endblock %}
 {% block content %}
 <h1>Setup</h1>
-<p style="margin-top: 0.75rem;"><a href="/setup/verify" style="color: #c0a878;">Verify loaded data &rarr;</a></p>
+<p style="margin-top: 0.75rem;"><a href="/setup/verify" style="color: #c0a878;">Verify loaded data &rarr;</a> &middot; <a href="/setup/export" style="color: #c0a878;">Export database &rarr;</a></p>
+{% if request.args.get("reset_done") %}
+<div style="background:#2a3a2a;border-left:3px solid #7ac97a;padding:0.9rem 1.1rem;border-radius:4px;margin:1rem 0;"><p style="margin:0;color:#a0e0a0;font-size:0.9rem;"><strong>{{ request.args.get("reset_done")|capitalize }} reset complete.</strong> {{ request.args.get("rows", "0") }} rows removed. Users and settings preserved.</p></div>
+{% endif %}
+{% if request.args.get("reset_error") %}
+<div style="background:#3a2a2a;border-left:3px solid #c97a7a;padding:0.9rem 1.1rem;border-radius:4px;margin:1rem 0;"><p style="margin:0;color:#e0a0a0;font-size:0.9rem;"><strong>Reset refused.</strong> {{ request.args.get("reset_error") }}</p></div>
+{% endif %}
 
 <div class="sub">Configure the appliance for a new installation</div>
 
@@ -107,4 +113,36 @@
   {% endfor %}
 </table>
 {% endif %}
+
+<h2 style="margin-top: 3rem; color: #c97a7a;">Danger zone</h2>
+<div style="background: #2c2c2c; border-left: 3px solid #c97a7a; padding: 1.25rem 1.5rem; border-radius: 4px; margin: 1rem 0; max-width: 900px; text-align: left;">
+
+  <h3 style="color: #c97a7a; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 0.5rem 0;">Reset database</h3>
+  <p style="color: #b0b0b0; font-size: 0.9rem; margin: 0 0 1rem 0;">
+    Before resetting, use <a href="/setup/export" style="color: #c0a878;">Export database</a> to archive what you have.
+    Neither reset touches <strong>users</strong> or <strong>settings</strong>.
+  </p>
+
+  <form method="POST" action="/setup/reset">
+    <div style="margin-bottom: 1rem;">
+      <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.35rem;">Mode</label>
+      <label style="display: block; color: #b0b0b0; font-size: 0.9rem; margin-bottom: 0.35rem;">
+        <input type="radio" name="reset_mode" value="soft" checked>
+        <strong>Soft</strong> &mdash; wipe production history only. Keep lines, SKUs, BOMs, procedures, jobs, and experiments. Use this to re-run the history generator against the same plant setup.
+      </label>
+      <label style="display: block; color: #b0b0b0; font-size: 0.9rem;">
+        <input type="radio" name="reset_mode" value="hard">
+        <strong>Hard</strong> &mdash; wipe everything except users and settings. Use this before uploading a new client's ten CSVs.
+      </label>
+    </div>
+    <div style="margin-bottom: 1rem;">
+      <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.35rem;">Confirm</label>
+      <input type="text" name="confirm" placeholder="Type RESET to confirm" autocomplete="off"
+             style="background: #1a1a1a; color: #e0e0e0; border: 1px solid #444; padding: 0.55rem 0.75rem; font-family: monospace; font-size: 0.9rem; width: 260px; border-radius: 4px;">
+    </div>
+    <button type="submit" style="background: #c97a7a; color: #1a1a1a; border: none; padding: 0.7rem 2rem; font-weight: bold; border-radius: 4px; font-size: 0.9rem; cursor: pointer;">
+      Reset database
+    </button>
+  </form>
+</div>
 {% endblock %}
