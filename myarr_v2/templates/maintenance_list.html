@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Myarra - Maintenance{% endblock %}
+{% block content %}
+<h1>Maintenance Log</h1>
+<div class="sub">One row per event. Click a row to see detail and edit notes.</div>
+
+<div style="margin: 1rem 0; font-size: 0.85rem; line-height: 1.9;">
+  <strong>Line:</strong>
+  <a href="/maintenance?days={{ days }}{% if current_station %}&station={{ current_station }}{% endif %}"
+     style="color: {{ 'var(--accent)' if not current_line else 'var(--muted)' }};">All</a>
+  {% for l in lines %}
+    <span style="color: var(--border);">|</span>
+    <a href="/maintenance?line={{ l.id }}&days={{ days }}{% if current_station %}&station={{ current_station }}{% endif %}"
+       style="color: {{ 'var(--accent)' if current_line == l.id else 'var(--muted)' }};">{{ l.id }} {{ l.name }}</a>
+  {% endfor %}
+</div>
+
+<div style="margin: 0 0 1rem 0; font-size: 0.85rem; line-height: 1.9;">
+  <strong>Station:</strong>
+  <a href="/maintenance?days={{ days }}{% if current_line %}&line={{ current_line }}{% endif %}"
+     style="color: {{ 'var(--accent)' if not current_station else 'var(--muted)' }};">All</a>
+  {% for st in stations %}
+    <span style="color: var(--border);">|</span>
+    <a href="/maintenance?station={{ st }}&days={{ days }}{% if current_line %}&line={{ current_line }}{% endif %}"
+       style="color: {{ 'var(--accent)' if current_station == st else 'var(--muted)' }};">{{ st }}</a>
+  {% endfor %}
+  <span style="margin-left: 2rem;"><strong>Window:</strong>
+    {% for d in [7, 14, 30, 90] %}
+      <a href="/maintenance?days={{ d }}{% if current_line %}&line={{ current_line }}{% endif %}{% if current_station %}&station={{ current_station }}{% endif %}"
+         style="color: {{ 'var(--accent)' if days == d else 'var(--muted)' }};">{{ d }}d</a>
+      {% if not loop.last %}<span style="color: var(--border);">|</span>{% endif %}
+    {% endfor %}
+  </span>
+</div>
+
+<table>
+  <tr>
+    <th>Date</th><th>Line</th><th>Station</th><th>Category</th>
+    <th>Symptom</th><th>Resolution</th><th>Technician</th>
+    <th style="text-align:right;">Min</th>
+  </tr>
+  {% for e in events %}
+  <tr onclick="window.location='/maintenance/{{ e.id }}'" style="cursor: pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size: 0.85rem;">{{ (e.started_at or '')[:16].replace('T', ' ') }}</td>
+    <td style="color: var(--accent);">{{ e.line_id }} &mdash; {{ e.line_name or '' }}</td>
+    <td style="font-size: 0.85rem;">{{ e.station or '-' }}</td>
+    <td style="font-size: 0.85rem;">{{ e.category or 'unplanned' }}</td>
+    <td style="font-size: 0.85rem;">{{ e.symptom or '-' }}</td>
+    <td style="font-size: 0.85rem; color: var(--muted);">{{ e.resolution or 'not recorded' }}</td>
+    <td style="font-size: 0.85rem;">{{ e.technician or '-' }}</td>
+    <td style="text-align:right;">{{ '%.0f'|format(e.aggregate_actual_min) if e.aggregate_actual_min else '-' }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% if not events %}
+<p style="color: var(--muted); margin-top: 1.5rem;">No maintenance events in the last {{ days }} days.</p>
+{% endif %}
+{% endblock %}

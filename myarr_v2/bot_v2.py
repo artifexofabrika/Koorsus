@@ -812,11 +812,41 @@ def h_end_cip(conn, s, text, user):
     return _resume_prior(conn, lid, cur, user, context='CIP')
 
 
+def _known_stations(conn):
+    rows = conn.execute(
+        "SELECT DISTINCT station FROM co_steps_v2 WHERE station IS NOT NULL "
+        "UNION SELECT DISTINCT station FROM downtime_events WHERE station IS NOT NULL"
+    ).fetchall()
+    return {r[0].lower() for r in rows if r[0]}
+
+
 def h_start_maintenance(conn, s, text, user):
-    reason = re.sub(r'^(start\s+)?maintenance\s*', '', text, flags=re.IGNORECASE).strip() or 'unspecified'
-    lid = _set_line_state(conn, s, user, 'maintenance', reason=reason)
+    raw = re.sub(r'^(start\s+)?maintenance\s*', '', text, flags=re.IGNORECASE).strip()
+    if not raw:
+        raw = 'unspecified'
+    station = None
+    symptom = raw
+    first, _, rest = raw.partition(' ')
+    if rest and first.lower() in _known_stations(conn):
+        station = first
+        symptom = rest.strip() or 'unspecified'
+    lid = _set_line_state(conn, s, user, 'maintenance', reason=raw)
+    cur = _current_line_event(conn, lid)
+    job_id = cur['job_id'] if cur else None
+    c = conn.execute(
+        "INSERT INTO maintenance_events (line_id, job_id, station, started_at, "
+        "category, symptom, source, user_id, raw_text) VALUES (?,?,?,?,?,?,?,?,?)",
+        (lid, job_id, station, datetime.now().isoformat(), 'unplanned',
+         symptom, 'telegram', user['id'] if user else None, text))
+    ev_id = c.lastrowid
+    if cur:
+        conn.execute("UPDATE line_events SET maintenance_event_id=? WHERE id=?",
+                     (ev_id, cur['id']))
+    conn.commit()
     s.set('state', 'idle'); s.save()
-    return f"Line {lid} now in MAINTENANCE. Reason: {reason}"
+    where = f" at {station}" if station else ""
+    return (f"Line {lid} now in MAINTENANCE{where}. Symptom: {symptom}\n"
+            f"When resolved, say 'end maintenance'.")
 
 
 def h_end_maintenance(conn, s, text, user):
@@ -824,7 +854,56 @@ def h_end_maintenance(conn, s, text, user):
     cur = _current_line_event(conn, lid)
     if not cur or cur['state'] != 'maintenance':
         return f"Line {lid} is not in maintenance (state: {cur['state'] if cur else 'none'})."
-    return _resume_prior(conn, lid, cur, user, context='Maintenance')
+    ev_id = cur['maintenance_event_id']
+    minutes = None
+    if ev_id:
+        ev = conn.execute("SELECT * FROM maintenance_events WHERE id=?", (ev_id,)).fetchone()
+        if ev:
+            try:
+                started = datetime.fromisoformat(ev['started_at'])
+                minutes = round((datetime.now() - started).total_seconds() / 60.0, 1)
+            except Exception:
+                pass
+            conn.execute(
+                "UPDATE maintenance_events SET ended_at=?, aggregate_actual_min=? WHERE id=?",
+                (datetime.now().isoformat(), minutes, ev_id))
+            conn.commit()
+    msg = _resume_prior(conn, lid, cur, user, context='Maintenance')
+    if ev_id:
+        s.set('state', 'maint_prompt')
+        s.set('pending_step_idx', 0)
+        s.set('pending_job_id', ev_id)
+        s.save()
+        dur = f" ({minutes:.0f} min)" if minutes else ""
+        return msg + f"\n\nMaintenance event recorded{dur}. Quick notes:\n\nWhat was the fix? (say 'skip' to leave blank)"
+    return msg
+
+
+def _handle_maint_prompt(conn, s, text, user):
+    step = s.get('pending_step_idx') or 0
+    ev_id = s.get('pending_job_id')
+    txt = (text or '').strip()
+    low = txt.lower()
+    if low in ('cancel', 'stop', 'quit'):
+        s.set('state', 'idle'); s.set('pending_step_idx', None); s.set('pending_job_id', None)
+        s.save()
+        return "Maintenance notes cancelled. Event still on record."
+    val = None if low in ('skip', '', 'none') else txt
+    if step == 2 and low == 'me':
+        val = (user or {}).get('name') or 'unknown'
+    fields = ['resolution', 'parts_used', 'technician']
+    if step < 3 and val is not None:
+        conn.execute(f"UPDATE maintenance_events SET {fields[step]}=? WHERE id=?", (val, ev_id))
+        conn.commit()
+    step += 1
+    s.set('pending_step_idx', step); s.save()
+    if step == 1:
+        return "Parts used? (say 'none' or 'skip')"
+    if step == 2:
+        return "Technician? (say 'me' for yourself, or 'skip')"
+    s.set('state', 'idle'); s.set('pending_step_idx', None); s.set('pending_job_id', None)
+    s.save()
+    return "Notes saved."
 
 
 def h_idle(conn, s, text, user):
@@ -1076,6 +1155,8 @@ def h_unknown(conn, s, text, user):
 
 
 def dispatch(conn, s, text, user):
+    if s.get('state') == 'maint_prompt':
+        return _handle_maint_prompt(conn, s, text, user)
     text = text.strip()
     if not text: return None
 

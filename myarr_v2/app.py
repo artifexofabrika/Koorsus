@@ -442,6 +442,68 @@ def pdca_edit(exp_id):
                            fishbone_max=FISHBONE_MAX_PER_CATEGORY)
 
 
+@app.route("/maintenance")
+def maintenance_list():
+    conn = get_db_connection()
+    line_filter = request.args.get('line', type=int)
+    station_filter = request.args.get('station')
+    days = request.args.get('days', default=30, type=int)
+    sql = """
+        SELECT m.*, l.name as line_name, j.job_number
+        FROM maintenance_events m
+        LEFT JOIN lines l ON l.id = m.line_id
+        LEFT JOIN jobs j ON j.id = m.job_id
+        WHERE m.started_at >= date('now', ?)
+    """
+    params = [f'-{days} days']
+    if line_filter:
+        sql += " AND m.line_id = ?"
+        params.append(line_filter)
+    if station_filter:
+        sql += " AND m.station = ?"
+        params.append(station_filter)
+    sql += " ORDER BY m.started_at DESC"
+    events = [dict(r) for r in conn.execute(sql, params).fetchall()]
+    stations = [r[0] for r in conn.execute(
+        "SELECT DISTINCT station FROM maintenance_events WHERE station IS NOT NULL ORDER BY station"
+    ).fetchall()]
+    lines_list = conn.execute("SELECT * FROM lines ORDER BY id").fetchall()
+    conn.close()
+    return render_template("maintenance_list.html", events=events, stations=stations,
+                           lines=lines_list, current_line=line_filter,
+                           current_station=station_filter, days=days)
+
+
+@app.route("/maintenance/<int:event_id>", methods=["GET", "POST"])
+def maintenance_detail(event_id):
+    conn = get_db_connection()
+    ev = conn.execute("""
+        SELECT m.*, l.name as line_name, j.job_number
+        FROM maintenance_events m
+        LEFT JOIN lines l ON l.id = m.line_id
+        LEFT JOIN jobs j ON j.id = m.job_id
+        WHERE m.id = ?
+    """, (event_id,)).fetchone()
+    if not ev:
+        conn.close(); return "Maintenance event not found", 404
+    if request.method == "POST":
+        f = request.form
+        upd = {}
+        for k in ['symptom', 'resolution', 'parts_used', 'technician',
+                  'called_by', 'reason_code', 'notes', 'category']:
+            if k in f:
+                upd[k] = f[k] or None
+        if upd:
+            set_clause = ', '.join(f"{k}=?" for k in upd)
+            conn.execute(f"UPDATE maintenance_events SET {set_clause} WHERE id=?",
+                         list(upd.values()) + [event_id])
+            conn.commit()
+        conn.close()
+        return redirect(url_for('maintenance_detail', event_id=event_id))
+    conn.close()
+    return render_template("maintenance.html", ev=dict(ev))
+
+
 @app.route("/setup", methods=["GET", "POST"])
 def setup():
     msg = None
