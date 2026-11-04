@@ -13,13 +13,13 @@
   <br>
   
 <h1>Changeover Analysis</h1>
-<div class="sub">Line 4: 8-&gt;7 &middot; 2026-10-23T16:00:00</div>
+<div class="sub">Line 4: 8-&gt;7 &middot; 2026-10-24T16:00:00</div>
 <div class="sub" style="margin-top:-1rem;color:var(--accent)">Job WO-2026-022 &rarr; Job WO-2026-023</div>
 
 <div class="box" style="max-width:900px;margin-bottom:2rem">
   <h2>Aggregate Time</h2>
-  <div class="stat-row"><span>Standard</span><span>40 min</span></div>
-  <div class="stat-row"><span>Actual</span><span class="good">37 min</span></div>
+  <div class="stat-row"><span>Standard</span><span>58 min</span></div>
+  <div class="stat-row"><span>Actual</span><span class="good">55 min</span></div>
   <div class="stat-row"><span>Variance</span><span class="good">-3 min</span></div>
 </div>
 
@@ -30,9 +30,21 @@
     <tr><th>Component</th><th>From</th><th>To</th></tr>
     
     <tr>
+      <td>can</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">16-std-sto</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">16-std-ipa</td>
+    </tr>
+    
+    <tr>
       <td>label</td>
       <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">sto16-lbl</td>
       <td style="font-family: monospace; font-size: 0.82rem;">ipa16-lbl</td>
+    </tr>
+    
+    <tr>
+      <td>pak</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">16-clip-sto</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">16-clip-ipa</td>
     </tr>
     
   </table>
@@ -46,8 +58,8 @@
   <tr>
     <td>Change can</td>
     <td>depalletizer</td>
-    <td>12m</td>
-    <td>10m</td>
+    <td>16m</td>
+    <td>14m</td>
     <td class="good">
       -2m
     </td>
@@ -56,9 +68,9 @@
   <tr>
     <td>Verify seam</td>
     <td>seamer</td>
-    <td>8m</td>
-    <td>8m</td>
-    <td class="">
+    <td>10m</td>
+    <td>10m</td>
+    <td class="bad">
       +0m
     </td>
   </tr>
@@ -66,8 +78,8 @@
   <tr>
     <td>Change label</td>
     <td>labeler</td>
+    <td>9m</td>
     <td>6m</td>
-    <td>4m</td>
     <td class="good">
       -2m
     </td>
@@ -76,8 +88,8 @@
   <tr>
     <td>Change pak</td>
     <td>packer</td>
-    <td>5m</td>
-    <td>5m</td>
+    <td>8m</td>
+    <td>8m</td>
     <td class="good">
       -0m
     </td>
@@ -86,8 +98,8 @@
   <tr>
     <td>Verify</td>
     <td>line</td>
-    <td>5m</td>
-    <td>6m</td>
+    <td>7m</td>
+    <td>8m</td>
     <td class="bad">
       +1m
     </td>
@@ -96,8 +108,8 @@
   <tr>
     <td>Startup</td>
     <td>line</td>
-    <td>4m</td>
-    <td>4m</td>
+    <td>8m</td>
+    <td>8m</td>
     <td class="good">
       -0m
     </td>

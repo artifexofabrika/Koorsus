@@ -13,13 +13,13 @@
   <br>
   
 <h1>Changeover Analysis</h1>
-<div class="sub">Line 1: 1-&gt;2 &middot; 2026-10-08T16:00:00</div>
+<div class="sub">Line 1: 1-&gt;2 &middot; 2026-10-09T16:00:00</div>
 <div class="sub" style="margin-top:-1rem;color:var(--accent)">Job WO-2026-001 &rarr; Job WO-2026-002</div>
 
 <div class="box" style="max-width:900px;margin-bottom:2rem">
   <h2>Aggregate Time</h2>
-  <div class="stat-row"><span>Standard</span><span>53 min</span></div>
-  <div class="stat-row"><span>Actual</span><span class="bad">54 min</span></div>
+  <div class="stat-row"><span>Standard</span><span>65 min</span></div>
+  <div class="stat-row"><span>Actual</span><span class="bad">66 min</span></div>
   <div class="stat-row"><span>Variance</span><span class="bad">+1 min</span></div>
 </div>
 
@@ -28,6 +28,12 @@
   <h2>Components Changed</h2>
   <table style="margin-top:0.5rem;">
     <tr><th>Component</th><th>From</th><th>To</th></tr>
+    
+    <tr>
+      <td>box</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">bx-rose</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">bx-sand</td>
+    </tr>
     
     <tr>
       <td>case</td>
@@ -41,6 +47,12 @@
       <td style="font-family: monospace; font-size: 0.82rem;">sand-pwd</td>
     </tr>
     
+    <tr>
+      <td>shrink</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">shr-rose</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">shr-sand</td>
+    </tr>
+    
   </table>
 </div>
 
@@ -52,28 +64,28 @@
   <tr>
     <td>Change case</td>
     <td>case_feeder</td>
-    <td>12m</td>
-    <td>13m</td>
+    <td>14m</td>
+    <td>16m</td>
     <td class="bad">
-      +1m
+      +2m
     </td>
   </tr>
   
   <tr>
     <td>Change formulation</td>
     <td>filler</td>
+    <td>12m</td>
     <td>10m</td>
-    <td>9m</td>
     <td class="good">
-      -1m
+      -2m
     </td>
   </tr>
   
   <tr>
     <td>Change shrink</td>
     <td>shrink_wrap</td>
-    <td>5m</td>
-    <td>6m</td>
+    <td>7m</td>
+    <td>8m</td>
     <td class="bad">
       +1m
     </td>
@@ -82,18 +94,18 @@
   <tr>
     <td>Change box</td>
     <td>boxer</td>
-    <td>8m</td>
-    <td>6m</td>
+    <td>10m</td>
+    <td>7m</td>
     <td class="good">
-      -2m
+      -3m
     </td>
   </tr>
   
   <tr>
     <td>Verify</td>
     <td>line</td>
-    <td>8m</td>
-    <td>11m</td>
+    <td>9m</td>
+    <td>12m</td>
     <td class="bad">
       +3m
     </td>
@@ -102,8 +114,8 @@
   <tr>
     <td>Startup</td>
     <td>line</td>
-    <td>10m</td>
-    <td>11m</td>
+    <td>13m</td>
+    <td>14m</td>
     <td class="bad">
       +1m
     </td>

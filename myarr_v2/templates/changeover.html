@@ -20,8 +20,8 @@
     {% for c in changes %}
     <tr>
       <td>{{ c.component_name }}</td>
-      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">{{ c.from_value or '&mdash;' }}</td>
-      <td style="font-family: monospace; font-size: 0.82rem;">{{ c.to_value or '&mdash;' }}</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">{{ c.from_value or '-' }}</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">{{ c.to_value or '-' }}</td>
     </tr>
     {% endfor %}
   </table>

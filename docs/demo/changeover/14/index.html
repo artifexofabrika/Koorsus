@@ -13,14 +13,14 @@
   <br>
   
 <h1>Changeover Analysis</h1>
-<div class="sub">Line 3: 6-&gt;5 &middot; 2026-10-22T16:00:00</div>
+<div class="sub">Line 3: 6-&gt;5 &middot; 2026-10-23T16:00:00</div>
 <div class="sub" style="margin-top:-1rem;color:var(--accent)">Job WO-2026-016 &rarr; Job WO-2026-017</div>
 
 <div class="box" style="max-width:900px;margin-bottom:2rem">
   <h2>Aggregate Time</h2>
-  <div class="stat-row"><span>Standard</span><span>40 min</span></div>
-  <div class="stat-row"><span>Actual</span><span class="bad">45 min</span></div>
-  <div class="stat-row"><span>Variance</span><span class="bad">+5 min</span></div>
+  <div class="stat-row"><span>Standard</span><span>58 min</span></div>
+  <div class="stat-row"><span>Actual</span><span class="bad">65 min</span></div>
+  <div class="stat-row"><span>Variance</span><span class="bad">+7 min</span></div>
 </div>
 
 
@@ -30,9 +30,21 @@
     <tr><th>Component</th><th>From</th><th>To</th></tr>
     
     <tr>
+      <td>can</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">12-sleek-sto</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">12-sleek-ipa</td>
+    </tr>
+    
+    <tr>
       <td>label</td>
       <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">sto-lbl</td>
       <td style="font-family: monospace; font-size: 0.82rem;">ipa-lbl</td>
+    </tr>
+    
+    <tr>
+      <td>pak</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">12-clip-sto</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">12-clip-ipa</td>
     </tr>
     
   </table>
@@ -46,28 +58,28 @@
   <tr>
     <td>Change can</td>
     <td>depalletizer</td>
-    <td>12m</td>
-    <td>15m</td>
+    <td>16m</td>
+    <td>20m</td>
     <td class="bad">
-      +3m
+      +4m
     </td>
   </tr>
   
   <tr>
     <td>Verify seam</td>
     <td>seamer</td>
-    <td>8m</td>
-    <td>8m</td>
+    <td>10m</td>
+    <td>11m</td>
     <td class="bad">
-      +0m
+      +1m
     </td>
   </tr>
   
   <tr>
     <td>Change label</td>
     <td>labeler</td>
-    <td>6m</td>
-    <td>7m</td>
+    <td>9m</td>
+    <td>10m</td>
     <td class="bad">
       +1m
     </td>
@@ -76,30 +88,30 @@
   <tr>
     <td>Change pak</td>
     <td>packer</td>
-    <td>5m</td>
-    <td>4m</td>
-    <td class="good">
-      -0m
-    </td>
-  </tr>
-  
-  <tr>
-    <td>Verify</td>
-    <td>line</td>
-    <td>5m</td>
-    <td>4m</td>
+    <td>8m</td>
+    <td>7m</td>
     <td class="good">
       -1m
     </td>
   </tr>
   
   <tr>
+    <td>Verify</td>
+    <td>line</td>
+    <td>7m</td>
+    <td>5m</td>
+    <td class="good">
+      -2m
+    </td>
+  </tr>
+  
+  <tr>
     <td>Startup</td>
     <td>line</td>
-    <td>4m</td>
-    <td>4m</td>
+    <td>8m</td>
+    <td>7m</td>
     <td class="good">
-      -0m
+      -1m
     </td>
   </tr>
   

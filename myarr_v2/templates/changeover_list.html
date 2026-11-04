@@ -48,9 +48,9 @@
     <td style="color: var(--accent);">{{ e.line_id }} &mdash; {{ e.line_name or '' }}</td>
     <td style="font-family: monospace; font-size: 0.82rem;">{{ e.from_job_number }}</td>
     <td style="font-family: monospace; font-size: 0.82rem;">{{ e.to_job_number }}</td>
-    <td style="font-size: 0.85rem;">{{ e.components_changed or '&mdash;' }}</td>
-    <td style="text-align:right; color: var(--muted);">{{ '%.0f'|format(e.aggregate_standard_min) if e.aggregate_standard_min else '&mdash;' }}</td>
-    <td style="text-align:right;">{{ '%.0f'|format(e.aggregate_actual_min) if e.aggregate_actual_min else '&mdash;' }}</td>
+    <td style="font-size: 0.85rem;">{{ e.components_changed or 'none recorded' }}</td>
+    <td style="text-align:right; color: var(--muted);">{{ '%.0f'|format(e.aggregate_standard_min) if e.aggregate_standard_min else '-' }}</td>
+    <td style="text-align:right;">{{ '%.0f'|format(e.aggregate_actual_min) if e.aggregate_actual_min else '-' }}</td>
     <td style="text-align:right;" class="{{ 'good' if e.variance is not none and e.variance <= 0 else ('bad' if e.variance is not none else '') }}">
       {% if e.variance is not none %}{{ '%+.0f'|format(e.variance) }}{% else %}&mdash;{% endif %}
     </td>

@@ -13,16 +13,54 @@
   <br>
   
 <h1>Changeover Analysis</h1>
-<div class="sub">Line 5: 10-&gt;9 &middot; 2026-10-24T16:00:00</div>
+<div class="sub">Line 5: 10-&gt;9 &middot; 2026-10-25T16:00:00</div>
 <div class="sub" style="margin-top:-1rem;color:var(--accent)">Job WO-2026-028 &rarr; Job WO-2026-029</div>
 
 <div class="box" style="max-width:900px;margin-bottom:2rem">
   <h2>Aggregate Time</h2>
-  <div class="stat-row"><span>Standard</span><span>40 min</span></div>
-  <div class="stat-row"><span>Actual</span><span class="good">34 min</span></div>
-  <div class="stat-row"><span>Variance</span><span class="good">-6 min</span></div>
+  <div class="stat-row"><span>Standard</span><span>45 min</span></div>
+  <div class="stat-row"><span>Actual</span><span class="good">38 min</span></div>
+  <div class="stat-row"><span>Variance</span><span class="good">-7 min</span></div>
 </div>
 
+
+<div class="box" style="max-width:900px;margin-bottom:2rem">
+  <h2>Components Changed</h2>
+  <table style="margin-top:0.5rem;">
+    <tr><th>Component</th><th>From</th><th>To</th></tr>
+    
+    <tr>
+      <td>basket</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">uns-bk</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">lav-bk</td>
+    </tr>
+    
+    <tr>
+      <td>brush</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">sm-br-uns</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">sm-br-lav</td>
+    </tr>
+    
+    <tr>
+      <td>cap</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">blk-cap</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">purple-cap</td>
+    </tr>
+    
+    <tr>
+      <td>formulation</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">unscented-formulation</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">lavender-formulation</td>
+    </tr>
+    
+    <tr>
+      <td>jar</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">4-gl-uns</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">4-gl-lav</td>
+    </tr>
+    
+  </table>
+</div>
 
 
 
@@ -32,18 +70,18 @@
   <tr>
     <td>Change jar</td>
     <td>unscrambler</td>
+    <td>8m</td>
     <td>6m</td>
-    <td>5m</td>
     <td class="good">
-      -1m
+      -2m
     </td>
   </tr>
   
   <tr>
     <td>Change cap</td>
     <td>capper</td>
+    <td>5m</td>
     <td>4m</td>
-    <td>3m</td>
     <td class="good">
       -1m
     </td>
@@ -52,18 +90,18 @@
   <tr>
     <td>Change brush</td>
     <td>inserter</td>
-    <td>3m</td>
     <td>4m</td>
+    <td>5m</td>
     <td class="bad">
-      +0m
+      +1m
     </td>
   </tr>
   
   <tr>
     <td>Change basket</td>
     <td>inserter</td>
-    <td>3m</td>
-    <td>3m</td>
+    <td>4m</td>
+    <td>4m</td>
     <td class="bad">
       +0m
     </td>
@@ -72,8 +110,8 @@
   <tr>
     <td>Change formulation</td>
     <td>filler</td>
+    <td>12m</td>
     <td>10m</td>
-    <td>8m</td>
     <td class="good">
       -2m
     </td>
@@ -92,10 +130,10 @@
   <tr>
     <td>Startup</td>
     <td>line</td>
-    <td>8m</td>
-    <td>10m</td>
+    <td>6m</td>
+    <td>7m</td>
     <td class="bad">
-      +2m
+      +1m
     </td>
   </tr>
   

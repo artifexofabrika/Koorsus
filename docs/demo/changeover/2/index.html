@@ -13,14 +13,14 @@
   <br>
   
 <h1>Changeover Analysis</h1>
-<div class="sub">Line 1: 2-&gt;1 &middot; 2026-10-13T16:00:00</div>
+<div class="sub">Line 1: 2-&gt;1 &middot; 2026-10-14T16:00:00</div>
 <div class="sub" style="margin-top:-1rem;color:var(--accent)">Job WO-2026-002 &rarr; Job WO-2026-003</div>
 
 <div class="box" style="max-width:900px;margin-bottom:2rem">
   <h2>Aggregate Time</h2>
-  <div class="stat-row"><span>Standard</span><span>53 min</span></div>
-  <div class="stat-row"><span>Actual</span><span class="bad">62 min</span></div>
-  <div class="stat-row"><span>Variance</span><span class="bad">+9 min</span></div>
+  <div class="stat-row"><span>Standard</span><span>65 min</span></div>
+  <div class="stat-row"><span>Actual</span><span class="bad">76 min</span></div>
+  <div class="stat-row"><span>Variance</span><span class="bad">+11 min</span></div>
 </div>
 
 
@@ -28,6 +28,12 @@
   <h2>Components Changed</h2>
   <table style="margin-top:0.5rem;">
     <tr><th>Component</th><th>From</th><th>To</th></tr>
+    
+    <tr>
+      <td>box</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">bx-sand</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">bx-rose</td>
+    </tr>
     
     <tr>
       <td>case</td>
@@ -41,6 +47,12 @@
       <td style="font-family: monospace; font-size: 0.82rem;">rose-pwd</td>
     </tr>
     
+    <tr>
+      <td>shrink</td>
+      <td style="font-family: monospace; font-size: 0.82rem; color: var(--muted);">shr-sand</td>
+      <td style="font-family: monospace; font-size: 0.82rem;">shr-rose</td>
+    </tr>
+    
   </table>
 </div>
 
@@ -52,8 +64,8 @@
   <tr>
     <td>Change case</td>
     <td>case_feeder</td>
-    <td>12m</td>
-    <td>15m</td>
+    <td>14m</td>
+    <td>17m</td>
     <td class="bad">
       +3m
     </td>
@@ -62,8 +74,8 @@
   <tr>
     <td>Change formulation</td>
     <td>filler</td>
-    <td>10m</td>
     <td>12m</td>
+    <td>14m</td>
     <td class="bad">
       +2m
     </td>
@@ -72,8 +84,8 @@
   <tr>
     <td>Change shrink</td>
     <td>shrink_wrap</td>
-    <td>5m</td>
-    <td>5m</td>
+    <td>7m</td>
+    <td>7m</td>
     <td class="good">
       -0m
     </td>
@@ -82,8 +94,8 @@
   <tr>
     <td>Change box</td>
     <td>boxer</td>
+    <td>10m</td>
     <td>8m</td>
-    <td>6m</td>
     <td class="good">
       -2m
     </td>
@@ -92,18 +104,18 @@
   <tr>
     <td>Verify</td>
     <td>line</td>
-    <td>8m</td>
     <td>9m</td>
+    <td>10m</td>
     <td class="bad">
-      +1m
+      +2m
     </td>
   </tr>
   
   <tr>
     <td>Startup</td>
     <td>line</td>
-    <td>10m</td>
-    <td>9m</td>
+    <td>13m</td>
+    <td>12m</td>
     <td class="good">
       -1m
     </td>
