@@ -205,6 +205,15 @@ def job_detail(job_number):
     if not job:
         conn.close(); return "Job not found", 404
     job = dict(job)
+    handovers_raw = conn.execute("""
+        SELECT h.*, fu.name AS from_name, tu.name AS to_name
+        FROM shift_handovers h
+        LEFT JOIN users fu ON fu.id = h.from_user_id
+        LEFT JOIN users tu ON tu.id = h.to_user_id
+        WHERE h.job_id = ?
+        ORDER BY h.created_at ASC
+    """, (job['id'],)).fetchall()
+    handovers = [dict(h) for h in handovers_raw]
     runs = conn.execute("""
         SELECT r.id, r.period, r.units_filled, r.duration_min, r.line_id,
                r.shift, r.recorded_at, j.sku_id
@@ -230,7 +239,7 @@ def job_detail(job_number):
     tgt_units = job['target_quantity'] or 0
     ul = _unit_label(conn); cl = _case_label(conn)
     conn.close()
-    return render_template("job_detail.html", job=job, details=details,
+    return render_template("job_detail.html", job=job, details=details, handovers=handovers,
                            cases=int(total_units // cp), tgt_cases=int(tgt_units // cp),
                            pct=(total_units / tgt_units * 100) if tgt_units else 0,
                            unit_label=ul, case_label=cl)

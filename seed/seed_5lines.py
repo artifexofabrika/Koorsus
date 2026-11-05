@@ -7,7 +7,9 @@ c = conn.cursor()
 
 for t in ['experiment_actions','fishbone_causes','experiments','co_event_steps',
           'co_event_changes','co_events',
-          'co_steps_v2','co_procedures_v2','line_events','downtime_events',
+          'co_steps_v2','co_procedures_v2',
+          'shift_handovers','maintenance_events',
+          'line_events','downtime_events',
           'hourly_runs','jobs','sku_bom','component_types',
           'line_sku_rates','skus','lines']:
     c.execute(f"DELETE FROM {t}")

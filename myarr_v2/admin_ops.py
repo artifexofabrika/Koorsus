@@ -14,6 +14,7 @@ EXPORT_TABLES = [
     'co_procedures_v2', 'co_steps_v2', 'jobs', 'users', 'settings',
     'hourly_runs', 'downtime_events', 'co_events', 'co_event_steps',
     'co_event_changes', 'line_events',
+    'maintenance_events', 'shift_handovers',
     'experiments', 'experiment_actions', 'fishbone_causes',
 ]
 

@@ -1096,10 +1096,17 @@ def h_handover(conn, s, text, user):
 
 
 def cont_handover_notes(conn, s, text, user):
-    conn.execute("UPDATE jobs SET handover_notes=? WHERE id=?", (text, s.get('pending_job_id')))
+    job_id = s.get('pending_job_id')
+    conn.execute("UPDATE jobs SET handover_notes=? WHERE id=?", (text, job_id))
+    job = conn.execute("SELECT line_id FROM jobs WHERE id=?", (job_id,)).fetchone()
+    line_id = job['line_id'] if job else None
+    from_uid = user['id'] if user else None
+    conn.execute(
+        "INSERT INTO shift_handovers (job_id, line_id, from_user_id, notes) VALUES (?,?,?,?)",
+        (job_id, line_id, from_uid, text))
     conn.commit()
     s.set('pending_job_id', None); s.set('state', 'idle'); s.save()
-    return "Handover notes saved."
+    return "Handover noted. Incoming operator can say 'taking over job WO-...' to see it."
 
 
 def h_takeover(conn, s, text, user):
@@ -1108,6 +1115,18 @@ def h_takeover(conn, s, text, user):
     if not job: return _explain_no_job(conn, job_no or text, conf, alts)
     agg = conn.execute("SELECT SUM(units_filled) b FROM hourly_runs WHERE job_id=?", (job['id'],)).fetchone()
     jh = next_job_hour(conn, job['id'])
+
+    open_h = conn.execute(
+        "SELECT * FROM shift_handovers WHERE job_id=? AND taken_at IS NULL "
+        "ORDER BY created_at DESC LIMIT 1", (job['id'],)).fetchone()
+    handover_notes = job.get('handover_notes') or 'none'
+    if open_h:
+        to_uid = user['id'] if user else None
+        conn.execute("UPDATE shift_handovers SET to_user_id=?, taken_at=? WHERE id=?",
+                     (to_uid, datetime.now().isoformat(), open_h['id']))
+        conn.commit()
+        handover_notes = open_h['notes'] or 'none'
+
     s.set('active_job_id', job['id']); s.set('pending_job_id', None)
     s.set('start_offset', None); s.set('shift', None); s.set('shift_hour', None)
     s.set('line_id', job['line_id']); s.set('state', 'idle'); s.save()
@@ -1116,7 +1135,7 @@ def h_takeover(conn, s, text, user):
     note = _fuzzy_note(job_no, conf, job)
     return (f"Taking over {job['job_number']}{note}.\n"
             f"Job-hours completed: {jh:.1f}. Produced: {cases:,} / {tgt_cases:,} {cl}.\n"
-            f"Handover notes: {job.get('handover_notes') or 'none'}\n"
+            f"Handover notes: {handover_notes}\n"
             f"Ready to log: 'running job {job['job_number']}, hour 1, N {cl}'.")
 
 

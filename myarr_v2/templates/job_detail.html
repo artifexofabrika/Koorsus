@@ -32,5 +32,22 @@
   {% endfor %}
 </table>
 
+{% if handovers %}
+<h2 style="margin-top:2.5rem;">Handover history</h2>
+<table style="max-width:900px;">
+  <tr>
+    <th>Date</th><th>From</th><th>To</th><th>Notes</th>
+  </tr>
+  {% for h in handovers %}
+  <tr {% if loop.last %}style="font-weight:bold;"{% endif %}>
+    <td style="font-size:0.85rem;">{{ (h.created_at or '')[:16].replace('T', ' ') }}</td>
+    <td style="font-size:0.85rem;">{{ h.from_name or '-' }}</td>
+    <td style="font-size:0.85rem;">{{ h.to_name or 'pending' }}</td>
+    <td style="font-size:0.85rem;">{{ h.notes or '-' }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
 <div style="margin-top:1.5rem;"><a href="/reconciliation" style="color: var(--accent);">&larr; Back to reconciliation</a></div>
 {% endblock %}
