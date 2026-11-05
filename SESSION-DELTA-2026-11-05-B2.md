@@ -177,7 +177,7 @@ Stage B2 complete and verified:
   - divergence demonstrated on line 4 (77 vs 90)
   - job column relabelled Progress
 
-The live maintenance path (via bot) has NOT been tested since B2.
+The live maintenance path was exercised on 2026-11-04 (maintenance_events id=1, line 1, source=telegram).
 That is the next verification step.
 
 ---
