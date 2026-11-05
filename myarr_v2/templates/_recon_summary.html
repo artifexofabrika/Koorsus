@@ -1,0 +1,29 @@
+<h2 style="margin-top: 1.5rem;">Line Summary: last {{ days }} days</h2>
+<table>
+  <tr>
+    <th>Line</th>
+    <th style="text-align:right;">OEE</th>
+    <th style="text-align:right;">Operator</th>
+    <th>Components (min)</th>
+  </tr>
+  {% for s in summary %}
+  <tr>
+    <td style="color: var(--accent);">{{ s.line_id }} &mdash; {{ s.line_name or '' }}</td>
+    <td style="text-align:right; font-weight: 600;">
+      {% if s.scheduled_min > 0 %}{{ '%.0f'|format(s.oee * 100) }}%{% else %}<span style="color: var(--muted);">no data</span>{% endif %}
+    </td>
+    <td style="text-align:right; font-weight: 600;">
+      {% if s.operator_available_min > 0 %}{{ '%.0f'|format(s.operator_perf * 100) }}%{% else %}<span style="color: var(--muted);">no data</span>{% endif %}
+    </td>
+    <td style="font-size: 0.78rem; color: var(--muted);">
+      prod {{ '%.0f'|format(s.production_min) }}
+      | CO {{ '%.0f'|format(s.changeover_min) }}
+      | maint {{ '%.0f'|format(s.unplanned_maint_min) }}
+      | idle {{ '%.0f'|format(s.idle_min) }}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+<p style="color: var(--muted); font-size: 0.85rem; margin-top: 0.5rem;">
+  OEE counts all losses, including unscheduled maintenance. Operator performance excludes time the operator did not cause: breakdowns and unplanned maintenance. Both are correct; they answer different questions.
+</p>

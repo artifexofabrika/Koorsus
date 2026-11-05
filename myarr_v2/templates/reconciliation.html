@@ -13,7 +13,7 @@
        style="color: {{ 'var(--accent)' if current_line == l.id else 'var(--muted)' }};">{{ l.id }} {{ l.name }}</a>
   {% endfor %}
   <span style="margin-left: 2rem;"><strong>Window:</strong>
-    {% for d in [1, 3, 7, 30] %}
+    {% for d in [7, 14, 30, 90] %}
       <a href="/reconciliation?days={{ d }}{% if current_line %}&line={{ current_line }}{% endif %}"
          style="color: {{ 'var(--accent)' if days == d else 'var(--muted)' }};">{{ d }}d</a>
       {% if not loop.last %}<span style="color: var(--border);">|</span>{% endif %}
@@ -21,13 +21,15 @@
   </span>
 </div>
 
+{% include "_recon_summary.html" %}
+
 <table>
   <tr>
     <th>Date</th><th>Shift</th><th>Line</th><th>Job</th><th>SKU</th>
     <th style="text-align:right;">{{ case_label|capitalize }}</th>
     <th style="text-align:right;">Expected</th>
     <th style="text-align:right;">Variance</th>
-    <th style="text-align:right;">Perf</th>
+    <th style="text-align:right;">Progress</th>
     <th>Status</th>
   </tr>
   {% for r in rows %}

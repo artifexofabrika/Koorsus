@@ -835,9 +835,11 @@ def h_start_maintenance(conn, s, text, user):
     job_id = cur['job_id'] if cur else None
     c = conn.execute(
         "INSERT INTO maintenance_events (line_id, job_id, station, started_at, "
-        "category, symptom, source, user_id, raw_text) VALUES (?,?,?,?,?,?,?,?,?)",
+        "category, symptom, source, user_id, raw_text, created_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?)",
         (lid, job_id, station, datetime.now().isoformat(), 'unplanned',
-         symptom, 'telegram', user['id'] if user else None, text))
+         symptom, 'telegram', user['id'] if user else None, text,
+         datetime.now().isoformat()))
     ev_id = c.lastrowid
     if cur:
         conn.execute("UPDATE line_events SET maintenance_event_id=? WHERE id=?",
@@ -1102,8 +1104,8 @@ def cont_handover_notes(conn, s, text, user):
     line_id = job['line_id'] if job else None
     from_uid = user['id'] if user else None
     conn.execute(
-        "INSERT INTO shift_handovers (job_id, line_id, from_user_id, notes) VALUES (?,?,?,?)",
-        (job_id, line_id, from_uid, text))
+        "INSERT INTO shift_handovers (job_id, line_id, from_user_id, notes, created_at) VALUES (?,?,?,?,?)",
+        (job_id, line_id, from_uid, text, datetime.now().isoformat()))
     conn.commit()
     s.set('pending_job_id', None); s.set('state', 'idle'); s.save()
     return "Handover noted. Incoming operator can say 'taking over job WO-...' to see it."

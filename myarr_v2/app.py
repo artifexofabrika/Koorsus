@@ -4,6 +4,7 @@ Myarra Web Application
 from flask import Flask, render_template, request, redirect, url_for, Response
 from db import get_db_connection, ingest_csv
 from onboarding import TEMPLATES, generate_csv, ingest_template, INGEST_ORDER
+from recon import summary_for_window
 from datetime import datetime, timedelta
 import json
 
@@ -13,6 +14,8 @@ from verify import verify_bp
 app.register_blueprint(verify_bp)
 from admin_ops import admin_ops_bp
 app.register_blueprint(admin_ops_bp)
+from views import ensure_views
+_c = get_db_connection(); ensure_views(_c); _c.close()
 
 FISHBONE_CATEGORIES = ['Man', 'Machine', 'Method', 'Material', 'Measurement', 'Environment']
 FISHBONE_MAX_PER_CATEGORY = 3
@@ -150,7 +153,8 @@ def dashboard():
 def reconciliation():
     conn = get_db_connection()
     line_filter = request.args.get('line', type=int)
-    days = request.args.get('days', default=3, type=int)
+    days = request.args.get('days', default=7, type=int)
+    summary = summary_for_window(conn, line_filter, days)
     sql = """
         SELECT j.id, j.job_number, j.line_id, l.name as line_name,
             s.part_number, s.description as sku_description, s.case_pack,
@@ -189,7 +193,7 @@ def reconciliation():
     lines_list = conn.execute("SELECT * FROM lines ORDER BY id").fetchall()
     case_label = _case_label(conn)
     conn.close()
-    return render_template("reconciliation.html", rows=out, lines=lines_list,
+    return render_template("reconciliation.html", rows=out, summary=summary, lines=lines_list,
                            current_line=line_filter, days=days, case_label=case_label)
 
 
