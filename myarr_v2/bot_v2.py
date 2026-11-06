@@ -720,6 +720,17 @@ def h_start_job(conn, s, text, user):
     if s.get('active_job_id') and s['active_job_id'] != job['id']:
         active = conn.execute("SELECT job_number FROM jobs WHERE id=?", (s['active_job_id'],)).fetchone()
         return f"You have {active['job_number']} active. End or pause it first."
+
+    # Agreed 2026-11-06: strict line enforcement. Refuse to start a job if the line is already active with another job.
+    active_line = conn.execute("""
+        SELECT j.job_number, le.state
+        FROM jobs j
+        JOIN line_events le ON le.job_id = j.id
+        WHERE j.line_id = ? AND le.ended_at IS NULL AND j.id != ?
+    """, (job['line_id'], job['id'])).fetchone()
+
+    if active_line:
+        return f"Line {job['line_id']} is currently running {active_line['job_number']} ({active_line['state']}). You must complete a changeover before starting {job['job_number']}."
     conn.execute("UPDATE jobs SET status='running', actual_end=NULL WHERE id=?", (job['id'],))
     conn.commit()
     s.set('pending_job_id', job['id']); s.set('line_id', job['line_id'])
