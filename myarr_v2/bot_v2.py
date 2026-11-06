@@ -1229,6 +1229,29 @@ def dispatch(conn, s, text, user):
     text = text.strip()
     if not text: return None
 
+    note_match = re.match(r'^(note|comment|memo)\s*(?:hour\s*(\d+))?:?\s+(.*)', text, re.IGNORECASE)
+    if note_match:
+        note_hour = note_match.group(2)
+        note_text = note_match.group(3).strip()
+        if not note_text:
+            return "Please provide the note text. Example: 'note: label roll change' or 'note hour 5: case feeder jam'"
+        if not s.get('active_job_id'):
+            return "No active job. Start or select a job first."
+        job_id = s['active_job_id']
+        if note_hour:
+            period = f"H{note_hour}"
+            target_row = conn.execute("SELECT id FROM hourly_runs WHERE job_id=? AND period=? AND (superseded IS NULL OR superseded=0) ORDER BY id DESC LIMIT 1", (job_id, period)).fetchone()
+            if not target_row:
+                return f"No existing {period} entry found for the active job."
+        else:
+            target_row = conn.execute("SELECT id, period FROM hourly_runs WHERE job_id=? AND (superseded IS NULL OR superseded=0) ORDER BY id DESC LIMIT 1", (job_id,)).fetchone()
+            if not target_row:
+                return "No hourly entries found for the active job."
+            period = target_row['period']
+        conn.execute("UPDATE hourly_runs SET notes=? WHERE id=?", (note_text, target_row['id']))
+        conn.commit()
+        return f"Note added to {period}: '{note_text}'"
+
     relog_match = re.match(r'^(relog|re-log|correct)\s+(.*)', text, re.IGNORECASE)
     if relog_match:
         original_text = relog_match.group(2).strip()

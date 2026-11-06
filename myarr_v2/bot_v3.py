@@ -19,6 +19,7 @@ STRUCTURED_PATTERNS = [
     r'^(resume|resuming|restart|restarting|unpause|continue|continuing)\b',
     r'^back\s+to\b',
     r'^relog\b',
+    r'^(note|comment|memo)\b',
     r'^(cancel|stop|quit|exit)\s*$',
     r'^confirm[\s,]',
 ]

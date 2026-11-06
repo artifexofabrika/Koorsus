@@ -204,74 +204,87 @@ def line_report(line_id):
     line = conn.execute("SELECT * FROM lines WHERE id=?", (line_id,)).fetchone()
     if not line:
         conn.close(); return "Line not found", 404
-    
-    # Get the most recent date with data
+
     latest = conn.execute("SELECT MAX(date(recorded_at)) as d FROM hourly_runs WHERE line_id=?", (line_id,)).fetchone()
     if not latest or not latest['d']:
         conn.close(); return "No data for this line", 404
-        
+
     runs = conn.execute("""
         SELECT r.period, r.recorded_at, r.units_filled, r.duration_min, r.scrap_units, r.notes, j.sku_id
         FROM hourly_runs r JOIN jobs j ON r.job_id = j.id
         WHERE r.line_id=? AND date(r.recorded_at)=? AND (r.superseded IS NULL OR r.superseded=0)
         ORDER BY r.period
     """, (line_id, latest['d'])).fetchall()
-    
+
+    if not runs:
+        conn.close(); return "No data for this line today", 404
+
+    # Get the shift from the first record
+    shift_row = conn.execute("SELECT shift FROM hourly_runs WHERE line_id=? AND date(recorded_at)=? LIMIT 1", (line_id, latest['d'])).fetchone()
+    shift = shift_row['shift'] if shift_row else 'S1'
+
+    sample_sku = runs[0]['sku_id']
+    rate_row = conn.execute("SELECT ideal_rate FROM line_sku_rates WHERE line_id=? AND sku_id=?", (line_id, sample_sku)).fetchone()
+    bpm = rate_row['ideal_rate'] if rate_row else 600.0
+    target_per_hour = int(bpm)
+
     rows = []
     total_target = 0
     total_actual = 0
     total_scrap = 0
     target_acc = 0
     actual_acc = 0
-    target_per_hour = 0
-    
+
     for r in runs:
-        rate = conn.execute("SELECT ideal_rate FROM line_sku_rates WHERE line_id=? AND sku_id=?", (line_id, r['sku_id'])).fetchone()
-        bpm = rate['ideal_rate'] if rate else 600.0
-        target_per_hour = int(bpm)
-        target = int(bpm * r['duration_min'] / 60.0)
+        duration = r['duration_min']
+        target = int(bpm * duration / 60.0)
+        actual = r['units_filled']
         
         target_acc += target
-        actual_acc += r['units_filled']
+        actual_acc += actual
         total_target += target
-        total_actual += r['units_filled']
+        total_actual += actual
         total_scrap += (r['scrap_units'] or 0)
-        
-        # Format actual time block (e.g., "14:00 - 15:00")
+
+        # Use the actual timestamp from the database - it is the truth
         hour_label = r['period']
         if r['recorded_at']:
             try:
-                start_dt = datetime.fromisoformat(r['recorded_at'])
-                end_dt = start_dt + timedelta(minutes=r['duration_min'])
-                hour_label = f"{start_dt.strftime('%H:%M')} - {end_dt.strftime('%H:%M')}"
+                dt = datetime.fromisoformat(r['recorded_at'])
+                end_dt = dt + timedelta(minutes=duration)
+                hour_label = f"{dt.strftime('%H:%M')} - {end_dt.strftime('%H:%M')}"
             except Exception:
                 pass
+
+        is_lunch = (duration < 60 and actual == 0)
         
         rows.append({
             'hour_label': hour_label,
-            'minutes': r['duration_min'],
-            'target': target,
-            'actual': r['units_filled'],
-            'target_acc': target_acc,
-            'actual_acc': actual_acc,
-            'delta': r['units_filled'] - target,
+            'minutes': duration,
+            'target': target if not is_lunch else 0,
+            'actual': actual,
+            'target_acc': target_acc if not is_lunch else target_acc,
+            'actual_acc': actual_acc if not is_lunch else actual_acc,
+            'delta': actual - target if not is_lunch else 0,
             'scrap': r['scrap_units'],
-            'comments': r['notes']
+            'comments': 'Scheduled break' if is_lunch else (r['notes'] or '—'),
+            'is_lunch': is_lunch
         })
-        
+
     conn.close()
-    
+
     p2p = round((total_actual / total_target * 100), 1) if total_target else 0
     ftq = round(((total_actual - total_scrap) / total_actual * 100), 1) if total_actual else 0
     takt_time = round(3600.0 / target_per_hour, 2) if target_per_hour else 0
-    
-    return render_template("line_report.html", 
-                           line=line, 
+
+    return render_template("line_report.html",
+                           line=line,
                            report_date=latest['d'],
-                           rows=rows, 
-                           total_target=total_target, 
+                           shift=shift,
+                           rows=rows,
+                           total_target=total_target,
                            total_actual=total_actual,
-                           p2p=p2p, 
+                           p2p=p2p,
                            ftq=ftq,
                            takt_time=takt_time,
                            target_per_hour=target_per_hour)
