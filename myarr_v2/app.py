@@ -197,6 +197,85 @@ def reconciliation():
                            current_line=line_filter, days=days, case_label=case_label)
 
 
+
+@app.route("/line/<int:line_id>/report")
+def line_report(line_id):
+    conn = get_db_connection()
+    line = conn.execute("SELECT * FROM lines WHERE id=?", (line_id,)).fetchone()
+    if not line:
+        conn.close(); return "Line not found", 404
+    
+    # Get the most recent date with data
+    latest = conn.execute("SELECT MAX(date(recorded_at)) as d FROM hourly_runs WHERE line_id=?", (line_id,)).fetchone()
+    if not latest or not latest['d']:
+        conn.close(); return "No data for this line", 404
+        
+    runs = conn.execute("""
+        SELECT r.period, r.recorded_at, r.units_filled, r.duration_min, r.scrap_units, r.notes, j.sku_id
+        FROM hourly_runs r JOIN jobs j ON r.job_id = j.id
+        WHERE r.line_id=? AND date(r.recorded_at)=? AND (r.superseded IS NULL OR r.superseded=0)
+        ORDER BY r.period
+    """, (line_id, latest['d'])).fetchall()
+    
+    rows = []
+    total_target = 0
+    total_actual = 0
+    total_scrap = 0
+    target_acc = 0
+    actual_acc = 0
+    target_per_hour = 0
+    
+    for r in runs:
+        rate = conn.execute("SELECT ideal_rate FROM line_sku_rates WHERE line_id=? AND sku_id=?", (line_id, r['sku_id'])).fetchone()
+        bpm = rate['ideal_rate'] if rate else 600.0
+        target_per_hour = int(bpm)
+        target = int(bpm * r['duration_min'] / 60.0)
+        
+        target_acc += target
+        actual_acc += r['units_filled']
+        total_target += target
+        total_actual += r['units_filled']
+        total_scrap += (r['scrap_units'] or 0)
+        
+        # Format actual time block (e.g., "14:00 - 15:00")
+        hour_label = r['period']
+        if r['recorded_at']:
+            try:
+                start_dt = datetime.fromisoformat(r['recorded_at'])
+                end_dt = start_dt + timedelta(minutes=r['duration_min'])
+                hour_label = f"{start_dt.strftime('%H:%M')} - {end_dt.strftime('%H:%M')}"
+            except Exception:
+                pass
+        
+        rows.append({
+            'hour_label': hour_label,
+            'minutes': r['duration_min'],
+            'target': target,
+            'actual': r['units_filled'],
+            'target_acc': target_acc,
+            'actual_acc': actual_acc,
+            'delta': r['units_filled'] - target,
+            'scrap': r['scrap_units'],
+            'comments': r['notes']
+        })
+        
+    conn.close()
+    
+    p2p = round((total_actual / total_target * 100), 1) if total_target else 0
+    ftq = round(((total_actual - total_scrap) / total_actual * 100), 1) if total_actual else 0
+    takt_time = round(3600.0 / target_per_hour, 2) if target_per_hour else 0
+    
+    return render_template("line_report.html", 
+                           line=line, 
+                           report_date=latest['d'],
+                           rows=rows, 
+                           total_target=total_target, 
+                           total_actual=total_actual,
+                           p2p=p2p, 
+                           ftq=ftq,
+                           takt_time=takt_time,
+                           target_per_hour=target_per_hour)
+
 @app.route("/job/<job_number>")
 def job_detail(job_number):
     conn = get_db_connection()

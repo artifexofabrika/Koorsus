@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Myarra - Line {{ line.id }} Report{% endblock %}
+{% block content %}
+<style>
+  .report-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 1rem; }
+  .report-table th { background: var(--card-bg); border-bottom: 2px solid var(--accent); padding: 0.5rem; text-align: right; }
+  .report-table th:first-child, .report-table th:last-child { text-align: left; }
+  .report-table td { padding: 0.5rem; border-bottom: 1px solid var(--border); text-align: right; }
+  .report-table td:first-child, .report-table td:last-child { text-align: left; }
+  .report-table tr.totals { font-weight: bold; background: var(--card-bg); border-top: 2px solid var(--accent); }
+  .takt-box { background: var(--card-bg); border: 1px solid var(--border); padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; display: inline-block; }
+</style>
+
+<div style="display: flex; justify-content: space-between; align-items: flex-start;">
+  <div>
+    <h1>Line {{ line.id }} — {{ line.name }}</h1>
+    <div class="sub">{{ report_date }} &middot; Shift Performance Report</div>
+  </div>
+  <a href="/" style="color: var(--accent);">&larr; Back to Dashboard</a>
+</div>
+
+<div class="takt-box">
+  <strong>Takt Time</strong> = Customer Demand / Available Minutes<br>
+  <span style="color: var(--muted); font-size: 0.85rem;">Target is calculated from Ideal Rate: {{ takt_time }} sec/unit ({{ target_per_hour }} units/hr)</span>
+</div>
+
+<table class="report-table">
+  <thead>
+    <tr>
+      <th>Hour</th>
+      <th>Minutes</th>
+      <th>Target</th>
+      <th>Actual</th>
+      <th>Target Accum.</th>
+      <th>Actual Accum.</th>
+      <th>Delta</th>
+      <th>Reject / Rework</th>
+      <th>Comments</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.hour_label }}</td>
+      <td>{{ r.minutes }}</td>
+      <td>{{ '{:,}'.format(r.target) }}</td>
+      <td>{{ '{:,}'.format(r.actual) }}</td>
+      <td>{{ '{:,}'.format(r.target_acc) }}</td>
+      <td>{{ '{:,}'.format(r.actual_acc) }}</td>
+      <td class="{{ 'good' if r.delta >= 0 else 'bad' }}">{{ '{:+,}'.format(r.delta) }}</td>
+      <td>{{ '{:,}'.format(r.scrap) if r.scrap else '—' }}</td>
+      <td style="color: var(--muted);">{{ r.comments or '—' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr class="totals">
+      <td colspan="2">Totals</td>
+      <td>{{ '{:,}'.format(total_target) }}</td>
+      <td>{{ '{:,}'.format(total_actual) }}</td>
+      <td></td>
+      <td></td>
+      <td class="{{ 'good' if (total_actual - total_target) >= 0 else 'bad' }}">{{ '{:+,}'.format(total_actual - total_target) }}</td>
+      <td colspan="2"></td>
+    </tr>
+  </tfoot>
+</table>
+
+<div style="margin-top: 1.5rem; display: flex; gap: 2rem; font-size: 1.1rem;">
+  <div><strong>P2P (Actual / Target):</strong> <span style="color: var(--accent);">{{ p2p }}%</span></div>
+  <div><strong>FTQ (First Time Quality):</strong> <span style="color: var(--accent);">{{ ftq }}%</span></div>
+</div>
+
+{% endblock %}

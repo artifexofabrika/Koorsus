@@ -9,7 +9,7 @@
   </tr>
   {% for r in rows %}
   <tr>
-    <td style="color: var(--accent);">{{ r.line_id }} &mdash; {{ r.line_name }}</td>
+    <td style="color: var(--accent);"><a href="/line/{{ r.line_id }}/report" style="color: inherit; text-decoration: underline;">{{ r.line_id }} &mdash; {{ r.line_name }}</a></td>
     <td>
       {% if r.state == 'production' %}
         <span class="pill pass">PRODUCTION</span>
