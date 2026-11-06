@@ -1,4 +1,4 @@
-"""Myarra Stage B2 views. Run once: python3 views.py. Idempotent."""
+"""Myarra views. Run once: python3 views.py. Idempotent."""
 from db import get_db_connection
 
 V_OEE = """
@@ -80,15 +80,107 @@ SELECT line_id, day,
 FROM v_oee_by_line_day
 """
 
+V_STAGE_C = """
+CREATE VIEW IF NOT EXISTS v_oee_daily AS
+SELECT * FROM v_oee_by_line_day;
+
+CREATE VIEW IF NOT EXISTS v_operator_performance AS
+SELECT * FROM v_operator_perf_by_line_day;
+
+CREATE VIEW IF NOT EXISTS v_production_vs_standard AS
+SELECT line_id, day,
+       actual_units, expected_units,
+       (actual_units - expected_units) AS variance_units,
+       CASE WHEN expected_units > 0
+            THEN 1.0*actual_units/expected_units ELSE NULL END AS pct_vs_standard
+FROM v_oee_by_line_day;
+
+CREATE VIEW IF NOT EXISTS v_unaccounted_by_line_day AS
+WITH per_run AS (
+    SELECT r.line_id, date(r.recorded_at) AS day,
+           r.duration_min,
+           CASE WHEN COALESCE(lsr.ideal_rate, 0) > 0
+                THEN r.duration_min - (r.units_filled * 60.0 / lsr.ideal_rate)
+                ELSE NULL END AS gap_min
+    FROM hourly_runs r
+    LEFT JOIN jobs j ON j.id = r.job_id
+    LEFT JOIN line_sku_rates lsr
+           ON lsr.line_id = r.line_id
+          AND lsr.sku_id  = COALESCE(r.sku_id, j.sku_id)
+    WHERE r.recorded_at IS NOT NULL
+)
+SELECT line_id, day,
+       SUM(duration_min) AS scheduled_prod_min,
+       ROUND(SUM(gap_min), 1) AS unaccounted_min,
+       CASE WHEN SUM(duration_min) > 0
+            THEN ROUND(SUM(gap_min)/SUM(duration_min), 3) ELSE NULL END AS unaccounted_pct
+FROM per_run
+GROUP BY line_id, day;
+
+CREATE VIEW IF NOT EXISTS v_changeover_variance AS
+SELECT e.line_id, date(e.started_at) AS day,
+       e.procedure_id,
+       p.name AS procedure_name,
+       p.aggregate_standard_min AS standard_min,
+       ROUND(AVG(e.aggregate_actual_min), 1) AS actual_min,
+       COUNT(*) AS event_count,
+       ROUND(AVG(e.aggregate_actual_min) - p.aggregate_standard_min, 1) AS variance_min,
+       ROUND((AVG(e.aggregate_actual_min) - p.aggregate_standard_min) / p.aggregate_standard_min, 3) AS variance_pct
+FROM co_events e
+JOIN co_procedures_v2 p ON p.id = e.procedure_id
+WHERE e.started_at IS NOT NULL
+  AND e.aggregate_actual_min IS NOT NULL
+  AND p.aggregate_standard_min IS NOT NULL
+  AND p.aggregate_standard_min > 0
+GROUP BY e.line_id, date(e.started_at), e.procedure_id, p.name, p.aggregate_standard_min;
+
+CREATE VIEW IF NOT EXISTS v_maintenance_by_station AS
+SELECT line_id, station, date(started_at) AS day,
+       COUNT(*) AS event_count,
+       ROUND(SUM(aggregate_actual_min), 1) AS total_min,
+       ROUND(AVG(aggregate_actual_min), 1) AS avg_min,
+       GROUP_CONCAT(DISTINCT category) AS categories,
+       MAX(reason_code) AS latest_reason_code
+FROM maintenance_events
+WHERE started_at IS NOT NULL
+GROUP BY line_id, station, date(started_at);
+
+CREATE VIEW IF NOT EXISTS v_pdca_trend AS
+SELECT e.id AS experiment_id, e.pdca_id, e.title,
+       date(ev.started_at) AS day,
+       ROUND(AVG(es.actual_min), 2) AS avg_actual_min,
+       COUNT(*) AS n_samples
+FROM experiments e
+JOIN co_steps_v2 s ON s.step_name = e.target_step_name
+JOIN co_event_steps es ON es.step_id = s.id
+JOIN co_events ev ON ev.id = es.event_id
+WHERE e.target_step_name IS NOT NULL
+  AND ev.started_at IS NOT NULL
+GROUP BY e.id, e.pdca_id, e.title, date(ev.started_at);
+"""
+
+ALL_VIEWS = [
+    "v_operator_perf_by_line_day",
+    "v_operator_performance",
+    "v_oee_by_line_day",
+    "v_oee_daily",
+    "v_production_vs_standard",
+    "v_changeover_variance",
+    "v_unaccounted_by_line_day",
+    "v_maintenance_by_station",
+    "v_pdca_trend",
+]
+
 def ensure_views(conn):
-    conn.execute("DROP VIEW IF EXISTS v_operator_perf_by_line_day")
-    conn.execute("DROP VIEW IF EXISTS v_oee_by_line_day")
+    for name in ALL_VIEWS:
+        conn.execute(f"DROP VIEW IF EXISTS {name}")
     conn.execute(V_OEE)
     conn.execute(V_OP)
+    conn.executescript(V_STAGE_C)
     conn.commit()
 
 if __name__ == "__main__":
     conn = get_db_connection()
     ensure_views(conn)
     conn.close()
-    print("views created")
+    print("all 9 views created")
