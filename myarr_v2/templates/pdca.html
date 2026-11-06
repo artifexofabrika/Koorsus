@@ -2,7 +2,7 @@
 {% block title %}Myarra - PDCA{% endblock %}
 {% block content %}
 <h1>Lean Planning Board</h1>
-<div class="sub">Active PDCA Experiments</div>
+<div class="sub">Active PDCA Experiments &middot; <a href="/pdca/log" style="color:var(--accent); text-decoration:underline;">View PDCA Register &rarr;</a></div>
 
 {% for dept, cards in groups.items() %}
   <h2 style="color:var(--accent);margin-top:2rem;margin-bottom:1rem;border-bottom:1px solid var(--border);padding-bottom:.5rem">{{ dept }}</h2>
