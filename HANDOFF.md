@@ -479,12 +479,12 @@ The bot can query Koorsus from Telegram: "sop, labeler E44 error code"
 Model file:
   /home/jeeves/llama.cpp/models/qwen2.5-3b/qwen2.5-3b-instruct-q4_k_m.gguf
 
-Served by: llama-server.service on port 8080
+Served by: koorsus-llm.service on port 8080
 
 Note on naming: llama-server is the NAME OF THE SOFTWARE (llama.cpp's server
 binary). Qwen is the MODEL it loads. Confusing but not a bug.
 
-IMPORTANT: Do NOT add LD_LIBRARY_PATH to llama-server.service. Doing so
+IMPORTANT: Do NOT add LD_LIBRARY_PATH to koorsus-llm.service (formerly llama-server.service). Doing so
 causes NVRM_RPC_DCE driver failures. Documented, verified, left clean.
 
 One model, two jobs:
@@ -493,14 +493,14 @@ One model, two jobs:
 
 Run sequentially, not concurrently.
 
-Future: rename llama-server.service to koorsus-llm.service for clarity.
+Done 2026-11-06: unit renamed to koorsus-llm.service. Binary remains llama-server.
 PARKING LOT.
 
 ---
 
 ## 10. SYSTEMD SERVICES
 
-  llama-server.service  — Qwen on port 8080
+  koorsus-llm.service   — Qwen on port 8080
   koorsus.service       — RAG on port 5000
   myarr.service         — Flask on port 5002
   myarra-bot.service    — Telegram bot (bot_live_v3.py)
@@ -511,7 +511,7 @@ All four active after cold reboot. Verified 2026-11-01.
                           disabled. Do not re-enable; conflicts on token.
 
 Start/stop/check:
-  sudo systemctl status llama-server koorsus myarr myarra-bot
+  sudo systemctl status koorsus-llm koorsus myarr myarra-bot
   sudo systemctl restart myarr
   sudo journalctl -u myarra-bot -n 50 --no-pager
 
@@ -632,7 +632,7 @@ SSH from Windows PowerShell:
   ssh jeeves@192.168.100.2
 
 Check all four services:
-  systemctl is-active llama-server koorsus myarr myarra-bot
+  systemctl is-active koorsus-llm koorsus myarr myarra-bot
 
 Check the main routes (should print 200 for each):
   for u in / /reconciliation /changeover /pdca /pdca/log /setup /admin; do
