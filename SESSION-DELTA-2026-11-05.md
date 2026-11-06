@@ -1,5 +1,7 @@
 # MYARRA — SESSION DELTA, 2026-11-05
 
+**Superseded by SESSION-DELTA-2026-11-05-B2.md and SESSION-DELTA-2026-11-06.md.** Read only when pointed to.
+
 DELTA on top of SESSION-DELTA-2026-11-03.md and HANDOFF.md (2026-11-03).
 Read those for architecture, invariants, and history. Read this for today's
 work, the design decisions made, and where we stopped. Do not re-read the

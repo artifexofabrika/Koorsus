@@ -1,41 +1,35 @@
-# Koorsus / Myarra
+# Myarra / Koorsus
 
-Two systems on one appliance for small and mid-sized manufacturers.
+Production-to-standard tracking and continuous improvement, on-premise.
+No cloud. No subscription. Data stays in the building.
 
-- **Koorsus** — document assistant. Answers questions from your SOPs,
-  handbooks, and procedures. Cites the source. Declines to invent.
-- **Myarra** — production tracker. Captures line state by voice from
-  the floor, compares each hour and each changeover to standard, and
-  runs PDCA experiments that prove whether a change paid off.
+Owner: Randy Wolf, Artifexo Fabrika, Columbus, Ohio.
+Licensed GPL v3. Modification encouraged.
 
-Both run on hardware the customer owns, with no data leaving the
-building. Built on open-source components: Qwen 2.5, llama.cpp,
-ChromaDB, Flask, SQLite. Runs on NVIDIA Jetson.
+## Read this first
 
-## License
+The newest session delta supersedes everything else. Read in this order:
 
-Copyright (C) 2026 Randy Wolf / Artifexo Fabrika.
+1. `SESSION-DELTA-2026-11-06.md` — current state, next steps, working method
+2. `HANDOFF.md` — architecture, hardware, network, history
+3. Older `SESSION-DELTA-*.md` — only when the newest delta points you there
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or (at
-your option) any later version.
+Do not read the older handoffs in full. They are long, and the newest
+delta names what still matters.
 
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-General Public License for more details.
+## What is here
 
-You should have received a copy of the GNU General Public License
-along with this program. If not, see <https://www.gnu.org/licenses/>.
+- `myarr_v2/` — the Flask application (port 5002) and the Telegram bot
+- `myarr_v2/views.py` — the shared measure layer: nine SQL views
+- `myarr_v2/recon.py` — OEE and operator performance, the two-measure design
+- `tools/` — demo data generation and population
+- `outreach/` — consulting collateral, CV, advisory sheets
+- `docs/` — static documentation and demo downloads
 
-Full license text: [LICENSE](LICENSE).
+## Working method
 
-## Commercial support
+Section 6 of the newest delta. In short: talk before coding; one change at
+a time with a verification gate; verify with SQL before patching Flask;
+small paste blocks; and at the site of any agreed decision, a comment of
+the form `Agreed YYYY-MM-DD: <decision>, because <reason>`.
 
-Consultancy, on-site setup, ERP integration, and ongoing support:
-[Artifexo Fabrika](https://www.artifexofabrika.com) —
-contact@artifexofabrika.com.
-
-The source is here so you are not locked in. You can fork it, maintain
-it yourself, or hire someone else. That is the point.

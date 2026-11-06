@@ -1,5 +1,7 @@
 # MYARRA — SESSION DELTA, 2026-11-03 (evening)
 
+**Superseded by later deltas.** Read only when pointed to.
+
 This is a DELTA on top of HANDOFF.md (2026-11-03 afternoon) and the
 2026-11-01 and 2026-10-31 handoffs. Read those for architecture,
 invariants, and history. Read this for what changed today and what is

@@ -1,5 +1,7 @@
 # MYARRA — SESSION DELTA, 2026-11-05 (Stage B2)
 
+**Superseded by SESSION-DELTA-2026-11-06.md.** Read only when that delta points you here.
+
 DELTA on top of SESSION-DELTA-2026-11-05.md (Stage A + B) and HANDOFF.md.
 Read those for architecture and history. Read this for Stage B2, the
 corrections discovered along the way, and the demonstration of the

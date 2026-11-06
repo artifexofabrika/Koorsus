@@ -1,5 +1,7 @@
 # MYARRA — PROJECT HANDOFF
 
+**Architecture and history.** Read after the newest delta.
+
 Last updated: 2026-11-03 (afternoon)
 Owner: Randy Wolf, Columbus, Ohio
 Prepared by: Jeeves (Claude)
