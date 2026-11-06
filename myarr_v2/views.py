@@ -1,4 +1,27 @@
-"""Myarra views. Run once: python3 views.py. Idempotent."""
+"""Myarra views — the shared measure layer for /reconciliation and Stage C.
+
+WHY THIS FILE EXISTS
+The same numbers are consumed by /reconciliation today and by /ask in
+Stage D. Inline SQL in Flask would drift between the two consumers.
+Views return per-line-per-day components only; ratios are computed by
+the consumer (recon.py). Agreed 2026-11-06.
+
+UNSCHEDULED IS A PLACEHOLDER (agreed 2026-11-06)
+The OEE denominator includes unscheduled_min, currently 0 because no
+source table exists yet. It is reserved for unaccounted availability
+losses once they have a source. Until then this is conditional OEE.
+Unaccounted minutes have their own view: v_unaccounted_by_line_day.
+
+THE COALESCE SCAR (do not simplify)
+hourly_runs.sku_id was null on all 285 demo rows when this view was
+first written; the join through jobs.sku_id was the workaround. The
+generator now writes sku_id at source (commit 372c697), but the
+COALESCE stays as belt-and-braces for any install whose generator
+predates that fix. A future editor who "cleans up" the join will
+break those installs. Leave it.
+
+Run once: python3 views.py. Idempotent: drops and recreates all nine.
+"""
 from db import get_db_connection
 
 V_OEE = """
@@ -159,6 +182,10 @@ WHERE e.target_step_name IS NOT NULL
 GROUP BY e.id, e.pdca_id, e.title, date(ev.started_at);
 """
 
+# ORDER MATTERS. Dependents drop first. v_operator_perf_by_line_day and
+# v_operator_performance SELECT from v_oee_by_line_day, so they must drop
+# before it. CREATE order is separate: V_OEE, then V_OP, then V_STAGE_C
+# (the aliases in V_STAGE_C reference v_oee_by_line_day).
 ALL_VIEWS = [
     "v_operator_perf_by_line_day",
     "v_operator_performance",
@@ -171,6 +198,9 @@ ALL_VIEWS = [
     "v_pdca_trend",
 ]
 
+# Drops everything first, then recreates in dependency order, in one
+# transaction: on any failure SQLite rolls back and no view is left
+# half-built. Called from app.py at module load.
 def ensure_views(conn):
     for name in ALL_VIEWS:
         conn.execute(f"DROP VIEW IF EXISTS {name}")

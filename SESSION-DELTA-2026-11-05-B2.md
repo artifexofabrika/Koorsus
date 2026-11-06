@@ -287,4 +287,11 @@ NEW THIS SESSION — these cost time today, do not repeat:
     correct. Treat its counsel as authoritative on architecture it
     built, and as advisory otherwise.
 
+  - COMMENT POLICY (agreed 2026-11-06): When a design decision is agreed
+    and then coded, add a comment at the site stating: "Agreed YYYY-MM-DD:
+    <decision>, because <reason>." The delta carries history; the comment
+    carries the reasoning where the reader will encounter it. The
+    /reconciliation explanatory sentence is the model. Keep comments
+    short: fragile anchors and decisions only, not essays.
+
 END OF DELTA.

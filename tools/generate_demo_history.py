@@ -211,6 +211,12 @@ def main():
                 (eid, t, d, lid, ts, sd, std, goal, cat))
         conn.commit()
 
+    # Agreed 2026-11-06: seed one demo maintenance event so OEE and operator
+    # performance visibly diverge. Line 4, day of highest production (not
+    # most recent): 180 min on a 240-min day reads 55% OEE and looks
+    # alarming; on a 780-min day it reads ~78%, the plausible mid-70s story.
+    # 180 min chosen to separate the two measures by ~13 points. job_id
+    # links to the running line-4 job so /job/<number> shows the block.
     already = c.execute("SELECT COUNT(*) FROM maintenance_events WHERE source='demo'").fetchone()[0]
     if already == 0:
         row = c.execute("""SELECT date(recorded_at) AS d, SUM(units_filled) AS u FROM hourly_runs
