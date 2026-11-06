@@ -135,3 +135,21 @@ not a parking-lot item.
   - The previous instance is a peer, not an oracle.
 
 END OF DELTA.
+
+---
+
+## 8. ODOO INTEGRATION & MARKETING STRATEGY (Planning for Week of 2026-11-09)
+
+### 8.1 The Model
+- **Core App (Myarra):** Stays GPLv3.
+- **Odoo Connector Module:** Will be a separate, proprietary module licensed under OPL-1 (Odoo Proprietary License). It will pull work orders from Odoo via API and push them to Myarra.
+- **Hardware:** Jetson 8GB appliance sold as a commercial product. GPL compliance requires providing "Installation Information" only for this specific hardware, not every chip on the market.
+- **Services:** Setup and consulting billed via Square invoices (direct to client).
+
+### 8.2 App Store Launch Plan
+- **Goal:** List the connector on the Odoo Apps Store by next week.
+- **Pricing:** "Founding Member" program (first 10 free/discounted) to generate case studies.
+- **Integration Path:** Read-only from Odoo. No data written back to the ERP to ensure zero risk for clients.
+- **Next Technical Step:** Write the `__manifest__.py` and the XML-RPC client to test against the local Odoo Linux instance.
+
+END OF DELTA.
