@@ -2,24 +2,24 @@
 {% block title %}Edit {{ ex.pdca_id or 'A3' }}{% endblock %}
 {% block content %}
 <style>
-  .a3-edit { max-width: 1000px; margin: 0 auto; background: #222222; color: #eeeeee; border: 1px solid #333333; padding: 2rem; }
-  .a3-edit h1 { font-size: 1.2rem; margin: 0 0 0.5rem 0; color: #c0a878; }
-  .a3-edit .pdca-id { font-family: monospace; font-size: 0.85rem; color: #888888; margin-bottom: 1.5rem; }
-  .a3-edit .cancel-btn { float: right; font-size: 0.85rem; color: #888888; margin-right: 1rem; padding-top: 0.4rem; text-decoration: none; }
+  .a3-edit { max-width: 1000px; margin: 0 auto; background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 2rem; }
+  .a3-edit h1 { font-size: 1.2rem; margin: 0 0 0.5rem 0; color: var(--accent); }
+  .a3-edit .pdca-id { font-family: monospace; font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .a3-edit .cancel-btn { float: right; font-size: 0.85rem; color: var(--muted); margin-right: 1rem; padding-top: 0.4rem; text-decoration: none; }
   .a3-edit .field { margin-bottom: 1rem; }
-  .a3-edit label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888888; margin-bottom: 0.25rem; }
+  .a3-edit label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.25rem; }
   .a3-edit input[type=text], .a3-edit input[type=date], .a3-edit input[type=number], .a3-edit textarea, .a3-edit select {
-    width: 100%; padding: 0.5rem 0.7rem; background: #111111; border: 1px solid #444444; color: #eeeeee; border-radius: 3px; font-family: Georgia, serif; font-size: 0.88rem; box-sizing: border-box;
+    width: 100%; padding: 0.5rem 0.7rem; background: var(--card-bg); border: 1px solid var(--border); color: var(--text); border-radius: 3px; font-family: Georgia, serif; font-size: 0.88rem; box-sizing: border-box;
   }
   .a3-edit textarea { min-height: 70px; resize: vertical; }
   .a3-edit .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1rem; }
-  .a3-edit .section-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #c0a878; margin: 1.5rem 0 0.75rem 0; padding-bottom: 0.3rem; border-bottom: 1px solid #333333; }
+  .a3-edit .section-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin: 1.5rem 0 0.75rem 0; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
   .a3-edit .pri-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
-  .a3-edit button { background: #c0a878; color: #111111; border: none; padding: 0.7rem 2rem; font-weight: bold; border-radius: 4px; font-size: 0.9rem; cursor: pointer; }
-  .a3-edit .readonly { background: #2a2a2a; color: #888888; cursor: not-allowed; }
+  .a3-edit button { background: var(--accent); color: var(--card-bg); border: none; padding: 0.7rem 2rem; font-weight: bold; border-radius: 4px; font-size: 0.9rem; cursor: pointer; }
+  .a3-edit .readonly { background: var(--card-bg); color: var(--muted); cursor: not-allowed; }
   .a3-edit .fishbone-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
   .a3-edit .fishbone-field textarea { min-height: 90px; font-family: monospace; font-size: 0.82rem; }
-  .a3-edit .hint { font-size: 0.72rem; color: #888888; margin-top: 0.25rem; font-style: italic; }
+  .a3-edit .hint { font-size: 0.72rem; color: var(--muted); margin-top: 0.25rem; font-style: italic; }
 </style>
 
 <div class="a3-edit">

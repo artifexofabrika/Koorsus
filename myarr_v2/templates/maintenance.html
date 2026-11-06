@@ -11,22 +11,22 @@
     <tr><td>Station</td><td>{{ ev.station or '-' }}</td></tr>
     <tr><td>Category</td>
         <td>
-          <select name="category" style="background:#1a1a1a;color:#e0e0e0;border:1px solid #444;padding:0.4rem;width:100%;">
+          <select name="category" style="background:var(--bg);color:var(--text);border:1px solid var(--border);padding:0.4rem;width:100%;">
             {% for c in ['unplanned', 'breakdown', 'planned', 'PM'] %}
               <option value="{{ c }}" {% if ev.category == c %}selected{% endif %}>{{ c }}</option>
             {% endfor %}
           </select>
         </td></tr>
     <tr><td>Duration</td><td>{{ '%.0f'|format(ev.aggregate_actual_min) if ev.aggregate_actual_min else '-' }} min</td></tr>
-    <tr><td>Symptom</td><td><input type="text" name="symptom" value="{{ ev.symptom or '' }}" style="width:100%;background:#1a1a1a;color:#e0e0e0;border:1px solid #444;padding:0.4rem;"></td></tr>
-    <tr><td>Resolution</td><td><input type="text" name="resolution" value="{{ ev.resolution or '' }}" style="width:100%;background:#1a1a1a;color:#e0e0e0;border:1px solid #444;padding:0.4rem;"></td></tr>
-    <tr><td>Parts used</td><td><input type="text" name="parts_used" value="{{ ev.parts_used or '' }}" style="width:100%;background:#1a1a1a;color:#e0e0e0;border:1px solid #444;padding:0.4rem;"></td></tr>
-    <tr><td>Technician</td><td><input type="text" name="technician" value="{{ ev.technician or '' }}" style="width:100%;background:#1a1a1a;color:#e0e0e0;border:1px solid #444;padding:0.4rem;"></td></tr>
-    <tr><td>Called by</td><td><input type="text" name="called_by" value="{{ ev.called_by or '' }}" style="width:100%;background:#1a1a1a;color:#e0e0e0;border:1px solid #444;padding:0.4rem;"></td></tr>
-    <tr><td>Reason code</td><td><input type="text" name="reason_code" value="{{ ev.reason_code or '' }}" style="width:100%;background:#1a1a1a;color:#e0e0e0;border:1px solid #444;padding:0.4rem;"></td></tr>
-    <tr><td>Notes</td><td><textarea name="notes" rows="4" style="width:100%;background:#1a1a1a;color:#e0e0e0;border:1px solid #444;padding:0.4rem;">{{ ev.notes or '' }}</textarea></td></tr>
+    <tr><td>Symptom</td><td><input type="text" name="symptom" value="{{ ev.symptom or '' }}" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);padding:0.4rem;"></td></tr>
+    <tr><td>Resolution</td><td><input type="text" name="resolution" value="{{ ev.resolution or '' }}" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);padding:0.4rem;"></td></tr>
+    <tr><td>Parts used</td><td><input type="text" name="parts_used" value="{{ ev.parts_used or '' }}" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);padding:0.4rem;"></td></tr>
+    <tr><td>Technician</td><td><input type="text" name="technician" value="{{ ev.technician or '' }}" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);padding:0.4rem;"></td></tr>
+    <tr><td>Called by</td><td><input type="text" name="called_by" value="{{ ev.called_by or '' }}" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);padding:0.4rem;"></td></tr>
+    <tr><td>Reason code</td><td><input type="text" name="reason_code" value="{{ ev.reason_code or '' }}" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);padding:0.4rem;"></td></tr>
+    <tr><td>Notes</td><td><textarea name="notes" rows="4" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);padding:0.4rem;">{{ ev.notes or '' }}</textarea></td></tr>
   </table>
-  <button type="submit" style="background:#c0a878;color:#1a1a1a;border:none;padding:0.7rem 2rem;font-weight:bold;border-radius:4px;font-size:0.9rem;cursor:pointer;margin-top:1rem;">Save</button>
+  <button type="submit" style="background:var(--accent);color:var(--bg);border:none;padding:0.7rem 2rem;font-weight:bold;border-radius:4px;font-size:0.9rem;cursor:pointer;margin-top:1rem;">Save</button>
 </form>
 
 <div style="margin-top:1.5rem;"><a href="/maintenance" style="color: var(--accent);">&larr; Back to maintenance log</a></div>
