@@ -98,6 +98,12 @@ def _cases(units, case_pack):
 
 
 def ensure_schema(conn):
+    conn.execute("""CREATE TABLE IF NOT EXISTS audit_log (
+        id INTEGER PRIMARY KEY,
+        user_id INTEGER,
+        raw_text TEXT,
+        created_at TEXT
+    )""")
     cols = [r[1] for r in conn.execute("PRAGMA table_info(bot_sessions)").fetchall()]
     for col, typ in [('shift_hour','INTEGER'), ('pending_text','TEXT'),
                      ('co_total_min','REAL'), ('pending_target_job_id','INTEGER'),
@@ -1176,6 +1182,10 @@ def h_unknown(conn, s, text, user):
 
 
 def dispatch(conn, s, text, user):
+    # Agreed 2026-11-06: strict audit trail of every incoming message.
+    conn.execute("INSERT INTO audit_log (user_id, raw_text, created_at) VALUES (?,?,?)",
+                 (user['id'] if user else None, text, datetime.now().isoformat()))
+    conn.commit()
     if s.get('state') == 'maint_prompt':
         return _handle_maint_prompt(conn, s, text, user)
     text = text.strip()
