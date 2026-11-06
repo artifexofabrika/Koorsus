@@ -1,0 +1,15 @@
+# Agreed 2026-11-06: normalize line endings to LF in the repo; mark binaries
+# so git never attempts a text conversion on them. The PDFs and the GGUF
+# model file are the critical cases — a mangled binary in history is
+# unrecoverable.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.gguf binary
+*.db binary
+*.sqlite binary
+*.zip binary
