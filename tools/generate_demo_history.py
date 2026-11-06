@@ -224,15 +224,17 @@ def main():
                            ORDER BY u DESC LIMIT 1""").fetchone()
         if row:
             md = row["d"]
+            job_row = c.execute("SELECT id FROM jobs WHERE line_id=4 AND status='running' LIMIT 1").fetchone()
+            jid = job_row["id"] if job_row else None
             c.execute("""INSERT INTO maintenance_events
                 (line_id, job_id, station, started_at, ended_at, aggregate_actual_min,
                  category, symptom, resolution, source, created_at)
-                VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, 'demo', ?)""",
-                (4, 'filler', md + 'T10:00:00', md + 'T13:00:00', 180,
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'demo', ?)""",
+                (4, jid, 'filler', md + 'T10:00:00', md + 'T13:00:00', 180,
                  'unplanned', 'Filler nozzle clog', 'Cleared and reseated',
                  md + 'T13:05:00'))
             conn.commit()
-            print(f"  Seeded maintenance: line 4, {md}, 180 min")
+            print(f"  Seeded maintenance: line 4, {md}, 180 min, job {jid}")
     print("HISTORY GENERATED")
     for t in ["hourly_runs", "co_events", "co_event_changes", "experiments"]:
         print(f"  {t:20s} "

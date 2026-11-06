@@ -218,6 +218,17 @@ def job_detail(job_number):
         ORDER BY h.created_at ASC
     """, (job['id'],)).fetchall()
     handovers = [dict(h) for h in handovers_raw]
+    # Agreed 2026-11-06: surface maintenance on the job page alongside
+    # handovers so a manager sees breakdowns in the job's own history, not
+    # only on /maintenance and /reconciliation.
+    maintenance_raw = conn.execute("""
+        SELECT id, station, started_at, ended_at, aggregate_actual_min,
+               category, symptom, resolution
+        FROM maintenance_events
+        WHERE job_id = ?
+        ORDER BY started_at ASC
+    """, (job['id'],)).fetchall()
+    maintenance = [dict(m) for m in maintenance_raw]
     runs = conn.execute("""
         SELECT r.id, r.period, r.units_filled, r.duration_min, r.line_id,
                r.shift, r.recorded_at, j.sku_id
@@ -243,7 +254,7 @@ def job_detail(job_number):
     tgt_units = job['target_quantity'] or 0
     ul = _unit_label(conn); cl = _case_label(conn)
     conn.close()
-    return render_template("job_detail.html", job=job, details=details, handovers=handovers,
+    return render_template("job_detail.html", job=job, details=details, handovers=handovers, maintenance=maintenance,
                            cases=int(total_units // cp), tgt_cases=int(tgt_units // cp),
                            pct=(total_units / tgt_units * 100) if tgt_units else 0,
                            unit_label=ul, case_label=cl)

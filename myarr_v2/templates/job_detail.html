@@ -49,5 +49,26 @@
 </table>
 {% endif %}
 
+{% if maintenance %}
+<h2 style="margin-top:2.5rem;">Maintenance history</h2>
+<table style="max-width:900px;">
+  <tr>
+    <th>Date</th><th>Station</th><th>Minutes</th><th>Category</th><th>Symptom</th><th>Resolution</th>
+  </tr>
+  {% for m in maintenance %}
+  <tr onclick="window.location='/maintenance/{{ m.id }}'" style="cursor:pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+      onmouseout="this.style.background='transparent'">
+    <td style="font-size:0.85rem;">{{ (m.started_at or '')[:16].replace('T', ' ') }}</td>
+    <td style="font-size:0.85rem;">{{ m.station or '-' }}</td>
+    <td style="font-size:0.85rem; text-align:right;">{{ '%.0f'|format(m.aggregate_actual_min or 0) }}</td>
+    <td style="font-size:0.85rem;">{{ m.category or 'unplanned' }}</td>
+    <td style="font-size:0.85rem;">{{ m.symptom or '-' }}</td>
+    <td style="font-size:0.85rem;">{{ m.resolution or '-' }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
 <div style="margin-top:1.5rem;"><a href="/reconciliation" style="color: var(--accent);">&larr; Back to reconciliation</a></div>
 {% endblock %}
