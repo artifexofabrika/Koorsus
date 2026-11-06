@@ -153,3 +153,7 @@ END OF DELTA.
 - **Next Technical Step:** Write the `__manifest__.py` and the XML-RPC client to test against the local Odoo Linux instance.
 
 END OF DELTA.
+
+- VISUAL HOURLY CHART (Requested 2026-11-06): Add a clickable, visual hour-by-hour chart for each line (e.g., bar chart of actual vs expected units per hour). Could resurrect the orphaned /shift/ route or build a dedicated view.
+
+END OF DELTA.
