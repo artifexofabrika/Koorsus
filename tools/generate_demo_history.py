@@ -94,22 +94,22 @@ def main():
                     c.execute(
                         """INSERT INTO hourly_runs
                         (job_id,line_id,shift,period,recorded_at,units_filled,duration_min,phase,
-                         job_hour_start,job_hour_end,user_id,flagged,source)
-                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                         job_hour_start,job_hour_end,user_id,flagged,source,sku_id)
+                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                         (j["id"], lid, shift_val, f"H{h+1}", hour_start.isoformat(),
                          units, 60, 'run', total_jh / 60, (total_jh + 60) / 60,
-                         1, 0, 'demo'))
+                         1, 0, 'demo', j["sku_id"]))
                     total_jh += 60
                 hour8_start = sh_start + timedelta(hours=7)
                 units8 = int(j["_rate"] * 0.5 * random.uniform(0.93, 0.99))
                 c.execute(
                     """INSERT INTO hourly_runs
                     (job_id,line_id,shift,period,recorded_at,units_filled,duration_min,phase,
-                     job_hour_start,job_hour_end,user_id,flagged,source)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                     job_hour_start,job_hour_end,user_id,flagged,source,sku_id)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (j["id"], lid, shift_val, 'H8', hour8_start.isoformat(),
                      units8, 30, 'run', total_jh / 60, (total_jh + 30) / 60,
-                     1, 0, 'demo'))
+                     1, 0, 'demo', j["sku_id"]))
                 total_jh += 30
                 prod_end = sh_start + timedelta(minutes=450)
                 lunch_end = prod_end + timedelta(minutes=30)
@@ -177,10 +177,10 @@ def main():
             c.execute(
                 """INSERT INTO hourly_runs
                 (job_id,line_id,shift,period,recorded_at,units_filled,duration_min,phase,
-                 job_hour_start,job_hour_end,user_id,flagged,source)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                 job_hour_start,job_hour_end,user_id,flagged,source,sku_id)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (last["id"], lid, '1', f"H{h+5}", hr.isoformat(),
-                 units, 60, 'run', h, h + 1, 1, 0, 'demo'))
+                 units, 60, 'run', h, h + 1, 1, 0, 'demo', last["sku_id"]))
         total_units = c.execute(
             "SELECT SUM(units_filled) FROM hourly_runs WHERE job_id=?",
             (last["id"],)).fetchone()[0] or 0
@@ -211,6 +211,22 @@ def main():
                 (eid, t, d, lid, ts, sd, std, goal, cat))
         conn.commit()
 
+    already = c.execute("SELECT COUNT(*) FROM maintenance_events WHERE source='demo'").fetchone()[0]
+    if already == 0:
+        row = c.execute("""SELECT date(recorded_at) AS d, SUM(units_filled) AS u FROM hourly_runs
+                           WHERE line_id=4 GROUP BY date(recorded_at)
+                           ORDER BY u DESC LIMIT 1""").fetchone()
+        if row:
+            md = row["d"]
+            c.execute("""INSERT INTO maintenance_events
+                (line_id, job_id, station, started_at, ended_at, aggregate_actual_min,
+                 category, symptom, resolution, source, created_at)
+                VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, 'demo', ?)""",
+                (4, 'filler', md + 'T10:00:00', md + 'T13:00:00', 180,
+                 'unplanned', 'Filler nozzle clog', 'Cleared and reseated',
+                 md + 'T13:05:00'))
+            conn.commit()
+            print(f"  Seeded maintenance: line 4, {md}, 180 min")
     print("HISTORY GENERATED")
     for t in ["hourly_runs", "co_events", "co_event_changes", "experiments"]:
         print(f"  {t:20s} "
