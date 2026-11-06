@@ -104,10 +104,16 @@ def ensure_schema(conn):
         raw_text TEXT,
         created_at TEXT
     )""")
+    hr_cols = [r[1] for r in conn.execute("PRAGMA table_info(hourly_runs)").fetchall()]
+    for col, typ in [('superseded', 'INTEGER DEFAULT 0'), ('override_reason', 'TEXT')]:
+        if col not in hr_cols:
+            conn.execute(f"ALTER TABLE hourly_runs ADD COLUMN {col} {typ}")
+    conn.commit()
+
     cols = [r[1] for r in conn.execute("PRAGMA table_info(bot_sessions)").fetchall()]
     for col, typ in [('shift_hour','INTEGER'), ('pending_text','TEXT'),
                      ('co_total_min','REAL'), ('pending_target_job_id','INTEGER'),
-                     ('line_id','INTEGER')]:
+                     ('line_id','INTEGER'), ('override_reason','TEXT')]:
         if col not in cols:
             conn.execute(f"ALTER TABLE bot_sessions ADD COLUMN {col} {typ}")
             conn.commit()
@@ -239,15 +245,17 @@ def check_plausibility(units, expected, force=False):
 
 
 def write_hour(conn, job, shift, period, units, duration, user_id, raw_text,
-               jh_start, jh_end, unacc, dts):
+               jh_start, jh_end, unacc, dts, override_reason=None, superseded=0):
     cur = conn.execute("""
         INSERT INTO hourly_runs
         (job_id, line_id, shift, period, recorded_at, units_filled, raw_text,
-         duration_min, phase, job_hour_start, job_hour_end, user_id, flagged, source)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         duration_min, phase, job_hour_start, job_hour_end, user_id, flagged, source,
+         override_reason, superseded)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (job['id'], job['line_id'], shift, period, datetime.now().isoformat(),
           units, raw_text, duration, 'run', jh_start, jh_end,
-          user_id, 1 if unacc > UNACC_THRESHOLD else 0, 'telegram'))
+          user_id, 1 if unacc > UNACC_THRESHOLD else 0, 'telegram',
+          override_reason, superseded))
     for d in dts:
         conn.execute("INSERT INTO downtime_events (run_id, station, reason, minutes) VALUES (?,?,?,?)",
                      (cur.lastrowid, d['station'], d['reason'], d['minutes']))
@@ -448,7 +456,7 @@ def h_record_hour(conn, s, text, user, force=False):
     gap = (expected - units) / (bpm / 60.0) if bpm else 0.0
     shift = s.get('shift') or current_shift(conn)
     write_hour(conn, job, shift, f"H{hour}", units, mins,
-               user['id'] if user else None, text, jh_start, jh_end, gap, [])
+               user['id'] if user else None, text, jh_start, jh_end, gap, [], override_reason=s.get('override_reason'))
     s.set('active_job_id', job['id']); s.set('shift', shift)
     s.set('shift_hour', hour + 1); s.save()
     flag = 'FLAG' if gap > UNACC_THRESHOLD else 'OK'
@@ -524,7 +532,7 @@ def cont_end_units(conn, s, text, user):
     shift = s.get('shift') or current_shift(conn)
     hour = s.get('shift_hour') or current_hour_in_shift(conn)
     write_hour(conn, job, shift, f"H{hour}", units, mins,
-               user['id'] if user else None, text + ' (ending job)', jh_start, jh_end, gap, [])
+               user['id'] if user else None, text + ' (ending job)', jh_start, jh_end, gap, [], override_reason=s.get('override_reason'))
     cur = _current_line_event(conn, line_id)
     if cur: _close_line_event(conn, cur['id'], end_iso=end_at)
     conn.execute("UPDATE jobs SET status='completed', actual_end=? WHERE id=?",
@@ -1192,15 +1200,60 @@ def h_unknown(conn, s, text, user):
     return "I did not understand.\n" + HELP
 
 
+def cont_relog_reason(conn, s, text, user):
+    reason = text.strip()
+    if not reason: return "Please provide a reason for the correction."
+    pending = s.get('pending_text')
+    s.set('state', 'idle')
+    s.set('override_reason', reason)
+    s.save()
+    
+    # Ensure the pending text routes to the running job handler
+    if not pending.lower().startswith('running'):
+        pending = f"running {pending}"
+        
+    res = dispatch(conn, s, pending, user)
+    s.set('override_reason', None)
+    s.save()
+    return f"Correction saved. Reason: {reason}\n\n{res}"
+
 def dispatch(conn, s, text, user):
     # Agreed 2026-11-06: strict audit trail of every incoming message.
     conn.execute("INSERT INTO audit_log (user_id, raw_text, created_at) VALUES (?,?,?)",
                  (user['id'] if user else None, text, datetime.now().isoformat()))
     conn.commit()
+    if s.get('state') == 'awaiting_relog_reason':
+        return cont_relog_reason(conn, s, text, user)
     if s.get('state') == 'maint_prompt':
         return _handle_maint_prompt(conn, s, text, user)
     text = text.strip()
     if not text: return None
+
+    relog_match = re.match(r'^(relog|re-log|correct)\s+(.*)', text, re.IGNORECASE)
+    if relog_match:
+        original_text = relog_match.group(2).strip()
+        job_no = parse_job_number(original_text)
+        if not job_no:
+            return "You must specify the job number to relog. Example: 'relog job WO-2026-024 hour 5, 25000 units'"
+        job, conf, alts = resolve_job(conn, job_no)
+        if not job:
+            return _explain_no_job(conn, job_no, conf, alts)
+        job_id = job['id']
+            
+        hour = parse_hour(original_text)
+        if hour is None:
+            return "Which hour are you relogging?"
+
+        old = conn.execute("SELECT id, units_filled FROM hourly_runs WHERE job_id=? AND period=? AND superseded=0", (job_id, f"H{hour}")).fetchone()
+        if not old:
+            return f"No existing H{hour} entry found to relog."
+            
+        conn.execute("UPDATE hourly_runs SET superseded=1 WHERE id=?", (old['id'],))
+        conn.commit()
+        s.set('state', 'awaiting_relog_reason')
+        s.set('pending_text', original_text)
+        s.save()
+        return f"Found original H{hour} entry ({old['units_filled']:,} units). It has been marked superseded. What is the reason for this correction?"
 
     if re.match(r'^(and|en)\s+(lunch|cip|maintenance|change|job|shift|wo[- ]?\d|work\s*order|order)', text, re.IGNORECASE):
         text = re.sub(r'^(and|en)\s+', 'end ', text, count=1, flags=re.IGNORECASE).strip()

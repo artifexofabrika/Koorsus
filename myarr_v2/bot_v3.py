@@ -18,6 +18,7 @@ STRUCTURED_PATTERNS = [
     r'^(pause|pausing|suspend|suspending|hold|holding)\b',
     r'^(resume|resuming|restart|restarting|unpause|continue|continuing)\b',
     r'^back\s+to\b',
+    r'^relog\b',
     r'^(cancel|stop|quit|exit)\s*$',
     r'^confirm[\s,]',
 ]
