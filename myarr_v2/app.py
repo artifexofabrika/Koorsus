@@ -110,7 +110,30 @@ def dashboard():
             "SELECT * FROM line_events WHERE line_id=? AND ended_at IS NULL ORDER BY started_at DESC LIMIT 1",
             (line['id'],)).fetchone()
         row = {'line_id': line['id'], 'line_name': line['name'],
-               'state': 'unknown', 'details': {}, 'started_at': None, 'elapsed_min': 0}
+               'state': 'unknown', 'details': {}, 'started_at': None, 'elapsed_min': 0,
+               'hourly_data': []}
+
+        # Agreed 2026-11-07: Dashboard shows current shift hour-by-hour in cases.
+        runs = conn.execute("""
+            SELECT r.period, r.units_filled, r.duration_min, s.case_pack, lsr.ideal_rate
+            FROM hourly_runs r
+            JOIN jobs j ON r.job_id = j.id
+            JOIN skus s ON s.id = j.sku_id
+            LEFT JOIN line_sku_rates lsr ON lsr.line_id = r.line_id AND lsr.sku_id = j.sku_id
+            WHERE r.line_id = ? AND date(r.recorded_at) = date('now') AND (r.superseded IS NULL OR r.superseded=0)
+            ORDER BY r.period
+        """, (line['id'],)).fetchall()
+
+        for run in runs:
+            bpm = run['ideal_rate'] or 600.0
+            target_units = bpm * run['duration_min'] / 60.0
+            cp = run['case_pack'] or 1
+            row['hourly_data'].append({
+                'period': run['period'],
+                'target_cases': int(target_units // cp),
+                'actual_cases': int(run['units_filled'] // cp),
+                'delta_cases': int((run['units_filled'] - target_units) // cp)
+            })
         if cur:
             row['state'] = cur['state']
             try: started = datetime.fromisoformat(cur['started_at'])

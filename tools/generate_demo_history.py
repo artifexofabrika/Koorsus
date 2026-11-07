@@ -67,7 +67,8 @@ def main():
     for lid, lst in by_line.items():
         for i, j in enumerate(lst):
             jday = START + timedelta(days=1 + i * 5 + (lid % 3))
-            shifts_count = random.choice([1, 2])
+            # Agreed 2026-11-07: All jobs run exactly 1 full shift (8 hours) for consistent demo data.
+            shifts_count = 1
             j["_start"] = jday
             j["_shifts"] = shifts_count
             j["_rate"] = rates.get((lid, j["sku_id"]), 1000)
@@ -159,7 +160,7 @@ def main():
     conn.commit()
 
     NOW = datetime.now()
-    STAGGER = [3.0, 2.2, 1.5, 4.1, 2.7]
+    STAGGER = [4.1, 4.1, 4.1, 4.1, 4.1]
     for i, lid in enumerate(sorted(by_line.keys())):
         lst = by_line[lid]
         last = max(lst, key=lambda j: j["_start"])
@@ -181,17 +182,6 @@ def main():
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (last["id"], lid, '1', f"H{h+1}", hr.isoformat(),
                  units, 60, 'run', h, h + 1, 1, 0, 'demo', last["sku_id"]))
-            if not c.execute("SELECT 1 FROM hourly_runs WHERE job_id=? AND period='H6'", (last["id"],)).fetchone():
-                for extra in [6, 7, 8]:
-                    extra_hr = started + timedelta(hours=extra)
-                    extra_units = int(last["_rate"] * random.uniform(0.93, 0.99))
-                    extra_dur = 30 if extra == 8 else 60
-                    c.execute("""INSERT INTO hourly_runs
-                        (job_id,line_id,shift,period,recorded_at,units_filled,duration_min,phase,
-                         job_hour_start,job_hour_end,user_id,flagged,source,sku_id)
-                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                        (last["id"], lid, '1', f"H{extra}", extra_hr.isoformat(),
-                         extra_units, extra_dur, 'run', extra, extra + extra_dur/60.0, 1, 0, 'demo', last["sku_id"]))
         total_units = c.execute(
             "SELECT SUM(units_filled) FROM hourly_runs WHERE job_id=?",
             (last["id"],)).fetchone()[0] or 0
