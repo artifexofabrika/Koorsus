@@ -1235,15 +1235,32 @@ def dispatch(conn, s, text, user):
         note_text = note_match.group(3).strip()
         if not note_text:
             return "Please provide the note text. Example: 'note: label roll change' or 'note hour 5: case feeder jam'"
-        if not s.get('active_job_id'):
-            return "No active job. Start or select a job first."
-        job_id = s['active_job_id']
         if note_hour:
             period = f"H{note_hour}"
-            target_row = conn.execute("SELECT id FROM hourly_runs WHERE job_id=? AND period=? AND (superseded IS NULL OR superseded=0) ORDER BY id DESC LIMIT 1", (job_id, period)).fetchone()
+            # Explicit hour given: find it on the user's line for today
+            line_id = s.get('line_id') or (user['line_id'] if user and 'line_id' in user.keys() else None)
+            
+            if line_id:
+                target_row = conn.execute("""
+                    SELECT r.id FROM hourly_runs r
+                    JOIN jobs j ON r.job_id = j.id
+                    WHERE r.line_id=? AND r.period=? AND date(r.recorded_at)=date('now')
+                    AND (r.superseded IS NULL OR r.superseded=0)
+                    ORDER BY r.id DESC LIMIT 1
+                """, (line_id, period)).fetchone()
+            elif s.get('active_job_id'):
+                job_id = s['active_job_id']
+                target_row = conn.execute("SELECT id FROM hourly_runs WHERE job_id=? AND period=? AND (superseded IS NULL OR superseded=0) ORDER BY id DESC LIMIT 1", (job_id, period)).fetchone()
+            else:
+                return f"I need a line or job to attach this note to."
+                
             if not target_row:
-                return f"No existing {period} entry found for the active job."
+                return f"No existing {period} entry found today for your line."
         else:
+            # No hour given: requires active job
+            if not s.get('active_job_id'):
+                return "No active job. Say 'note hour N: text' to target a specific hour."
+            job_id = s['active_job_id']
             target_row = conn.execute("SELECT id, period FROM hourly_runs WHERE job_id=? AND (superseded IS NULL OR superseded=0) ORDER BY id DESC LIMIT 1", (job_id,)).fetchone()
             if not target_row:
                 return "No hourly entries found for the active job."
