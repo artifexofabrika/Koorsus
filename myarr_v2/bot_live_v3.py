@@ -4,8 +4,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import config
-from bot_v2 import get_conn, ensure_schema, Session, get_user_by_tg
-from bot_v3 import dispatch
+from bot_v2 import get_conn, ensure_schema, get_user_by_tg
+from bot.db import Session
+from bot.dispatch import dispatch
 
 TOKEN = config.TELEGRAM_BOT_TOKEN
 API = f"https://api.telegram.org/bot{TOKEN}"
