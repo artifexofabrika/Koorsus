@@ -179,8 +179,19 @@ def main():
                 (job_id,line_id,shift,period,recorded_at,units_filled,duration_min,phase,
                  job_hour_start,job_hour_end,user_id,flagged,source,sku_id)
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                (last["id"], lid, '1', f"H{h+5}", hr.isoformat(),
+                (last["id"], lid, '1', f"H{h+1}", hr.isoformat(),
                  units, 60, 'run', h, h + 1, 1, 0, 'demo', last["sku_id"]))
+            if not c.execute("SELECT 1 FROM hourly_runs WHERE job_id=? AND period='H6'", (last["id"],)).fetchone():
+                for extra in [6, 7, 8]:
+                    extra_hr = started + timedelta(hours=extra)
+                    extra_units = int(last["_rate"] * random.uniform(0.93, 0.99))
+                    extra_dur = 30 if extra == 8 else 60
+                    c.execute("""INSERT INTO hourly_runs
+                        (job_id,line_id,shift,period,recorded_at,units_filled,duration_min,phase,
+                         job_hour_start,job_hour_end,user_id,flagged,source,sku_id)
+                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        (last["id"], lid, '1', f"H{extra}", extra_hr.isoformat(),
+                         extra_units, extra_dur, 'run', extra, extra + extra_dur/60.0, 1, 0, 'demo', last["sku_id"]))
         total_units = c.execute(
             "SELECT SUM(units_filled) FROM hourly_runs WHERE job_id=?",
             (last["id"],)).fetchone()[0] or 0

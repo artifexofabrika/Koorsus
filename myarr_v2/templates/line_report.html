@@ -8,9 +8,8 @@
   .report-table td { padding: 0.5rem; border-bottom: 1px solid var(--border); text-align: right; }
   .report-table td:first-child, .report-table td:last-child { text-align: left; }
   .report-table tr.totals { font-weight: bold; background: var(--card-bg); border-top: 2px solid var(--accent); }
-  .report-table tr.lunch-row td { color: var(--muted); font-style: italic; background: rgba(0,0,0,0.1); }
-  .report-table tr.pending-row td { color: var(--muted); }
   .takt-box { background: var(--card-bg); border: 1px solid var(--border); padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; display: inline-block; }
+  .events-box { margin-top: 2rem; background: var(--card-bg); border: 1px solid var(--border); padding: 1rem; border-radius: 4px; max-width: 600px; }
 </style>
 
 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -42,31 +41,17 @@
   </thead>
   <tbody>
     {% for r in rows %}
-    {% if r.is_lunch %}
-    <tr class="lunch-row">
-      <td>{{ r.hour_label }}</td>
-      <td>{{ r.minutes }}</td>
-      <td>—</td>
-      <td>—</td>
-      <td>{{ '{:,}'.format(r.target_acc) }}</td>
-      <td>{{ '{:,}'.format(r.actual_acc) }}</td>
-      <td>—</td>
-      <td>—</td>
-      <td>{{ r.comments }}</td>
-    </tr>
-    {% else %}
-    <tr class="{{ 'pending-row' if not r.has_data else '' }}">
+    <tr>
       <td>{{ r.hour_label }}</td>
       <td>{{ r.minutes }}</td>
       <td>{{ '{:,}'.format(r.target) }}</td>
-      <td>{% if r.actual is not none %}{{ '{:,}'.format(r.actual) }}{% else %}—{% endif %}</td>
-      <td>{% if r.actual is not none %}{{ '{:,}'.format(r.target_acc) }}{% else %}—{% endif %}</td>
-      <td>{% if r.actual is not none %}{{ '{:,}'.format(r.actual_acc) }}{% else %}—{% endif %}</td>
-      <td>{% if r.actual is not none %}<span class="{{ 'good' if r.delta >= 0 else 'bad' }}">{{ '{:+,}'.format(r.delta) }}</span>{% else %}—{% endif %}</td>
-      <td>{% if r.actual is not none and r.scrap %}{{ '{:,}'.format(r.scrap) }}{% else %}—{% endif %}</td>
+      <td>{% if r.has_data %}{{ '{:,}'.format(r.actual) }}{% else %}—{% endif %}</td>
+      <td>{% if r.has_data %}{{ '{:,}'.format(r.target_acc) }}{% else %}—{% endif %}</td>
+      <td>{% if r.has_data %}{{ '{:,}'.format(r.actual_acc) }}{% else %}—{% endif %}</td>
+      <td>{% if r.has_data %}<span class="{{ 'good' if r.delta >= 0 else 'bad' }}">{{ '{:+,}'.format(r.delta) }}</span>{% else %}—{% endif %}</td>
+      <td>{% if r.scrap %}{{ '{:,}'.format(r.scrap) }}{% else %}—{% endif %}</td>
       <td style="color: var(--muted);">{{ r.comments }}</td>
     </tr>
-    {% endif %}
     {% endfor %}
   </tbody>
   <tfoot>
@@ -86,5 +71,19 @@
   <div><strong>P2P (Actual / Target):</strong> <span style="color: var(--accent);">{{ p2p }}%</span></div>
   <div><strong>FTQ (First Time Quality):</strong> <span style="color: var(--accent);">{{ ftq }}%</span></div>
 </div>
+
+{% if events %}
+<div class="events-box">
+  <h3 style="margin-top:0; color:var(--accent);">Shift Events (Non-Production Time)</h3>
+  <table style="width:100%; font-size:0.85rem;">
+    {% for ev in events %}
+    <tr>
+      <td style="color:var(--text); text-transform:capitalize;">{{ ev.state }}</td>
+      <td style="text-align:right; color:var(--muted);">{{ (ev.started_at or '')[:16].replace('T',' ') }} to {{ (ev.ended_at or '')[:16].replace('T',' ') }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
 
 {% endblock %}
