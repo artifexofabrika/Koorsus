@@ -1,7 +1,7 @@
 """
 Myarra Web Application
 """
-from flask import Flask, render_template, request, redirect, url_for, Response
+from flask import Flask, render_template, request, redirect, url_for, Response, jsonify
 from db import get_db_connection, ingest_csv
 from onboarding import TEMPLATES, generate_csv, ingest_template, INGEST_ORDER
 from recon import summary_for_window
@@ -189,7 +189,7 @@ def reconciliation():
         LEFT JOIN lines l ON l.id = j.line_id
         LEFT JOIN skus s ON s.id = j.sku_id
         JOIN hourly_runs r ON r.job_id = j.id
-        WHERE j.status IN ('running', 'completed', 'paused')
+        WHERE j.status = 'completed'
     """
     params = []
     if line_filter:
@@ -741,6 +741,60 @@ def shift_detail(run_date, shift):
     return render_template("shift_detail.html", run_date=run_date, shift=shift,
                            details=details, unit=unit)
 
+
+# Agreed 2026-11-07: Odoo Connector endpoint. Read-only from Odoo's perspective,
+# accepts work orders and maps them to Myarra's schema by part_number and line_name.
+@app.route("/api/odoo/jobs", methods=["POST"])
+def api_odoo_jobs():
+    token = request.headers.get("X-Myarra-Token")
+    if token != "MYARRA-ODOO-SECRET":
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    if not isinstance(data, list):
+        return jsonify({"error": "Expected a JSON array of jobs"}), 400
+        
+    conn = get_db_connection()
+    imported = 0
+    errors = []
+    
+    for job in data:
+        try:
+            job_no = job.get("job_number")
+            sku_part = job.get("part_number")
+            line_name = job.get("line_name")
+            target_qty = job.get("target_quantity", 0)
+            
+            if not job_no or not sku_part:
+                errors.append(f"Missing job_number or part_number")
+                continue
+                
+            # Map names to internal IDs
+            sku = conn.execute("SELECT id FROM skus WHERE part_number=?", (sku_part,)).fetchone()
+            if not sku:
+                errors.append(f"SKU not found: {sku_part}")
+                continue
+                
+            # Line is optional; default to Line 1 if not found
+            line = conn.execute("SELECT id FROM lines WHERE name=?", (line_name,)).fetchone()
+            line_id = line['id'] if line else 1
+            
+            # UPSERT
+            conn.execute("""
+                INSERT INTO jobs (job_number, sku_id, line_id, target_quantity, scheduled_start, scheduled_end, status)
+                VALUES (?, ?, ?, ?, ?, ?, 'scheduled')
+                ON CONFLICT(job_number) DO UPDATE SET
+                    target_quantity=excluded.target_quantity,
+                    scheduled_start=excluded.scheduled_start,
+                    scheduled_end=excluded.scheduled_end
+            """, (job_no, sku['id'], line_id, target_qty, job.get("scheduled_start"), job.get("scheduled_end")))
+            imported += 1
+        except Exception as e:
+            errors.append(f"Job {job.get('job_number', '?')}: {str(e)}")
+            
+    conn.commit()
+    conn.close()
+    return jsonify({"imported": imported, "errors": errors}), 200
 
 @app.route("/favicon.ico")
 def favicon():

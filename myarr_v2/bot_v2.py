@@ -479,6 +479,20 @@ def h_ending_job(conn, s, text, user):
         conf = 'exact'
     else:
         return "Which job is ending? Say: 'end WO-2026-001'."
+
+    if not job.get('completion_variance_reason'):
+        actual = conn.execute("SELECT SUM(units_filled) FROM hourly_runs WHERE job_id=?", (job['id'],)).fetchone()[0] or 0
+        target = job['target_quantity'] or 0
+        if target > 0:
+            var_pct = (actual - target) / target
+            tol_row = conn.execute("SELECT value FROM settings WHERE key='job_variance_tolerance'").fetchone()
+            tol = float(tol_row['value']) if tol_row else 0.05
+            if abs(var_pct) > tol:
+                s.set('state', 'awaiting_variance_reason')
+                s.set('pending_job_id', job['id'])
+                s.save()
+                return f"Job {job['job_number']} is off target by {var_pct*100:.1f}%. Please provide a reason to close."
+
     line_id = _derive_line(conn, job, s, user)
     cur = _current_line_event(conn, line_id)
     if cur and cur['state'] != 'production':
@@ -1217,17 +1231,54 @@ def cont_relog_reason(conn, s, text, user):
     s.save()
     return f"Correction saved. Reason: {reason}\n\n{res}"
 
+def cont_variance_reason(conn, s, text, user):
+    reason = text.strip()
+    if not reason: return "Please provide a reason to close the job."
+    job_id = s.get('pending_job_id')
+    if not job_id:
+        return "Session lost track of the job. Please try 'end WO-...' again."
+    
+    conn.execute("UPDATE jobs SET completion_variance_reason=?, completion_flagged=1 WHERE id=?", (reason, job_id))
+    conn.commit()
+    
+    job_row = conn.execute("SELECT job_number FROM jobs WHERE id=?", (job_id,)).fetchone()
+    job_no = job_row['job_number'] if job_row else None
+    
+    s.set('state', 'idle')
+    s.set('pending_job_id', None)
+    s.save()
+    
+    if not job_no:
+        return "Job closed and flagged. Please run 'status line N' to confirm."
+    return h_ending_job(conn, s, f"end {job_no}", user)
+
 def dispatch(conn, s, text, user):
     # Agreed 2026-11-06: strict audit trail of every incoming message.
     conn.execute("INSERT INTO audit_log (user_id, raw_text, created_at) VALUES (?,?,?)",
                  (user['id'] if user else None, text, datetime.now().isoformat()))
     conn.commit()
+    if s.get('state') == 'awaiting_variance_reason':
+        return cont_variance_reason(conn, s, text, user)
     if s.get('state') == 'awaiting_relog_reason':
         return cont_relog_reason(conn, s, text, user)
     if s.get('state') == 'maint_prompt':
         return _handle_maint_prompt(conn, s, text, user)
     text = text.strip()
     if not text: return None
+    if text.lower() in ('help', '/help'):
+        return "Commands:\n\n" \
+               "running job WO-XXXX-XXX, hour N, UNITS\n" \
+               "record production hour N, M minutes, UNITS\n" \
+               "start WO-XXXX-XXX | end WO-XXXX-XXX\n" \
+               "changeover job WO-XXXX to WO-YYYY | end changeover\n" \
+               "pause WO-XXXX | resume WO-XXXX\n" \
+               "relog job WO-XXXX hour N, UNITS\n" \
+               "note: TEXT | note hour N: TEXT\n" \
+               "maintenance <station> <reason> | end maintenance\n" \
+               "status line N | status job WO-XXXX\n" \
+               "handover job WO-XXXX | taking over job WO-XXXX\n" \
+               "sop, your question\n" \
+               "cancel | lunch | end lunch" 
 
     note_match = re.match(r'^(note|comment|memo)\s*(?:hour\s*(\d+))?:?\s+(.*)', text, re.IGNORECASE)
     if note_match:

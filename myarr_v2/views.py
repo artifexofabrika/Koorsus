@@ -104,6 +104,31 @@ FROM v_oee_by_line_day
 """
 
 V_STAGE_C = """
+CREATE VIEW IF NOT EXISTS v_changeover_by_station AS
+SELECT
+    e.line_id,
+    date(e.started_at) AS day,
+    e.id AS co_event_id,
+    p.name AS procedure_name,
+    e.from_job_number,
+    e.to_job_number,
+    s.station,
+    s.step_name,
+    s.standard_min,
+    es.actual_min,
+    ROUND(es.actual_min - s.standard_min, 1) AS variance_min,
+    CASE WHEN s.standard_min > 0
+         THEN ROUND((es.actual_min - s.standard_min) / s.standard_min, 3)
+         ELSE NULL END AS variance_pct
+FROM co_events e
+JOIN co_procedures_v2 p ON p.id = e.procedure_id
+JOIN co_event_steps es ON es.event_id = e.id
+JOIN co_steps_v2 s ON s.id = es.step_id
+WHERE e.started_at IS NOT NULL
+  AND e.aggregate_actual_min IS NOT NULL
+  AND s.standard_min IS NOT NULL;
+
+
 CREATE VIEW IF NOT EXISTS v_oee_daily AS
 SELECT * FROM v_oee_by_line_day;
 
@@ -192,6 +217,7 @@ ALL_VIEWS = [
     "v_oee_by_line_day",
     "v_oee_daily",
     "v_production_vs_standard",
+    "v_changeover_by_station",
     "v_changeover_variance",
     "v_unaccounted_by_line_day",
     "v_maintenance_by_station",
@@ -213,4 +239,4 @@ if __name__ == "__main__":
     conn = get_db_connection()
     ensure_views(conn)
     conn.close()
-    print("all 9 views created")
+    print(f"all {len(ALL_VIEWS)} views created")
