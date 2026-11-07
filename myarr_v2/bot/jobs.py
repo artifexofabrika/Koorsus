@@ -15,8 +15,7 @@ from datetime import datetime, timedelta
 from . import db
 from parsers import parse_job_number, parse_all_job_numbers, parse_int
 
-# Temporary bridge (see module docstring).
-from bot_v2 import resolve_job, _explain_no_job, _fuzzy_note, next_job_hour
+from .resolve import resolve_job, _explain_no_job, _fuzzy_note, next_job_hour
 
 
 def h_start_job(conn, s, text, user):

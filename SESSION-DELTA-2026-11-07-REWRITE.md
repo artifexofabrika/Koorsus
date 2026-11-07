@@ -40,20 +40,11 @@ entirety without touching the others.
 
 ---
 
-## 2. THE TEMP BRIDGE (What It Is and How to Remove It)
+## 2. THE TEMP BRIDGE (RESOLVED 2026-11-07)
 
-`bot/jobs.py` imports four functions from the old `bot_v2.py`:
-`resolve_job`, `_explain_no_job`, `_fuzzy_note`, `next_job_hour`.
+The four utility functions (`resolve_job`, `_explain_no_job`, `_fuzzy_note`, `next_job_hour`) have been successfully extracted from the old bot into `bot/resolve.py`. `bot/jobs.py` now imports from the new module. 
 
-**Why:** Voice-to-text produces mangled job numbers ("w0-2026-006", "WO 2026006"). The fuzzy-matching logic is non-trivial and works. Duplicating it during the rewrite risked re-introducing bugs.
-
-**What to do next session:**
-1. Create `bot/resolve.py`.
-2. Move those four functions from `bot_v2.py` into it, unmodified.
-3. Change `bot/jobs.py` to import them from `.resolve`.
-4. `bot_v2.py` can then be renamed to `bot_v2.py.retired`. Nothing imports it.
-
-This is a 15-minute task. Until it is done, `bot_v2.py` must not be deleted.
+`bot_v2.py` has been renamed to `bot_v2.py.retired` and is no longer imported by anything. The live bot is now 100% running on the new modular architecture.
 
 ---
 
