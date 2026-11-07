@@ -186,6 +186,10 @@ def h_start_shift(conn, s, text, user):
 def h_end_shift(conn, s, text, user):
     line_id = db.derive_line(conn, None, s, user)
     shift_code = s.get('shift') or current_shift_code()
+    # Agreed 2026-11-07: stale session values from bot_v2 stored shift codes
+    # as bare digits. Validate and override with the clock's current shift.
+    if shift_code not in ('S1', 'S2', 'S3'):
+        shift_code = current_shift_code()
     day = datetime.now().strftime('%Y-%m-%d')
 
     rec = compute_reconciliation(conn, line_id, shift_code, day)

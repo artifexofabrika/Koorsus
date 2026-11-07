@@ -62,15 +62,22 @@ The four utility functions (`resolve_job`, `_explain_no_job`, `_fuzzy_note`, `ne
 **Tested on live Telegram after the swap:**
 - `running job WO-2026-006, hour 4, 7000 parts, 20 scrap` returned the correct receipt and stored `H4|7000|20`.
 
-**NOT tested on live Telegram after the swap (next session must test):**
-- Live changeover end-to-end via Telegram.
-- Live maintenance end-to-end via Telegram (start → end → minutes prompt → three notes).
-- Live `end shift` reconciliation.
-- Live variance-reason prompt on `end job`.
-- Live `start shift` command.
+**Tested live on Telegram after the swap (2026-11-07 evening):**
+- Changeover end-to-end: WO-2026-001 → WO-2026-002, 6 steps walked, saved correctly.
+- Shift reconciliation: `end shift` on Line 1 S2 — correct math, scrap from H2/H5 captured, downtime from maintenance_events.
+- Job close with variance gate: WO-2026-006 closed, reason preserved, flagged.
+- Production with scrap on H5: 7,000 units, 20 scrap stored correctly.
+- `start shift` command (via `start wo-2026-002` flow).
 
-**Not yet exercised:**
-- `shift_reconciliations` table has not been written to via a live `end shift`. The math function works; the interaction path through Telegram has not been run.
+**Still to test (next session):**
+- Live maintenance end-to-end via Telegram (only tested via unit REPL).
+- Live `start shift` command as its own message.
+
+**One bug found and fixed during live testing:**
+- `h_end_shift` was reading a stale session value `'2'` (from old bot_v2 tests) that did not match `SHIFTS` keys. Normalized to `S1`/`S2`/`S3` with a clock fallback.
+
+**Parking lot addition:**
+- Mid-shift residual notation. When `end shift` is run before the shift window has elapsed, the report should note "hours still to run" vs. "hours unaccounted" so a manager reading at 5pm does not mistake an open shift for a problem shift.
 
 ---
 
