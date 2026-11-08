@@ -1,0 +1,70 @@
+<section class="oe_container">
+  <div class="oe_row oe_spaced">
+    <h2 class="oe_slogan" style="color:#8a6d3b;">Myarra Connector</h2>
+    <h3 class="oe_slogan">Read-only bridge from Odoo to the Myarra shop-floor tracker.</h3>
+    <p class="oe_mt32" style="text-align:center;">
+      Stop forcing your operators to tap through tablets.
+    </p>
+  </div>
+</section>
+
+<section class="oe_container oe_dark">
+  <div class="oe_row oe_spaced">
+    <h2 class="oe_slogan">What This Module Does</h2>
+    <p class="oe_mt16">
+      The Myarra Connector reads active Manufacturing Orders from your Odoo
+      instance and passes them to a Myarra appliance on your local network.
+      Operators then log production hours in ten seconds, by voice or typed
+      message. Myarra computes OEE and operator performance against the
+      Odoo work order, and exposes the unaccounted minutes that a standard
+      OEE log cannot see.
+    </p>
+    <p>
+      This module is <strong>strictly read-only</strong>. It does not write
+      to your Odoo database. Your financial, inventory, and scheduling data
+      remain untouched.
+    </p>
+  </div>
+</section>
+
+<section class="oe_container">
+  <div class="oe_row oe_spaced">
+    <h2 class="oe_slogan">Two Measures, Both True</h2>
+    <p class="oe_mt16">
+      Unlike standard OEE tools that hold the operator responsible for
+      machine breakdowns, Myarra reports <strong>Total OEE</strong> (counts
+      every loss) and <strong>Operator Performance</strong> (excludes time
+      the operator did not cause). Show both, and people stop gaming the
+      log.
+    </p>
+  </div>
+</section>
+
+<section class="oe_container oe_dark">
+  <div class="oe_row oe_spaced">
+    <h2 class="oe_slogan">How It Works</h2>
+    <ol class="oe_mt16" style="font-size:16px;">
+      <li>Install this connector in your Odoo instance.</li>
+      <li>Enter the local IP address of your Myarra installation in Settings.</li>
+      <li>The connector pulls active Manufacturing Orders (mrp.production)
+          and passes them to Myarra.</li>
+      <li>Operators log actuals via voice or typed message from the floor.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="oe_container">
+  <div class="oe_row oe_spaced">
+    <h2 class="oe_slogan">Deployment Requirements</h2>
+    <p class="oe_mt16">
+      This module requires a <strong>Myarra installation</strong> to
+      function. It is not a standalone dashboard. The recommended
+      deployment is a turnkey appliance available directly from
+      Artifexo Fabrika. The software can also be self-hosted from the
+      open-source repository.
+    </p>
+  </div>
+</section>
+
+<section class="oe_container oe_separator">
+</section>
