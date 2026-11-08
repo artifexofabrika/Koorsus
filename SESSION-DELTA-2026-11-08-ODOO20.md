@@ -44,3 +44,34 @@ Version string changed 18.0.1.0.0 to 20.0.1.0.0 so Odoo 20 accepts the module.
 - docker restart required after addon changes for web server to see new views.
 
 END OF DELTA.
+
+---
+
+## 7. ADDENDUM — END-TO-END SYNC VERIFIED (2026-11-08, later)
+
+The Sync button was restored and the full Odoo-to-Myarra path was proven:
+
+1. Created product with default_code COS-CMP-RS via Odoo shell.
+2. Created MO WH/MO/00002 for qty 1000.
+3. Clicked Sync to Myarra in Manufacturing > Operations > Manufacturing Orders.
+4. Odoo returned green notification: Synced: 1 jobs.
+5. Verified in Myarra database:
+
+   sqlite3 /mnt/lake/myarra.db SELECT id, job_number, sku_id, line_id, target_quantity, status FROM jobs WHERE job_number LIKE "WH/%"
+   -> 31|WH/MO/00002|1|1|1000|scheduled
+
+That is the full loop: Odoo MO -> connector module -> Jetson API -> Myarra jobs table, with SKU correctly mapped from default_code to sku_id.
+
+### The fix that unblocked it
+The Sync button view was rewritten for Odoo 20's list view (tree was renamed to list). The Python model used ir.config_parameter.get_param() which does not exist in Odoo 20; replaced with a search() on the key. Full corrected files are in the repository at odoo_connector/myarra_connector/.
+
+### Submission package
+Tarball built at ~/odoo_connector/myarra_connector.tar.gz (460KB), copied to Windows Desktop. Contains 5 screenshots including screenshot_5_odoo_sync.png (the Sync button in action), clean manifest, verified model and view files. Ready to upload.
+
+### Remaining before Friday
+- Odoo Apps Store vendor account setup (if not already created).
+- Upload myarra_connector.tar.gz at https://apps.odoo.com/apps/upload.
+- Fill the submission form using outreach/odoo_listing.md.
+- Set price 99 USD, license OPL-1.
+
+END OF ADDENDUM.
