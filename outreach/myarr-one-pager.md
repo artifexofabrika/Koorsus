@@ -3,16 +3,20 @@
 ## Front
 
 # Myarra
-### Production to standard, measured honestly.
+### Continuous improvement stalls at Check.
 
-**Your OEE number is a fiction.** Not because anyone is lying, but
-because the downtime log only records what someone remembered to write
-down. The minutes nobody logged are the minutes you can least afford.
+Your people are not the problem. They come to work wanting to do a good
+job.
 
-**Myarra computes the residual:** expected production, minus actual,
-minus logged downtime. That gap is what your current tool hides. It is
-also the only number that tells you where the next hour of capacity
-actually lives.
+The problem is that getting the data costs a person, and that person
+stops improving and starts clerking. Plan and Do cost thought. Check
+costs data. So the cycle closes annually instead of weekly, and the
+improvement work waits behind the spreadsheet.
+
+**Myarra fixes the capture.** Operators log production in ten seconds,
+by voice or by text, in their own words. No dropdown to fight. No code
+list that is missing the one that actually happened. The two measures
+compute themselves, and PDCA closes every week.
 
 ### Two measures, both true
 
@@ -35,26 +39,27 @@ unaccounted minutes named rather than buried.
 and per station. See which component was the constraint and which was
 along for the ride.
 
-**Hour by hour.** Every run against its rate, with the gap and the
-downtime that explains it. Handover history and maintenance history on
-the same page as the production record.
-
 **PDCA.** Every experiment with its priority score, current condition,
 target, root cause, and the verification that says whether it worked.
+The check is measured against the floor, not remembered.
 
-**Maintenance memory.** Symptom, resolution, parts, technician, reason
-code, captured as it happens and findable later. Ask 'what did we do
-last time the labeler threw E44' and get an answer from your own history.
+**Maintenance memory.** Symptom, resolution, parts, technician, captured
+as it happens and findable later. Ask what we did last time the labeler
+threw E44 and get an answer from your own history.
 
 **Voice or typed entry.** The operator logs an hour in ten seconds, by
 voice on a noisy floor or by typed message at a quiet station. Both
 work. If the number is implausible, the system refuses it and asks again.
 
+**Ask in plain English.** Koorsus and Myarra index your own data. Ask
+which changeovers lost the most time on the labeler, and get an answer
+with the source cited. If the answer is not in your data, it says so.
+
 ### What it costs
 
 **The software is free.** The full source is on GitHub under GPL v3.
-Clone it, flash a Jetson, run it yourself. If you can run it, you owe
-us nothing.
+Clone it, flash a Jetson, run it yourself. If you can run it, you owe us
+nothing.
 
 If you would rather not build it yourself, here is the ladder:
 
