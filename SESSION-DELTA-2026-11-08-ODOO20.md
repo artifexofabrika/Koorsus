@@ -1,5 +1,7 @@
 # MYARRA — SESSION DELTA, 2026-11-08 (Odoo 20 Adaptation)
 
+**Superseded by SESSION-DELTA-2026-11-09-MARKETING-CRM.md.** Read only when that delta points you here.
+
 Read alongside 2026-11-07-REWRITE.
 
 ## 1. TEST ENVIRONMENT
