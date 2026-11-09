@@ -52,13 +52,24 @@ work. If the number is implausible, the system refuses it and asks again.
 
 ### What it costs
 
-The turnkey appliance, installed and configured for your data, starts at
-**$3,500**. Includes 20 hours of remote setup, team training, and 90
-days of support. The NX hardware tier for larger plants or future
-vision work is **$5,500**.
+**The software is free.** The full source is on GitHub under GPL v3.
+Clone it, flash a Jetson, run it yourself. If you can run it, you owe
+us nothing.
 
-If you already have capable hardware, the software bundle is **$1,500**.
-Hardware only, unflashed, is **$1,200**.
+If you would rather not build it yourself, here is the ladder:
+
+- **$1,200.** Hardware only. The Yahboom Jetson Orin Nano kit with SSD,
+  Wi-Fi, and case. You flash it and build it.
+- **$1,500.** Hardware and software. Flashed and installed with demo
+  data. You enter your own master data.
+- **$3,500.** Turnkey on Orin Nano. We configure it remotely, ingest your
+  data, train your team, and support you for 90 days.
+- **$5,500.** Turnkey on Orin NX. The same service on the heavier
+  module, for larger plants and future vision work.
+
+**Add-ons.** The Odoo Connector, a read-only bridge to Odoo
+Manufacturing, is $99. Spot consulting is $100 per hour, one hour
+minimum, for anyone doing it themselves who wants a hand.
 
 ### Start here
 
