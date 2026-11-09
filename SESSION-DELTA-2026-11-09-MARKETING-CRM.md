@@ -5,6 +5,8 @@ Read this for the Odoo App Store publication, Apify lead scraping, and CRM setup
 
 **Current entry point.** Read this first. Supersedes all earlier deltas.
 
+**Before anything else, read PHILOSOPHY.md.** It is the governing document, never superseded. If a proposed change contradicts it, the change is wrong, not the document.
+
 **Prior context — required reading before representing the product.**
 - `SESSION-DELTA-2026-11-07-REWRITE.md` — modular bot architecture.
 - `SESSION-DELTA-2026-11-08-ODOO20.md` — the connector, verified end to end.
