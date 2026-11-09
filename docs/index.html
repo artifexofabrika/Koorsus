@@ -31,8 +31,10 @@ justify-content: center;
 min-height: 100vh;
 text-align: center;
 padding: 2rem 1.25rem;
-background: linear-gradient(rgba(26, 26, 26, 0.65), rgba(26, 26, 26, 0.80)), url('board_screenshot.png') center/cover no-repeat;
+background: linear-gradient(rgba(26, 26, 26, 0.60), rgba(26, 26, 26, 0.80)), url('board_screenshot.png') center/cover no-repeat;
+background-attachment: fixed; /* Parallax effect */
 position: relative;
+text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.9); /* Makes text pop */
 }
 .hero .eyebrow {
 color: #888;
@@ -322,6 +324,41 @@ Open source, or installed on your device from $1,500.
 <img src="01-dashboard.png" alt="Myarra dashboard" style="display:block;width:100%;margin-top:1.25rem;border-radius:6px;border:1px solid #444;">
 </div>
 
+</div>
+</div>
+
+<div class="section" style="max-width:1000px;">
+<h2>See the system.</h2>
+<p style="margin-bottom:2rem;">A private appliance running entirely on your network. Here is what it looks like in practice.</p>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+    <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
+        <img src="01-dashboard.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Live Dashboard">
+        <div style="padding: 1.5rem;">
+            <strong style="color: #c0a878; font-size: 1.1rem;">The Floor View</strong>
+            <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">What is happening right now? The live dashboard shows the state of every line, the active job, and the elapsed time.</p>
+        </div>
+    </div>
+    <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
+        <img src="03-telegram.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Telegram Bot">
+        <div style="padding: 1.5rem;">
+            <strong style="color: #c0a878; font-size: 1.1rem;">The Floor Voice</strong>
+            <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">Operators log production in seconds via Telegram. The bot validates the numbers and refuses implausible entries.</p>
+        </div>
+    </div>
+    <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
+        <img src="02-koorsus.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Koorsus AI">
+        <div style="padding: 1.5rem;">
+            <strong style="color: #c0a878; font-size: 1.1rem;">The Answer Engine</strong>
+            <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">Koorsus indexes your SOPs and manuals. Ask a question, get an answer with the exact source cited. No hallucinations.</p>
+        </div>
+    </div>
+    <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
+        <img src="16-pdca.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="PDCA Board">
+        <div style="padding: 1.5rem;">
+            <strong style="color: #c0a878; font-size: 1.1rem;">The Improvement Loop</strong>
+            <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">Every experiment with its priority, condition, and target. The Check step measures the result against the floor, not a spreadsheet.</p>
+        </div>
+    </div>
 </div>
 </div>
 
