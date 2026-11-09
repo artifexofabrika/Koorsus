@@ -1,7 +1,34 @@
-# Myarra Pricing Tiers (Final 2026-11-08)
+# Myarra Pricing Tiers (Final 2026-11-09)
 
 Every tier is sold as-is with the inclusions and exclusions stated below.
 Nothing is implied. If it is not listed as included, it is not included.
+
+The software is open source (GPL v3) and free to self-host. The tiers below
+are for hardware, installation, and support. If you can flash it and run it
+yourself, you owe us nothing.
+
+---
+
+## 0. Free Self-Hosted — $0
+
+**The source is on GitHub. Take it.**
+
+### INCLUDED
+- Full Myarra source under GPL v3
+- Full Koorsus source under GPL v3
+- Documentation sufficient to flash a Jetson and install both
+- The Odoo connector module source
+
+### NOT INCLUDED
+- Hardware of any kind
+- Installation assistance
+- Support of any kind
+- Setup, training, or configuration
+- Warranty
+
+### WHO BUYS THIS
+Someone technical who wants to run it themselves, or someone evaluating
+before committing to a paid tier. This is the honest floor of the ladder.
 
 ---
 
@@ -33,8 +60,7 @@ Nothing is implied. If it is not listed as included, it is not included.
 
 ### WHO BUYS THIS
 Someone who wants the parts at a fair price and intends to do their own
-build. This exists as the floor of the pricing ladder. It is not the
-recommended path.
+build. This exists as the second rung of the pricing ladder.
 
 ---
 
@@ -116,7 +142,7 @@ recommended tier and the one to lead with in every conversation.
 ### INCLUDED
 - Everything in Tier 3, but with an **NVIDIA Jetson Orin NX 16GB**
   instead of the Orin Nano 8GB
-- The NX module delivers roughly 4× the AI compute and unlocks future
+- The NX module delivers roughly 4x the AI compute and unlocks future
   capabilities (vision inspection, larger local models) that the Nano
   cannot run
 - 20 hours of REMOTE professional services as in Tier 3
@@ -157,6 +183,30 @@ sync. Never sold to a customer who does not already have Myarra.
 
 ---
 
+## 6. Spot Consulting — $100 per hour, one hour minimum
+
+**For anyone doing it themselves who wants a hand.**
+
+### INCLUDED
+- One hour of remote consulting per booking
+- Screen-share assistance with installation, configuration, data
+  ingestion, bot setup, or troubleshooting
+- Written notes after the session
+
+### NOT INCLUDED
+- **NO HARDWARE.**
+- **NO ONGOING SUPPORT.** This is a one-hour engagement, not a retainer.
+- **NO MASTER DATA ENTRY.** We will teach you how; we will not do it for
+  you at this rate.
+- **NO GUARANTEE OF OUTCOME.** You are buying an hour of expertise, not a
+  result.
+
+### WHO BUYS THIS
+A self-hoster who has hit a wall, or someone evaluating the system who
+wants a guided walk-through before committing to a tier.
+
+---
+
 ## OPTIONAL ADD-ON: On-Site Installation
 
 Available on Tier 3 and Tier 4 only, quoted separately.
@@ -180,11 +230,13 @@ requires it.
 
 | Tier | Price | Flashed | Setup | Training | Support | Odoo Connector |
 |---|---|---|---|---|---|---|
+| 0. Free Self-Hosted | $0 | ✗ | ✗ | ✗ | ✗ | ✗ |
 | 1. Hardware Only | $1,200 | ✗ | ✗ | ✗ | ✗ | ✗ |
 | 2. Hardware + Software | $1,500 | ✓ | ✗ | ✗ | 30d email | ✗ |
 | 3. Turnkey Orin | $3,500 | ✓ | Remote | Remote | 90 days | ✓ |
 | 4. Turnkey NX | $5,500 | ✓ | Remote | Remote | 90 days | ✓ |
 | 5. Odoo Connector | $99 | n/a | n/a | n/a | ✗ | ✓ |
+| 6. Spot Consulting | $100/hr | n/a | n/a | n/a | n/a | n/a |
 
 ---
 
@@ -195,9 +247,12 @@ requires it.
   messages as easily as voice, which matters in loud factory floors.
 - **Hardware sourcing:** Yahboom kit confirmed on Amazon at ~$670, case
   (Waveshare aluminum, ~$22) confirmed. Official NVIDIA dev kits are
-  currently out of stock or priced above $600 — the Yahboom kit is the
+  currently out of stock or priced above $600. The Yahboom kit is the
   only sane sourcing path.
 - **No SD card slot** on the SUB board. NVMe only. Flashing uses
   Yahboom's factory image and super boot procedure.
 - **On-site is an upsell, never a default.** Remote is the operating
   assumption. Travel is always billed separately.
+- **Open core.** The software is free. The tiers are for hardware, setup,
+  and support. Say so plainly on the website; it is a feature, not a
+  weakness.
