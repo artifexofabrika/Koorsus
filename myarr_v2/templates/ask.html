@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Myarra - Ask{% endblock %}
+{% block content %}
+<h1>Ask Myarra</h1>
+<div class="sub">Plain-English questions about the plant</div>
+
+<form method="POST" style="max-width: 720px; margin: 1.5rem 0;">
+  <input type="text" name="question" value="{{ question or '' }}"
+         placeholder="e.g. How many units did Line 4 produce today?"
+         style="width:100%; padding:0.7rem; background:var(--card-bg); color:var(--text); border:1px solid var(--border); border-radius:4px; font-size:1rem; font-family:Georgia,serif;"
+         autofocus>
+  <button type="submit" style="margin-top:0.75rem; background:var(--accent); color:#111; border:none; padding:0.7rem 2rem; font-weight:bold; border-radius:4px; font-size:0.9rem; cursor:pointer;">Ask</button>
+</form>
+
+{% if result %}
+  {% if result.error %}
+    <div style="padding:1rem; background:rgba(198,40,40,0.15); border:1px solid var(--danger); border-radius:4px; max-width:720px;">
+      <strong style="color:var(--danger);">Error:</strong> {{ result.error }}
+      {% if result.sql %}<div style="margin-top:0.5rem; font-family:monospace; font-size:0.8rem; color:var(--muted);">{{ result.sql }}</div>{% endif %}
+    </div>
+  {% else %}
+    <div style="margin-top:0.5rem; color:var(--muted); font-size:0.8rem; font-family:monospace;">{{ result.sql }}</div>
+    <table style="margin-top:1rem;">
+      <tr>
+        {% for c in result.columns %}<th style="text-align:left;">{{ c }}</th>{% endfor %}
+      </tr>
+      {% for row in result.rows %}
+      <tr>
+        {% for c in result.columns %}<td style="text-align:left;">{{ row[c] }}</td>{% endfor %}
+      </tr>
+      {% endfor %}
+    </table>
+    {% if result.count == 0 %}<p style="color:var(--muted); margin-top:1rem;">Query returned no rows.</p>{% endif %}
+  {% endif %}
+{% endif %}
+
+{% endblock %}

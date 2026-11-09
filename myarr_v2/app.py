@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, redirect, url_for, Response, 
 from db import get_db_connection, ingest_csv
 from onboarding import TEMPLATES, generate_csv, ingest_template, INGEST_ORDER
 from recon import summary_for_window
+from ask import ask as ask_question
 from datetime import datetime, timedelta
 import json
 
@@ -795,6 +796,16 @@ def api_odoo_jobs():
     conn.commit()
     conn.close()
     return jsonify({"imported": imported, "errors": errors}), 200
+
+@app.route("/ask", methods=["GET", "POST"])
+def ask_view():
+    result = None
+    question = None
+    if request.method == "POST":
+        question = (request.form.get("question") or "").strip()
+        if question:
+            result = ask_question(question)
+    return render_template("ask.html", question=question, result=result)
 
 @app.route("/favicon.ico")
 def favicon():

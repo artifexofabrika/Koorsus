@@ -244,3 +244,20 @@ def connect():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+# ============================================================
+# Compatibility helpers for bot_live_v3.py
+# ============================================================
+
+def get_conn():
+    """Alias for connect(). Kept for bot_live_v3.py compatibility."""
+    return connect()
+
+
+def get_user_by_tg(conn, telegram_id):
+    """Look up an active user by their Telegram id."""
+    row = conn.execute(
+        "SELECT * FROM users WHERE telegram_id=? AND active=1",
+        (str(telegram_id),)).fetchone()
+    return dict(row) if row else None

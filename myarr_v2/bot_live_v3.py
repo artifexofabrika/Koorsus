@@ -4,8 +4,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import config
-from bot_v2 import get_conn, ensure_schema, get_user_by_tg
-from bot.db import Session
+from bot.db import get_conn, ensure_schema, get_user_by_tg, Session
 from bot.dispatch import dispatch
 
 TOKEN = config.TELEGRAM_BOT_TOKEN

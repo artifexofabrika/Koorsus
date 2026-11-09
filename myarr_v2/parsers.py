@@ -20,7 +20,7 @@ LINE_DIGIT_RE = re.compile(r'\bline\s*(\d+)\b', re.IGNORECASE)
 LINE_WORD_RE = re.compile(
     r'\bline\s+(one|two|three|four|five|six|seven|eight)\b', re.IGNORECASE)
 BOTTLES_RE = re.compile(
-    r'(\d[\d, ]*\d|\d)\s*(?:bottles?|btl|units?|containers?|cans?|jars?|cases?)\b',
+    r'(\d[\d, ]*\d|\d)\s*(?:good\s+)?(?:bottles?|btl|units?|containers?|cans?|jars?|cases?|parts?|pcs?|pieces?)\b',
     re.IGNORECASE)
 DOWNTIME_RE = re.compile(
     r'(\d+(?:\.\d+)?)\s*(?:min|minutes?)\s+(?:of\s+)?(?:downtime|down)\s+(?:at|on)?\s*(?:the\s+)?(.+?)(?:,|$)',
