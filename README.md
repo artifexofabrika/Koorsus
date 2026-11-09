@@ -8,12 +8,18 @@ Licensed GPL v3. Modification encouraged.
 
 ## Read this first
 
-The newest session delta supersedes everything else. Read in this order:
+`PHILOSOPHY.md` is the governing document. Read it before anything else.
+It is never superseded. If a proposed change contradicts it, the change is
+wrong, not the document.
 
-1. `SESSION-DELTA-2026-11-09-MARKETING-CRM.md` — Odoo Apps Store publication,
+After that, the newest session delta supersedes everything else. Read in
+this order:
+
+1. `PHILOSOPHY.md` — philosophy and inviolable commitments
+2. `SESSION-DELTA-2026-11-09-MARKETING-CRM.md` — Odoo Apps Store publication,
    Apify lead scraping, Odoo CRM setup, current state and next steps
-2. `HANDOFF.md` — architecture, hardware, network, history
-3. Older `SESSION-DELTA-*.md` — only when the newest delta points you there
+3. `HANDOFF.md` — architecture, hardware, network, history
+4. Older `SESSION-DELTA-*.md` — only when the newest delta points you there
 
 Do not read the older handoffs in full. They are long, and the newest
 delta names what still matters.
@@ -35,21 +41,30 @@ kept in step by copying from it, never the reverse.
 ## What is here
 
 - `myarr_v2/` — the Flask application (port 5002) and the Telegram bot
-- `myarr_v2/views.py` — the shared measure layer: nine SQL views
+- `myarr_v2/views.py` — the shared measure layer: eleven SQL views
 - `myarr_v2/recon.py` — OEE and operator performance, the two-measure design
+- `myarr_v2/parsers.py` — freeform capture parsing; jidoka in software
+- `myarr_v2/bot/` — modular Telegram bot, ten modules
 - `odoo_connector/` — build directory for the published Odoo 20 module
 - `tools/` — demo data generation and population
-- `outreach/` — consulting collateral, CV, advisory sheets, pricing, listings
-- `docs/` — static documentation and demo downloads
+- `outreach/` — consulting collateral, CV, advisory sheets, pricing, listings,
+  one-pager, Reddit copy, jigsaw mailer concept, hardware sourcing
+- `docs/` — static documentation, marketing site, demo downloads
 
 ## Commercial pipeline
 
 - Odoo Apps Store: Myarra Connector, v20.0.1.0.2, 99 EUR, OPL-1, published.
 - Odoo CRM: pipeline stages New, Contacted, Proposition, Won. Leads are
-  tagged `Tier 1 - *` for packagers, bottlers, cosmetics, food, partners
-  and manufacturing, and `Tier 2 - *` for breweries, distilleries, wineries.
+  tagged `Tier 1 - *` for packagers, bottlers, cosmetics, food, partners,
+  manufacturing, and mobile canning, and `Tier 2 - *` for breweries,
+  distilleries, wineries.
 - Lead generation via Apify (Compass Google Maps Scraper), exported to CSV
   and imported through Odoo list view.
+- Pricing ladder in `outreach/pricing_tiers.md`: free self-hosted, $1,200
+  hardware, $1,500 bundle, $3,500 turnkey Orin Nano, $5,500 turnkey Orin NX,
+  $99 connector, $100/hour spot consulting.
+- Odoo partnerships contacts: Andrew Boeing (AE) escalated to Cameron and
+  Collin on the partnerships team, 2026-11-09.
 
 ## Working method
 
