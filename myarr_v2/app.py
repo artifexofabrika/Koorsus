@@ -797,6 +797,91 @@ def api_odoo_jobs():
     conn.close()
     return jsonify({"imported": imported, "errors": errors}), 200
 
+@app.route("/board/<int:line_id>")
+def board(line_id):
+    conn = get_db_connection()
+    line = conn.execute("SELECT * FROM lines WHERE id=?", (line_id,)).fetchone()
+    if not line:
+        conn.close(); return "Line not found", 404
+
+    # PARKING LOT: For production, this should be date('now') and return blank if empty.
+    latest = conn.execute("SELECT MAX(date(recorded_at)) as d FROM hourly_runs WHERE line_id=?", (line_id,)).fetchone()
+    if not latest or not latest['d']:
+        conn.close()
+        return render_template("board.html", line=line, rows=[], total_target=0, total_actual=0, p2p=0, ftq=0, takt_time=0, bpm=0, current_date=datetime.now().strftime('%Y-%m-%d'), active_job="No Active Job")
+
+    runs = conn.execute("""
+        SELECT r.period, r.units_filled, r.duration_min, r.scrap_units, r.notes, j.sku_id, r.shift, j.job_number
+        FROM hourly_runs r JOIN jobs j ON r.job_id = j.id
+        WHERE r.line_id=? AND date(r.recorded_at)=? AND (r.superseded IS NULL OR r.superseded=0)
+    """, (line_id, latest['d'])).fetchall()
+
+    if not runs:
+        conn.close()
+        return render_template("board.html", line=line, rows=[], total_target=0, total_actual=0, p2p=0, ftq=0, takt_time=0, bpm=0, current_date=datetime.now().strftime('%Y-%m-%d'), active_job="No Active Job")
+
+    existing = {r['period']: dict(r) for r in runs}
+    shift = runs[0]['shift'] or '1'
+    shift_h = int(shift) if str(shift).isdigit() else 1
+    shift_start = 7 + (shift_h - 1) * 8
+
+    sample_sku = runs[0]['sku_id']
+    rate_row = conn.execute("SELECT ideal_rate FROM line_sku_rates WHERE line_id=? AND sku_id=?", (line_id, sample_sku)).fetchone()
+    bpm = rate_row['ideal_rate'] if rate_row else 600.0
+    takt_time = round(3600.0 / bpm, 2) if bpm else 0
+
+    rows = []
+    total_target = 0
+    total_actual = 0
+    total_scrap = 0
+    target_acc = 0
+    actual_acc = 0
+
+    for pn in range(1, 9):
+        period = f"H{pn}"
+        duration = 60
+        if period in existing and existing[period]['duration_min']:
+            duration = existing[period]['duration_min']
+
+        st = (shift_start + pn - 1) % 24
+        en = (st + duration // 60) % 24
+        enm = duration % 60
+        label = f"{st:02d}:00 - {en:02d}:{enm:02d}"
+
+        target = int(bpm * duration / 60.0)
+
+        if period in existing:
+            r = existing[period]
+            actual = r['units_filled']
+            scrap = r['scrap_units'] or 0
+            comments = r['notes'] or ''
+            target_acc += target
+            actual_acc += actual
+            total_target += target
+            total_actual += actual
+            total_scrap += scrap
+            delta = actual - target
+            has = True
+        else:
+            actual = None
+            comments = '— (pending)'
+            delta = None
+            has = False
+
+        rows.append({
+            'period': label, 'target': target, 'actual': actual,
+            'target_acc': target_acc if has else None,
+            'actual_acc': actual_acc if has else None,
+            'delta': delta, 'scrap': scrap if has else None, 'notes': comments, 'has_data': has,
+        })
+
+    active_job = runs[0]['job_number'] if runs else 'No Active Job'
+    conn.close()
+    p2p = round((total_actual / total_target * 100), 1) if total_target else 0
+    ftq = round(((total_actual - total_scrap) / total_actual * 100), 1) if total_actual else 0
+
+    return render_template("board.html", line=line, rows=rows, total_target=total_target, total_actual=total_actual, p2p=p2p, ftq=ftq, takt_time=takt_time, bpm=bpm, current_date=latest['d'], active_job=active_job)
+
 @app.route("/ask", methods=["GET", "POST"])
 def ask_view():
     result = None

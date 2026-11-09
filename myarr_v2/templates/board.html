@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Line {{ line.id }} - Board</title>
+    <meta http-equiv="refresh" content="30">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background-color: #1a1a1a;
+            color: #eee;
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 3px solid #c0a878;
+            padding: 1.5vh 2vw;
+            background: #222;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: clamp(24px, 4vh, 60px);
+            font-weight: 800;
+            color: #fff;
+        }
+        .header .active-job {
+            font-size: clamp(18px, 2.5vh, 36px);
+            color: #c0a878;
+            font-weight: bold;
+            margin-top: 0.5vh;
+        }
+        .header .meta {
+            text-align: right;
+            font-size: clamp(16px, 2vh, 30px);
+            font-weight: 600;
+            color: #aaa;
+        }
+        .header .takt {
+            font-size: clamp(16px, 2vh, 30px);
+            color: #fff;
+            font-weight: bold;
+            margin-bottom: 0.5vh;
+        }
+        .table-container {
+            flex-grow: 1;
+            overflow: hidden;
+            padding: 0 2vw;
+        }
+        table {
+            width: 100%;
+            height: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            table-layout: fixed;
+            font-size: clamp(14px, 3vh, 40px);
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 0.5vh 0.5vw;
+        }
+        th {
+            font-size: clamp(12px, 1.8vh, 24px);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            border-bottom: 2px solid #c0a878;
+        }
+        th:first-child, td:first-child { width: 10%; }
+        th:nth-child(2), td:nth-child(2) { width: 10%; }
+        th:nth-child(3), td:nth-child(3) { width: 10%; }
+        th:nth-child(4), td:nth-child(4) { width: 12%; }
+        th:nth-child(5), td:nth-child(5) { width: 12%; }
+        th:nth-child(6), td:nth-child(6) { width: 10%; }
+        th:nth-child(7), td:nth-child(7) { width: 10%; }
+        th:last-child, td:last-child { text-align: left; width: 26%; }
+        td {
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .delta-pos { color: #4ade80; font-weight: bold; }
+        .delta-neg { color: #f87171; font-weight: bold; }
+        .pending { color: #555; font-style: italic; }
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            border-top: 3px solid #c0a878;
+            padding: 1.5vh 2vw;
+            font-size: clamp(24px, 4vh, 60px);
+            font-weight: 800;
+            background: #222;
+        }
+        .footer .label { font-size: clamp(12px, 1.8vh, 24px); color: #888; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5vh; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <div style="font-size: clamp(10px, 1.5vh, 18px); color: #888; text-transform: uppercase; font-weight: bold;">Live Floor Board</div>
+            <h1>Line {{ line.id }}: {{ line.name }}</h1>
+            <div class="active-job">{{ active_job }}</div>
+        </div>
+        <div class="meta">
+            <div class="takt">Takt: {{ takt_time }} sec/unit ({{ bpm|int }} /hr)</div>
+            <div>{{ current_date }}</div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>HR</th>
+                    <th>Target</th>
+                    <th>Actual</th>
+                    <th>Tgt Accum</th>
+                    <th>Act Accum</th>
+                    <th>+/-</th>
+                    <th>Scrap</th>
+                    <th style="text-align: left;">Comments</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td>{{ r.period }}</td>
+                    <td>{{ '{:,}'.format(r.target) }}</td>
+                    <td>
+                        {% if r.has_data %}{{ '{:,}'.format(r.actual) }}{% else %}<span class="pending">&mdash;</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if r.has_data %}{{ '{:,}'.format(r.target_acc) }}{% else %}<span class="pending">&mdash;</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if r.has_data %}{{ '{:,}'.format(r.actual_acc) }}{% else %}<span class="pending">&mdash;</span>{% endif %}
+                    </td>
+                    <td class="{% if r.has_data and r.delta >= 0 %}delta-pos{% elif r.has_data %}delta-neg{% endif %}">
+                        {% if r.has_data %}
+                            {% if r.delta > 0 %}+{% endif %}{{ '{:,}'.format(r.delta) }}
+                        {% else %}
+                            <span class="pending">&mdash;</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if r.has_data %}{{ '{:,}'.format(r.scrap) }}{% else %}<span class="pending">&mdash;</span>{% endif %}
+                    </td>
+                    <td style="font-size: 0.75em; color: #bbb;">{{ r.notes }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <div>
+            <div class="label">Total Target</div>
+            <div>{{ '{:,}'.format(total_target) }}</div>
+        </div>
+        <div>
+            <div class="label">Total Actual</div>
+            <div>{{ '{:,}'.format(total_actual) }}</div>
+        </div>
+        <div style="text-align: center;">
+            <div class="label">FTQ</div>
+            <div class="{% if ftq >= 99 %}delta-pos{% elif ftq >= 95 %}text-warning{% else %}delta-neg{% endif %}">{{ '%.1f'|format(ftq) }}%</div>
+        </div>
+        <div style="text-align: right;">
+            <div class="label">P2P</div>
+            <div class="{% if p2p >= 100 %}delta-pos{% else %}delta-neg{% endif %}">{{ '%.1f'|format(p2p) }}%</div>
+        </div>
+    </div>
+</body>
+</html>
