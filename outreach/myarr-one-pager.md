@@ -67,8 +67,9 @@ If you would rather not build it yourself, here is the ladder:
   Wi-Fi, and case. You flash it and build it.
 - **$1,500.** Hardware and software. Flashed and installed with demo
   data. You enter your own master data.
-- **$3,500.** Turnkey on Orin Nano. We configure it remotely, ingest your
-  data, train your team, and support you for 90 days.
+- **$3,500.** Turnkey on Orin Nano. Remote installation and configuration.
+  We ingest your master data. Up to 4 hours of live training for your team.
+  30 days of email support for installation issues.
 - **$5,500.** Turnkey on Orin NX. The same service on the heavier
   module, for larger plants and future vision work.
 
