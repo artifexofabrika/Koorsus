@@ -28,6 +28,7 @@
     <th>Date</th><th>Shift</th><th>Line</th><th>Job</th><th>SKU</th>
     <th style="text-align:right;">{{ case_label|capitalize }}</th>
     <th style="text-align:right;">Expected</th>
+    <th style="text-align:right;">Scrap</th>
     <th style="text-align:right;">Variance</th>
     <th style="text-align:right;">Progress</th>
     <th>Status</th>
@@ -43,6 +44,7 @@
     <td>{{ r.sku_description or '' }}</td>
     <td style="text-align:right; font-weight: 600;">{{ '{:,}'.format(r.cases) }}</td>
     <td style="text-align:right; color: var(--muted);">{{ '{:,}'.format(r.tgt_cases) }}</td>
+    <td style="text-align:right;" class="bad">{{ '{:,}'.format(r.scrap_cases) }}</td>
     <td style="text-align:right;" class="{{ 'good' if r.variance >= 0 else 'bad' }}">{{ '{:+,}'.format(r.variance) }}</td>
     <td style="text-align:right;">{{ '%.1f'|format(r.perf) }}%</td>
     <td><span class="pill {{ 'pass' if r.status == 'running' else ('warn' if r.status == 'paused' else 'flag') }}">{{ r.status|upper }}</span></td>

@@ -1,74 +1,117 @@
 {% extends "base.html" %}
 {% block title %}Myarra - {{ job.job_number }}{% endblock %}
 {% block content %}
-<h1>{{ job.job_number }}</h1>
-<div class="sub">{{ job.sku_description or '' }} &middot; Line {{ job.line_id }} ({{ job.line_name or '' }})</div>
+<style>
+    .board-container {
+        background-color: #ffffff;
+        color: #1a1a1a;
+        font-family: system-ui, -apple-system, sans-serif;
+        padding: 2rem;
+        border-radius: 8px;
+        margin: 0 auto;
+        max-width: 1200px;
+        border: 1px solid #bbb;
+    }
+    .board-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        border-bottom: 4px solid #222;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+    .board-header h1 { margin: 0; font-size: 2.5rem; font-weight: 800; color: #000; }
+    .board-header .meta { text-align: right; font-size: 1.2rem; font-weight: 600; color: #555; }
+    .board-table { width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed; font-size: 1.2rem; }
+    .board-table th, .board-table td { border: 2px solid #bbb; padding: 0.75rem 0.5rem; }
+    .board-table th { font-size: 0.9rem; text-transform: uppercase; color: #333; border-bottom: 3px solid #222; background: #eee; }
+    .board-table th:last-child, .board-table td:last-child { text-align: left; width: 30%; }
+    .board-footer {
+        display: flex; justify-content: space-between; border-top: 4px solid #222; padding-top: 1rem; margin-top: 1rem; font-weight: 800;
+    }
+    .board-footer .label { font-size: 0.9rem; color: #555; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem; }
+    .delta-pos { color: #15803d; font-weight: bold; }
+    .delta-neg { color: #b91c1c; font-weight: bold; }
+    .pending { color: #999; font-style: italic; }
+</style>
 
-<div class="box" style="max-width:900px;margin-bottom:2rem;">
-  <div class="stat-row"><span>Status</span><span>{{ job.status|upper }}</span></div>
-  <div class="stat-row"><span>Target</span><span>{{ '{:,}'.format(tgt_cases) }} {{ case_label }}</span></div>
-  <div class="stat-row"><span>Produced</span><span>{{ '{:,}'.format(cases) }} {{ case_label }}</span></div>
-  <div class="stat-row"><span>Progress</span><span class="{{ 'good' if pct >= 100 else '' }}">{{ '%.1f'|format(pct) }}%</span></div>
+<div style="margin-bottom: 1rem;">
+    <a href="/reconciliation" style="color: var(--accent);">&larr; Back to Reconciliation</a>
 </div>
 
-<table>
-  <tr>
-    <th>Date</th><th>Shift</th><th>Hour</th>
-    <th style="text-align:right;">Expected</th>
-    <th style="text-align:right;">Actual</th>
-    <th style="text-align:right;">Gap min</th>
-    <th>Downtime</th>
-  </tr>
-  {% for d in details %}
-  <tr>
-    <td style="font-size: 0.85rem;">{{ d.date }}</td>
-    <td>S{{ d.shift }}</td>
-    <td>{{ d.period }}</td>
-    <td style="text-align:right; color: var(--muted);">{{ '{:,.0f}'.format(d.expected) }}</td>
-    <td style="text-align:right;">{{ '{:,}'.format(d.actual) }}</td>
-    <td style="text-align:right;">{{ '%.2f'|format(d.gap) }}</td>
-    <td>{% for dt in d.downtime %}{{ dt.station }}: {{ dt.reason }} ({{ dt.minutes }}m){% if not loop.last %}, {% endif %}{% endfor %}{% if not d.downtime %}—{% endif %}</td>
-  </tr>
-  {% endfor %}
-</table>
+<div class="board-container">
+    <div class="board-header">
+        <div>
+            <div style="font-size: 0.9rem; color: #555; text-transform: uppercase; font-weight: bold;">Job Performance Report</div>
+            <h1>{{ job.job_number }}</h1>
+            <div style="font-size: 1.5rem; color: #8a6d3b; font-weight: bold; margin-top: 0.5rem;">{{ job.sku_description or '' }} &middot; Line {{ job.line_id }}</div>
+        </div>
+        <div class="meta">
+            <div style="font-size: 1.5rem; color: #000; font-weight: bold;">Takt: {{ takt_time }} sec/unit ({{ target_per_hour|int }} /hr)</div>
+            <div style="font-size: 1.2rem; color: #555; margin-top: 0.5rem;">Target: {{ '{:,}'.format(tgt_cases) }} {{ case_label }} &middot; Produced: {{ '{:,}'.format(cases) }} {{ case_label }} ({{ '%.1f'|format(pct) }}%)</div>
+        </div>
+    </div>
 
-{% if handovers %}
-<h2 style="margin-top:2.5rem;">Handover history</h2>
-<table style="max-width:900px;">
-  <tr>
-    <th>Date</th><th>From</th><th>To</th><th>Notes</th>
-  </tr>
-  {% for h in handovers %}
-  <tr {% if loop.last %}style="font-weight:bold;"{% endif %}>
-    <td style="font-size:0.85rem;">{{ (h.created_at or '')[:16].replace('T', ' ') }}</td>
-    <td style="font-size:0.85rem;">{{ h.from_name or '-' }}</td>
-    <td style="font-size:0.85rem;">{{ h.to_name or 'pending' }}</td>
-    <td style="font-size:0.85rem;">{{ h.notes or '-' }}</td>
-  </tr>
-  {% endfor %}
-</table>
-{% endif %}
+    <table class="board-table">
+        <thead>
+            <tr>
+                <th>HR</th>
+                <th>Target</th>
+                <th>Actual</th>
+                <th>Tgt Accum</th>
+                <th>Act Accum</th>
+                <th>+/-</th>
+                <th>Scrap</th>
+                <th>Gap (min)</th>
+                <th style="text-align: left;">Comments</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in rows %}
+            <tr>
+                <td>{{ r.hour_label }}</td>
+                <td>{{ '{:,}'.format(r.target) }}</td>
+                <td>{% if r.has_data %}{{ '{:,}'.format(r.actual) }}{% else %}<span class="pending">&mdash;</span>{% endif %}</td>
+                <td>{% if r.has_data %}{{ '{:,}'.format(r.target_acc) }}{% else %}<span class="pending">&mdash;</span>{% endif %}</td>
+                <td>{% if r.has_data %}{{ '{:,}'.format(r.actual_acc) }}{% else %}<span class="pending">&mdash;</span>{% endif %}</td>
+                <td class="{% if r.has_data and r.delta >= 0 %}delta-pos{% elif r.has_data %}delta-neg{% endif %}">
+                    {% if r.has_data %}{% if r.delta > 0 %}+{% endif %}{{ '{:,}'.format(r.delta) }}{% else %}<span class="pending">&mdash;</span>{% endif %}
+                </td>
+                <td>{% if r.has_data %}{{ '{:,}'.format(r.scrap) }}{% else %}<span class="pending">&mdash;</span>{% endif %}</td>
+                <td class="{% if r.has_data %}delta-neg{% endif %}">
+                    {% if r.has_data %}{{ '%.1f'|format(r.gap) }}{% else %}<span class="pending">&mdash;</span>{% endif %}
+                </td>
+                <td style="font-size: 0.85em;">{% if r.has_data %}{{ r.comments }}{% else %}<span class="pending">&mdash; (pending)</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-{% if maintenance %}
-<h2 style="margin-top:2.5rem;">Maintenance history</h2>
-<table style="max-width:900px;">
-  <tr>
-    <th>Date</th><th>Station</th><th>Minutes</th><th>Category</th><th>Symptom</th><th>Resolution</th>
-  </tr>
-  {% for m in maintenance %}
-  <tr onclick="window.location='/maintenance/{{ m.id }}'" style="cursor:pointer;"
-      onmouseover="this.style.background='rgba(255,255,255,0.05)'"
-      onmouseout="this.style.background='transparent'">
-    <td style="font-size:0.85rem;">{{ (m.started_at or '')[:16].replace('T', ' ') }}</td>
-    <td style="font-size:0.85rem;">{{ m.station or '-' }}</td>
-    <td style="font-size:0.85rem; text-align:right;">{{ '%.0f'|format(m.aggregate_actual_min or 0) }}</td>
-    <td style="font-size:0.85rem;">{{ m.category or 'unplanned' }}</td>
-    <td style="font-size:0.85rem;">{{ m.symptom or '-' }}</td>
-    <td style="font-size:0.85rem;">{{ m.resolution or '-' }}</td>
-  </tr>
-  {% endfor %}
-</table>
-{% endif %}
-
-<div style="margin-top:1.5rem;"><a href="/reconciliation" style="color: var(--accent);">&larr; Back to reconciliation</a></div>
+    <div class="board-footer">
+        <div>
+            <div class="label">Total Target</div>
+            <div>{{ '{:,}'.format(total_target) }}</div>
+        </div>
+        <div>
+            <div class="label">Total Actual</div>
+            <div>{{ '{:,}'.format(total_actual) }}</div>
+        </div>
+        <div>
+            <div class="label">Total Scrap</div>
+            <div class="delta-neg">{{ '{:,}'.format(total_scrap) }}</div>
+        </div>
+        <div>
+            <div class="label">Total Gap</div>
+            <div class="delta-neg">{{ '%.1f'|format(total_gap) }}m</div>
+        </div>
+        <div>
+            <div class="label">FTQ</div>
+            <div class="{% if ftq >= 99 %}delta-pos{% elif ftq >= 95 %}text-warning{% else %}delta-neg{% endif %}">{{ '%.1f'|format(ftq) }}%</div>
+        </div>
+        <div>
+            <div class="label">P2P</div>
+            <div class="{% if p2p >= 100 %}delta-pos{% else %}delta-neg{% endif %}">{{ '%.1f'|format(p2p) }}%</div>
+        </div>
+    </div>
+</div>
 {% endblock %}

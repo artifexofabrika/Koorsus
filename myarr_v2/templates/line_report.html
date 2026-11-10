@@ -2,88 +2,107 @@
 {% block title %}Myarra - Line {{ line.id }} Report{% endblock %}
 {% block content %}
 <style>
-  .report-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 1rem; }
-  .report-table th { background: var(--card-bg); border-bottom: 2px solid var(--accent); padding: 0.5rem; text-align: right; }
-  .report-table th:first-child, .report-table th:last-child { text-align: left; }
-  .report-table td { padding: 0.5rem; border-bottom: 1px solid var(--border); text-align: right; }
-  .report-table td:first-child, .report-table td:last-child { text-align: left; }
-  .report-table tr.totals { font-weight: bold; background: var(--card-bg); border-top: 2px solid var(--accent); }
-  .takt-box { background: var(--card-bg); border: 1px solid var(--border); padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; display: inline-block; }
-  .events-box { margin-top: 2rem; background: var(--card-bg); border: 1px solid var(--border); padding: 1rem; border-radius: 4px; max-width: 600px; }
+    .board-container {
+        background-color: #ffffff;
+        color: #1a1a1a;
+        font-family: system-ui, -apple-system, sans-serif;
+        padding: 2rem;
+        border-radius: 8px;
+        margin: 0 auto;
+        max-width: 1200px;
+        border: 1px solid #bbb;
+    }
+    .board-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        border-bottom: 4px solid #222;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+    .board-header h1 { margin: 0; font-size: 2.5rem; font-weight: 800; color: #000; }
+    .board-header .meta { text-align: right; font-size: 1.2rem; font-weight: 600; color: #555; }
+    .board-table { width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed; font-size: 1.2rem; }
+    .board-table th, .board-table td { border: 2px solid #bbb; padding: 0.75rem 0.5rem; }
+    .board-table th { font-size: 0.9rem; text-transform: uppercase; color: #333; border-bottom: 3px solid #222; background: #eee; }
+    .board-table th:last-child, .board-table td:last-child { text-align: left; width: 30%; }
+    .board-footer {
+        display: flex; justify-content: space-between; border-top: 4px solid #222; padding-top: 1rem; margin-top: 1rem; font-weight: 800;
+    }
+    .board-footer .label { font-size: 0.9rem; color: #555; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem; }
+    .delta-pos { color: #15803d; font-weight: bold; }
+    .delta-neg { color: #b91c1c; font-weight: bold; }
+    .pending { color: #999; font-style: italic; }
 </style>
 
-<div style="display: flex; justify-content: space-between; align-items: flex-start;">
-  <div>
-    <h1>Line {{ line.id }} — {{ line.name }}</h1>
-    <div class="sub">{{ report_date }} &middot; S{{ shift }} Shift Performance Report</div>
-  </div>
-  <a href="/" style="color: var(--accent);">&larr; Back to Dashboard</a>
+<div style="margin-bottom: 1rem;">
+    <a href="/" style="color: var(--accent);">&larr; Back to Dashboard</a>
 </div>
 
-<div class="takt-box">
-  <strong>Takt Time</strong> = Customer Demand / Available Minutes<br>
-  <span style="color: var(--muted); font-size: 0.85rem;">Target is calculated from Ideal Rate: {{ takt_time }} sec/unit ({{ target_per_hour }} units/hr)</span>
+<div class="board-container">
+    <div class="board-header">
+        <div>
+            <div style="font-size: 0.9rem; color: #555; text-transform: uppercase; font-weight: bold;">Shift Performance Report</div>
+            <h1>Line {{ line.id }}: {{ line.name }}</h1>
+            <div style="font-size: 1.5rem; color: #8a6d3b; font-weight: bold; margin-top: 0.5rem;">{{ report_date }} &middot; S{{ shift }} Shift</div>
+        </div>
+        <div class="meta">
+            <div style="font-size: 1.5rem; color: #000; font-weight: bold;">Takt: {{ takt_time }} sec/unit ({{ target_per_hour|int }} /hr)</div>
+        </div>
+    </div>
+
+    <table class="board-table">
+        <thead>
+            <tr>
+                <th>HR</th>
+                <th>Target</th>
+                <th>Actual</th>
+                <th>Tgt Accum</th>
+                <th>Act Accum</th>
+                <th>+/-</th>
+                <th>Scrap</th>
+                <th style="text-align: left;">Comments</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in rows %}
+            <tr>
+                <td>{{ r.hour_label }}</td>
+                <td>{{ '{:,}'.format(r.target) }}</td>
+                <td>{% if r.has_data %}{{ '{:,}'.format(r.actual) }}{% else %}<span class="pending">&mdash;</span>{% endif %}</td>
+                <td>{% if r.has_data %}{{ '{:,}'.format(r.target_acc) }}{% else %}<span class="pending">&mdash;</span>{% endif %}</td>
+                <td>{% if r.has_data %}{{ '{:,}'.format(r.actual_acc) }}{% else %}<span class="pending">&mdash;</span>{% endif %}</td>
+                <td class="{% if r.has_data and r.delta >= 0 %}delta-pos{% elif r.has_data %}delta-neg{% endif %}">
+                    {% if r.has_data %}{% if r.delta > 0 %}+{% endif %}{{ '{:,}'.format(r.delta) }}{% else %}<span class="pending">&mdash;</span>{% endif %}
+                </td>
+                <td>{% if r.has_data %}{{ '{:,}'.format(r.scrap) }}{% else %}<span class="pending">&mdash;</span>{% endif %}</td>
+                <td style="font-size: 0.85em;">{% if r.has_data %}{{ r.comments }}{% else %}<span class="pending">&mdash; (pending)</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="board-footer">
+        <div>
+            <div class="label">Total Target</div>
+            <div>{{ '{:,}'.format(total_target) }}</div>
+        </div>
+        <div>
+            <div class="label">Total Actual</div>
+            <div>{{ '{:,}'.format(total_actual) }}</div>
+        </div>
+        <div>
+            <div class="label">Total Scrap</div>
+            <div class="delta-neg">{{ '{:,}'.format(total_scrap) }}</div>
+        </div>
+        <div>
+            <div class="label">FTQ</div>
+            <div class="{% if ftq >= 99 %}delta-pos{% elif ftq >= 95 %}text-warning{% else %}delta-neg{% endif %}">{{ '%.1f'|format(ftq) }}%</div>
+        </div>
+        <div>
+            <div class="label">P2P</div>
+            <div class="{% if p2p >= 100 %}delta-pos{% else %}delta-neg{% endif %}">{{ '%.1f'|format(p2p) }}%</div>
+        </div>
+    </div>
 </div>
-
-<table class="report-table">
-  <thead>
-    <tr>
-      <th>Hour</th>
-      <th>Minutes</th>
-      <th>Target</th>
-      <th>Actual</th>
-      <th>Target Accum.</th>
-      <th>Actual Accum.</th>
-      <th>Delta</th>
-      <th>Reject / Rework</th>
-      <th>Comments</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for r in rows %}
-    <tr>
-      <td>{{ r.hour_label }}</td>
-      <td>{{ r.minutes }}</td>
-      <td>{{ '{:,}'.format(r.target) }}</td>
-      <td>{% if r.has_data %}{{ '{:,}'.format(r.actual) }}{% else %}—{% endif %}</td>
-      <td>{% if r.has_data %}{{ '{:,}'.format(r.target_acc) }}{% else %}—{% endif %}</td>
-      <td>{% if r.has_data %}{{ '{:,}'.format(r.actual_acc) }}{% else %}—{% endif %}</td>
-      <td>{% if r.has_data %}<span class="{{ 'good' if r.delta >= 0 else 'bad' }}">{{ '{:+,}'.format(r.delta) }}</span>{% else %}—{% endif %}</td>
-      <td>{% if r.scrap %}{{ '{:,}'.format(r.scrap) }}{% else %}—{% endif %}</td>
-      <td style="color: var(--muted);">{{ r.comments }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-  <tfoot>
-    <tr class="totals">
-      <td colspan="2">Totals</td>
-      <td>{{ '{:,}'.format(total_target) }}</td>
-      <td>{{ '{:,}'.format(total_actual) }}</td>
-      <td></td>
-      <td></td>
-      <td><span class="{{ 'good' if (total_actual - total_target) >= 0 else 'bad' }}">{{ '{:+,}'.format(total_actual - total_target) }}</span></td>
-      <td colspan="2"></td>
-    </tr>
-  </tfoot>
-</table>
-
-<div style="margin-top: 1.5rem; display: flex; gap: 2rem; font-size: 1.1rem;">
-  <div><strong>P2P (Actual / Target):</strong> <span style="color: var(--accent);">{{ p2p }}%</span></div>
-  <div><strong>FTQ (First Time Quality):</strong> <span style="color: var(--accent);">{{ ftq }}%</span></div>
-</div>
-
-{% if events %}
-<div class="events-box">
-  <h3 style="margin-top:0; color:var(--accent);">Shift Events (Non-Production Time)</h3>
-  <table style="width:100%; font-size:0.85rem;">
-    {% for ev in events %}
-    <tr>
-      <td style="color:var(--text); text-transform:capitalize;">{{ ev.state }}</td>
-      <td style="text-align:right; color:var(--muted);">{{ (ev.started_at or '')[:16].replace('T',' ') }} to {{ (ev.ended_at or '')[:16].replace('T',' ') }}</td>
-    </tr>
-    {% endfor %}
-  </table>
-</div>
-{% endif %}
-
 {% endblock %}

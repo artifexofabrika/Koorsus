@@ -21,7 +21,6 @@ _c = get_db_connection(); ensure_views(_c); _c.close()
 FISHBONE_CATEGORIES = ['Man', 'Machine', 'Method', 'Material', 'Measurement', 'Environment']
 FISHBONE_MAX_PER_CATEGORY = 3
 
-
 def _priority_total(e):
     return (
         (e.get("pri_time") or 0) * 10 +
@@ -31,7 +30,6 @@ def _priority_total(e):
         (e.get("pri_cost") or 0) * 50
     )
 
-
 def _setting(conn, key, default):
     try:
         r = conn.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
@@ -39,10 +37,8 @@ def _setting(conn, key, default):
     except Exception:
         return default
 
-
 def _unit_label(conn): return _setting(conn, 'unit_label', 'units')
 def _case_label(conn): return _setting(conn, 'case_label', 'cases')
-
 
 def _load_fishbone(conn, exp_id):
     data = {cat: [] for cat in FISHBONE_CATEGORIES}
@@ -53,52 +49,51 @@ def _load_fishbone(conn, exp_id):
             data[row['category']].append(row['cause_text'])
     return data
 
-
 def _fishbone_text_block(fishbone):
     return {cat: '\n'.join(items) for cat, items in fishbone.items()}
 
-
 def _compute_trend(conn, exp):
-    mt = exp.get('measurement_type') or 'manual'
-    if mt == 'manual':
-        return {'manual': True, 'baseline': exp.get('baseline_value'),
-                'current': None, 'target': exp.get('target_goal_min'), 'events': []}
-    if mt != 'changeover_sku_pair':
-        return {'manual': True, 'baseline': exp.get('baseline_value'),
-                'current': None, 'target': exp.get('target_goal_min'), 'events': [],
-                'note': f"Trend not yet auto-computed for {mt}"}
-    try:
-        cfg = json.loads(exp.get('measurement_config') or '{}')
-    except Exception:
-        cfg = {}
-    line_id = cfg.get('line_id'); from_sku = cfg.get('from_sku'); to_sku = cfg.get('to_sku')
-    if not (line_id and from_sku and to_sku):
-        return {'manual': True, 'baseline': None, 'current': None,
-                'target': exp.get('target_goal_min'), 'events': [],
-                'note': 'measurement_config incomplete'}
-    proc = conn.execute(
-        "SELECT id, aggregate_standard_min FROM co_procedures_v2 WHERE line_id=? AND from_sku_id=? AND to_sku_id=?",
-        (line_id, from_sku, to_sku)).fetchone()
-    if not proc:
-        return {'manual': True, 'baseline': None, 'current': None,
-                'target': exp.get('target_goal_min'), 'events': [],
-                'note': 'No procedure matches this SKU pair'}
-    start = exp.get('start_date') or '1900-01-01'
-    baseline_row = conn.execute(
-        "SELECT AVG(aggregate_actual_min), COUNT(*) FROM co_events WHERE procedure_id=? AND date(started_at) < ?",
-        (proc['id'], start)).fetchone()
-    baseline = baseline_row[0] if baseline_row and baseline_row[0] else None
-    baseline_count = baseline_row[1] if baseline_row else 0
-    events = conn.execute(
-        "SELECT date(started_at) as d, aggregate_actual_min as v FROM co_events "
-        "WHERE procedure_id=? AND date(started_at) >= ? ORDER BY started_at",
-        (proc['id'], start)).fetchall()
-    current = sum(e['v'] for e in events) / len(events) if events else None
-    return {'manual': False, 'baseline': baseline, 'baseline_count': baseline_count,
-            'current': current, 'target': exp.get('target_goal_min'),
-            'std': proc['aggregate_standard_min'],
-            'events': [{'date': e['d'], 'value': e['v']} for e in events]}
-
+    baseline = None
+    current = None
+    events = []
+    
+    if exp.get('target_step_name'):
+        baseline = conn.execute("""
+            SELECT AVG(es.actual_min) FROM co_event_steps es
+            JOIN co_steps_v2 s ON s.id = es.step_id
+            JOIN co_events ev ON ev.id = es.event_id
+            WHERE s.step_name = ? AND date(ev.started_at) < ?
+        """, (exp['target_step_name'], exp['start_date'])).fetchone()[0]
+        current = conn.execute("""
+            SELECT AVG(es.actual_min) FROM co_event_steps es
+            JOIN co_steps_v2 s ON s.id = es.step_id
+            JOIN co_events ev ON ev.id = es.event_id
+            WHERE s.step_name = ? AND date(ev.started_at) >= ?
+        """, (exp['target_step_name'], exp['start_date'])).fetchone()[0]
+        evs = conn.execute("""
+            SELECT ev.started_at, es.actual_min, date(ev.started_at) as ev_date
+            FROM co_event_steps es
+            JOIN co_steps_v2 s ON s.id = es.step_id
+            JOIN co_events ev ON ev.id = es.event_id
+            WHERE s.step_name = ? ORDER BY ev.started_at ASC
+        """, (exp['target_step_name'],)).fetchall()
+        events = [{'date': e['ev_date'], 'value': e['actual_min']} for e in evs]
+    else:
+        baseline = conn.execute("""
+            SELECT AVG(aggregate_actual_min) FROM co_events
+            WHERE line_id = ? AND date(started_at) < ?
+        """, (exp['line_id'], exp['start_date'])).fetchone()[0]
+        current = conn.execute("""
+            SELECT AVG(aggregate_actual_min) FROM co_events
+            WHERE line_id = ? AND date(started_at) >= ?
+        """, (exp['line_id'], exp['start_date'])).fetchone()[0]
+        evs = conn.execute("""
+            SELECT started_at, aggregate_actual_min as actual_min, date(started_at) as ev_date
+            FROM co_events WHERE line_id = ? ORDER BY started_at ASC
+        """, (exp['line_id'],)).fetchall()
+        events = [{'date': e['ev_date'], 'value': e['actual_min']} for e in evs]
+        
+    return {'manual': False, 'baseline': baseline, 'current': current, 'target': exp.get('target_goal_min'), 'events': events}
 
 @app.route("/")
 def dashboard():
@@ -114,7 +109,6 @@ def dashboard():
                'state': 'unknown', 'details': {}, 'started_at': None, 'elapsed_min': 0,
                'hourly_data': []}
 
-        # Agreed 2026-11-07: Dashboard shows current shift hour-by-hour in cases.
         runs = conn.execute("""
             SELECT r.period, r.units_filled, r.duration_min, s.case_pack, lsr.ideal_rate
             FROM hourly_runs r
@@ -172,7 +166,6 @@ def dashboard():
     conn.close()
     return render_template("dashboard.html", rows=rows, case_label=cl)
 
-
 @app.route("/reconciliation")
 def reconciliation():
     conn = get_db_connection()
@@ -185,7 +178,8 @@ def reconciliation():
             j.target_quantity, j.status,
             MAX(date(r.recorded_at)) as last_date,
             MIN(r.shift) as shift_min, MAX(r.shift) as shift_max,
-            SUM(r.units_filled) as units_filled
+            SUM(r.units_filled) as units_filled,
+            SUM(r.scrap_units) as scrap_units
         FROM jobs j
         LEFT JOIN lines l ON l.id = j.line_id
         LEFT JOIN skus s ON s.id = j.sku_id
@@ -211,6 +205,7 @@ def reconciliation():
         r['tgt_cases'] = int(tgt // cp)
         r['variance'] = r['cases'] - r['tgt_cases']
         r['perf'] = (units / tgt * 100) if tgt else 0
+        r['scrap_cases'] = int((r['scrap_units'] or 0) // cp)
         r['shift_display'] = (f"S{r['shift_min']}" if r['shift_min'] == r['shift_max']
                               else f"S{r['shift_min']}-S{r['shift_max']}")
         out.append(r)
@@ -219,8 +214,6 @@ def reconciliation():
     conn.close()
     return render_template("reconciliation.html", rows=out, summary=summary, lines=lines_list,
                            current_line=line_filter, days=days, case_label=case_label)
-
-
 
 @app.route("/line/<int:line_id>/report")
 def line_report(line_id):
@@ -253,8 +246,8 @@ def line_report(line_id):
     target_per_hour = int(bpm)
 
     events = conn.execute("""
-        SELECT state, started_at, ended_at 
-        FROM line_events 
+        SELECT state, started_at, ended_at
+        FROM line_events
         WHERE line_id=? AND date(started_at)=? AND ended_at IS NOT NULL
         ORDER BY started_at
     """, (line_id, latest['d'])).fetchall()
@@ -311,7 +304,7 @@ def line_report(line_id):
 
     return render_template("line_report.html", line=line, report_date=latest['d'],
                            shift=shift, rows=rows, total_target=total_target,
-                           total_actual=total_actual, p2p=p2p, ftq=ftq,
+                           total_actual=total_actual, total_scrap=total_scrap, p2p=p2p, ftq=ftq,
                            takt_time=takt_time, target_per_hour=target_per_hour,
                            events=events)
 
@@ -327,56 +320,93 @@ def job_detail(job_number):
     if not job:
         conn.close(); return "Job not found", 404
     job = dict(job)
-    handovers_raw = conn.execute("""
-        SELECT h.*, fu.name AS from_name, tu.name AS to_name
-        FROM shift_handovers h
-        LEFT JOIN users fu ON fu.id = h.from_user_id
-        LEFT JOIN users tu ON tu.id = h.to_user_id
-        WHERE h.job_id = ?
-        ORDER BY h.created_at ASC
-    """, (job['id'],)).fetchall()
-    handovers = [dict(h) for h in handovers_raw]
-    # Agreed 2026-11-06: surface maintenance on the job page alongside
-    # handovers so a manager sees breakdowns in the job's own history, not
-    # only on /maintenance and /reconciliation.
-    maintenance_raw = conn.execute("""
-        SELECT id, station, started_at, ended_at, aggregate_actual_min,
-               category, symptom, resolution
-        FROM maintenance_events
-        WHERE job_id = ?
-        ORDER BY started_at ASC
-    """, (job['id'],)).fetchall()
-    maintenance = [dict(m) for m in maintenance_raw]
+
     runs = conn.execute("""
-        SELECT r.id, r.period, r.units_filled, r.duration_min, r.line_id,
-               r.shift, r.recorded_at, j.sku_id
+        SELECT r.id, r.period, r.units_filled, r.scrap_units, r.duration_min, r.line_id,
+               r.shift, r.recorded_at, j.sku_id, r.notes
         FROM hourly_runs r JOIN jobs j ON r.job_id = j.id
         WHERE r.job_id = ? ORDER BY r.recorded_at, r.period
     """, (job['id'],)).fetchall()
-    details = []
-    for r in runs:
-        rate = conn.execute("SELECT ideal_rate FROM line_sku_rates WHERE line_id=? AND sku_id=?",
-                            (r["line_id"], r["sku_id"])).fetchone()
-        rpm = rate["ideal_rate"] if rate else 600.0
-        expected = rpm * r["duration_min"] / 60.0
-        gap = (expected - r["units_filled"]) / (rpm / 60.0) if rpm else 0.0
-        dts = conn.execute("SELECT station, reason, minutes FROM downtime_events WHERE run_id=?",
-                           (r["id"],)).fetchall()
-        details.append({"period": r["period"], "shift": r["shift"],
-                        "date": (r["recorded_at"] or "")[:10],
-                        "expected": expected, "actual": r["units_filled"], "gap": gap,
-                        "downtime": [{"station": d["station"], "reason": d["reason"],
-                                      "minutes": round(d["minutes"], 1)} for d in dts]})
-    cp = job['case_pack'] or 1
-    total_units = sum(d["actual"] for d in details)
-    tgt_units = job['target_quantity'] or 0
-    ul = _unit_label(conn); cl = _case_label(conn)
-    conn.close()
-    return render_template("job_detail.html", job=job, details=details, handovers=handovers, maintenance=maintenance,
-                           cases=int(total_units // cp), tgt_cases=int(tgt_units // cp),
-                           pct=(total_units / tgt_units * 100) if tgt_units else 0,
-                           unit_label=ul, case_label=cl)
+    existing = {r['period']: dict(r) for r in runs}
+    
+    if runs:
+        shift = runs[0]['shift'] or '1'
+        shift_h = int(shift) if str(shift).isdigit() else 1
+        shift_start = 7 + (shift_h - 1) * 8
+        sample_sku = runs[0]['sku_id']
+    else:
+        shift_start = 7
+        sample_sku = job['sku_id']
 
+    rate_row = conn.execute("SELECT ideal_rate FROM line_sku_rates WHERE line_id=? AND sku_id=?", (job['line_id'], sample_sku)).fetchone()
+    bpm = rate_row['ideal_rate'] if rate_row else 600.0
+    target_per_hour = int(bpm)
+    takt_time = round(3600.0 / target_per_hour, 2) if target_per_hour else 0
+
+    rows = []
+    total_target = 0
+    total_actual = 0
+    total_scrap = 0
+    total_gap = 0
+    target_acc = 0
+    actual_acc = 0
+
+    for pn in range(1, 9):
+        period = f"H{pn}"
+        duration = 60
+        if period in existing and existing[period]['duration_min']:
+            duration = existing[period]['duration_min']
+
+        st = (shift_start + pn - 1) % 24
+        en = (st + duration // 60) % 24
+        enm = duration % 60
+        label = f"{st:02d}:00 - {en:02d}:{enm:02d}"
+
+        target = int(bpm * duration / 60.0)
+
+        if period in existing:
+            r = existing[period]
+            actual = r['units_filled']
+            scrap = r['scrap_units'] or 0
+            comments = r['notes'] or ''
+            
+            dts = conn.execute("SELECT station, reason, minutes FROM downtime_events WHERE run_id=?", (r['id'],)).fetchall()
+            dt_str = ", ".join([f"{d['station']}: {d['reason']} ({round(d['minutes'],1)}m)" for d in dts])
+            if dt_str:
+                comments = (comments + " | " if comments else "") + dt_str
+
+            target_acc += target
+            actual_acc += actual
+            total_target += target
+            total_actual += actual
+            total_scrap += scrap
+            gap = round((target - actual) / (bpm / 60.0), 1) if bpm else 0.0
+            total_gap += gap
+            has = True
+        else:
+            actual = None; scrap = None; comments = '— (pending)'
+            gap = None; has = False
+
+        rows.append({
+            'hour_label': label, 'minutes': duration, 'target': target,
+            'actual': actual,
+            'target_acc': target_acc if has else None,
+            'actual_acc': actual_acc if has else None,
+            'delta': (actual - target) if has else None, 
+            'gap': gap, 'scrap': scrap, 'comments': comments,
+            'has_data': has,
+        })
+
+    conn.close()
+    p2p = round((total_actual / total_target * 100), 1) if total_target else 0
+    ftq = round(((total_actual - total_scrap) / total_actual * 100), 1) if total_actual else 0
+    cp = job['case_pack'] or 1
+
+    return render_template("job_detail.html", job=job, rows=rows, total_target=total_target,
+                           total_actual=total_actual, total_scrap=total_scrap, total_gap=total_gap,
+                           p2p=p2p, ftq=ftq, takt_time=takt_time, target_per_hour=target_per_hour,
+                           cases=int(total_actual // cp), tgt_cases=int(job['target_quantity'] // cp),
+                           pct=(total_actual / job['target_quantity'] * 100) if job['target_quantity'] else 0)
 
 @app.route("/changeover")
 def changeover_list():
@@ -425,7 +455,6 @@ def changeover_list():
                            lines=lines_list, current_line=line_filter,
                            current_component=component_filter, days=days)
 
-
 @app.route("/changeover/<int:event_id>")
 def changeover_detail(event_id):
     conn = get_db_connection()
@@ -451,7 +480,6 @@ def changeover_detail(event_id):
     conn.close()
     return render_template("changeover.html", ev=ev, steps=steps, changes=changes)
 
-
 @app.route("/pdca")
 def pdca_view():
     conn = get_db_connection()
@@ -459,37 +487,20 @@ def pdca_view():
     groups = {}
     for e in exps:
         e_dict = dict(e)
-        baseline_avg = conn.execute("""
-            SELECT AVG(es.actual_min) FROM co_event_steps es
-            JOIN co_steps_v2 s ON s.id = es.step_id
-            JOIN co_events ev ON ev.id = es.event_id
-            WHERE s.step_name = ? AND date(ev.started_at) < ?
-        """, (e["target_step_name"], e["start_date"])).fetchone()[0]
-        exp_avg = conn.execute("""
-            SELECT AVG(es.actual_min) FROM co_event_steps es
-            JOIN co_steps_v2 s ON s.id = es.step_id
-            JOIN co_events ev ON ev.id = es.event_id
-            WHERE s.step_name = ? AND date(ev.started_at) >= ?
-        """, (e["target_step_name"], e["start_date"])).fetchone()[0]
-        events = conn.execute("""
-            SELECT ev.started_at, es.actual_min, date(ev.started_at) as ev_date
-            FROM co_event_steps es
-            JOIN co_steps_v2 s ON s.id = es.step_id
-            JOIN co_events ev ON ev.id = es.event_id
-            WHERE s.step_name = ? ORDER BY ev.started_at ASC
-        """, (e["target_step_name"],)).fetchall()
-        e_dict["baseline_avg"] = baseline_avg
-        e_dict["current_avg"] = exp_avg
-        e_dict["events"] = [dict(ev) for ev in events]
-        e_dict["priority_total"] = _priority_total(e_dict)
+        trend = _compute_trend(conn, e_dict)
+        e_dict['baseline_avg'] = trend['baseline']
+        e_dict['current_avg'] = trend['current']
+        e_dict['events'] = trend['events']
+        e_dict['priority_total'] = _priority_total(e_dict)
+        
         dept = e["department"] or "Production"
         if dept not in groups: groups[dept] = []
         groups[dept].append(e_dict)
+        
     for dept in groups:
         groups[dept].sort(key=lambda x: x["priority_total"], reverse=True)
     conn.close()
     return render_template("pdca.html", groups=groups)
-
 
 @app.route("/pdca/log")
 def pdca_log():
@@ -501,7 +512,6 @@ def pdca_log():
         d = dict(e); d["priority_total"] = _priority_total(d); rows.append(d)
     rows.sort(key=lambda r: (0 if (r.get("status") or "") == "active" else 1, -(r["priority_total"] or 0)))
     return render_template("pdca_log.html", rows=rows)
-
 
 @app.route("/pdca/<int:exp_id>")
 def pdca_detail(exp_id):
@@ -520,7 +530,6 @@ def pdca_detail(exp_id):
                            trend=trend, fishbone=fishbone,
                            fishbone_categories=FISHBONE_CATEGORIES,
                            fishbone_max=FISHBONE_MAX_PER_CATEGORY)
-
 
 @app.route("/pdca/<int:exp_id>/edit", methods=["GET", "POST"])
 def pdca_edit(exp_id):
@@ -583,7 +592,6 @@ def pdca_edit(exp_id):
                            fishbone_categories=FISHBONE_CATEGORIES,
                            fishbone_max=FISHBONE_MAX_PER_CATEGORY)
 
-
 @app.route("/maintenance")
 def maintenance_list():
     conn = get_db_connection()
@@ -615,7 +623,6 @@ def maintenance_list():
                            lines=lines_list, current_line=line_filter,
                            current_station=station_filter, days=days)
 
-
 @app.route("/maintenance/<int:event_id>", methods=["GET", "POST"])
 def maintenance_detail(event_id):
     conn = get_db_connection()
@@ -644,7 +651,6 @@ def maintenance_detail(event_id):
         return redirect(url_for('maintenance_detail', event_id=event_id))
     conn.close()
     return render_template("maintenance.html", ev=dict(ev))
-
 
 @app.route("/setup", methods=["GET", "POST"])
 def setup():
@@ -683,7 +689,6 @@ def setup():
     return render_template("setup.html", stats=stats, msg=msg,
                            templates=TEMPLATES, reports=reports)
 
-
 @app.route("/setup/download/<name>")
 def setup_download(name):
     if name not in TEMPLATES:
@@ -695,7 +700,6 @@ def setup_download(name):
         mimetype='text/csv; charset=utf-8',
         headers={'Content-Disposition': f'attachment; filename="{t["filename"]}"'}
     )
-
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin_view():
@@ -714,7 +718,6 @@ def admin_view():
     users = conn.execute("SELECT * FROM users WHERE active=1").fetchall()
     conn.close()
     return render_template("admin.html", users=users, msg=msg)
-
 
 @app.route("/shift/<run_date>/<shift>")
 def shift_detail(run_date, shift):
@@ -742,45 +745,39 @@ def shift_detail(run_date, shift):
     return render_template("shift_detail.html", run_date=run_date, shift=shift,
                            details=details, unit=unit)
 
-
-# Agreed 2026-11-07: Odoo Connector endpoint. Read-only from Odoo's perspective,
-# accepts work orders and maps them to Myarra's schema by part_number and line_name.
 @app.route("/api/odoo/jobs", methods=["POST"])
 def api_odoo_jobs():
     token = request.headers.get("X-Myarra-Token")
     if token != "MYARRA-ODOO-SECRET":
         return jsonify({"error": "Unauthorized"}), 401
-    
+
     data = request.json
     if not isinstance(data, list):
         return jsonify({"error": "Expected a JSON array of jobs"}), 400
-        
+
     conn = get_db_connection()
     imported = 0
     errors = []
-    
+
     for job in data:
         try:
             job_no = job.get("job_number")
             sku_part = job.get("part_number")
             line_name = job.get("line_name")
             target_qty = job.get("target_quantity", 0)
-            
+
             if not job_no or not sku_part:
                 errors.append(f"Missing job_number or part_number")
                 continue
-                
-            # Map names to internal IDs
+
             sku = conn.execute("SELECT id FROM skus WHERE part_number=?", (sku_part,)).fetchone()
             if not sku:
                 errors.append(f"SKU not found: {sku_part}")
                 continue
-                
-            # Line is optional; default to Line 1 if not found
+
             line = conn.execute("SELECT id FROM lines WHERE name=?", (line_name,)).fetchone()
             line_id = line['id'] if line else 1
-            
-            # UPSERT
+
             conn.execute("""
                 INSERT INTO jobs (job_number, sku_id, line_id, target_quantity, scheduled_start, scheduled_end, status)
                 VALUES (?, ?, ?, ?, ?, ?, 'scheduled')
@@ -792,7 +789,7 @@ def api_odoo_jobs():
             imported += 1
         except Exception as e:
             errors.append(f"Job {job.get('job_number', '?')}: {str(e)}")
-            
+
     conn.commit()
     conn.close()
     return jsonify({"imported": imported, "errors": errors}), 200
@@ -804,15 +801,16 @@ def board(line_id):
     if not line:
         conn.close(); return "Line not found", 404
 
-    # PARKING LOT: For production, this should be date('now') and return blank if empty.
     latest = conn.execute("SELECT MAX(date(recorded_at)) as d FROM hourly_runs WHERE line_id=?", (line_id,)).fetchone()
     if not latest or not latest['d']:
         conn.close()
         return render_template("board.html", line=line, rows=[], total_target=0, total_actual=0, p2p=0, ftq=0, takt_time=0, bpm=0, current_date=datetime.now().strftime('%Y-%m-%d'), active_job="No Active Job")
 
     runs = conn.execute("""
-        SELECT r.period, r.units_filled, r.duration_min, r.scrap_units, r.notes, j.sku_id, r.shift, j.job_number
-        FROM hourly_runs r JOIN jobs j ON r.job_id = j.id
+        SELECT r.period, r.units_filled, r.duration_min, r.scrap_units, r.notes, j.sku_id, r.shift, j.job_number, s.case_pack
+        FROM hourly_runs r
+        JOIN jobs j ON r.job_id = j.id
+        JOIN skus s ON s.id = j.sku_id
         WHERE r.line_id=? AND date(r.recorded_at)=? AND (r.superseded IS NULL OR r.superseded=0)
     """, (line_id, latest['d'])).fetchall()
 
@@ -848,12 +846,14 @@ def board(line_id):
         enm = duration % 60
         label = f"{st:02d}:00 - {en:02d}:{enm:02d}"
 
-        target = int(bpm * duration / 60.0)
+        cp = runs[0]['case_pack'] or 1
+        target_units = bpm * duration / 60.0
+        target = int(target_units / cp)
 
         if period in existing:
             r = existing[period]
-            actual = r['units_filled']
-            scrap = r['scrap_units'] or 0
+            actual = int(r['units_filled'] / cp)
+            scrap = int((r['scrap_units'] or 0) / cp)
             comments = r['notes'] or ''
             target_acc += target
             actual_acc += actual
@@ -896,7 +896,6 @@ def ask_view():
 def favicon():
     from flask import send_from_directory
     return send_from_directory(app.root_path, "favicon.png", mimetype="image/png")
-
 
 if __name__ == "__main__":
     from waitress import serve
