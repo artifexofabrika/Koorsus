@@ -274,6 +274,13 @@ padding: 1.35rem 1rem;
 .step { gap: 0.9rem; }
 }
 </style>
+
+<style>
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); cursor: zoom-out; }
+.modal-content { margin: auto; display: block; max-width: 95%; max-height: 95vh; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+.gallery-img { cursor: zoom-in; transition: opacity 0.2s; }
+.gallery-img:hover { opacity: 0.7; }
+</style>
 </head>
 <body>
 <div class="artifexo-page">
@@ -313,7 +320,7 @@ Open source, or installed on your device from $1,500.
 <span style="display:block;margin-top:0.35rem;color:#c0a878;font-style:italic;font-size:0.85rem;">Latin <em>cursus</em>: the path from where your plant is to where it intends to be.</span>
 <span style="display:block;margin-top:0.9rem;">Your handbooks, SOPs, procedures, and maintenance logs, ingested and indexed on hardware you own. Ask a question in plain English. The answer comes back with the source cited. If the answer is not in your documents, Koorsus says so. It does not invent.</span>
 <span style="display:block;margin-top:0.9rem;">This is not a novelty. When a line is down and the answer is in a PDF nobody has opened since 2019, Koorsus finds it in four seconds and tells you which document and which section. When the answer is not in any document, it declines, and that refusal is what makes the answers it does give trustworthy.</span>
-<img src="02-koorsus.png" alt="Koorsus answering a question with source citation" style="display:block;width:100%;margin-top:1.25rem;border-radius:6px;border:1px solid #444;">
+<img class=\"gallery-img\" src=\"02-koorsus.png" alt="Koorsus answering a question with source citation" style="display:block;width:100%;margin-top:1.25rem;border-radius:6px;border:1px solid #444;">
 </div>
 
 <div class="feature-card" style="flex:1 1 100%;max-width:100%;text-align:left;">
@@ -323,7 +330,7 @@ Open source, or installed on your device from $1,500.
 <span style="display:block;margin-top:0.9rem;">What is Line 2 doing right now? How many cases has WO-2026-001 produced against its target, and how many remain? Where did the last changeover lose minutes, and at which station? Myarra captures it as it happens, by voice from the line, and shows you the answer in cases, because cases are what you sell.</span>
 <span style="display:block;margin-top:0.9rem;">Myarra shows you the unaccounted minutes that your current OEE tool cannot see. It compares each changeover component against its standard, so you can see which station helped and which station hurt. It runs PDCA experiments that close the loop weekly instead of annually.</span>
 <a href="/myarra.html" style="display:block;margin-top:1rem;color:#c0a878;font-weight:bold;text-decoration:underline;">Read the full Soup-to-Nuts guide &rarr;</a>
-<img src="01-dashboard.png" alt="Myarra dashboard" style="display:block;width:100%;margin-top:1.25rem;border-radius:6px;border:1px solid #444;">
+<img class=\"gallery-img\" src=\"01-dashboard.png" alt="Myarra dashboard" style="display:block;width:100%;margin-top:1.25rem;border-radius:6px;border:1px solid #444;">
 </div>
 
 </div>
@@ -334,42 +341,42 @@ Open source, or installed on your device from $1,500.
 <p style="margin-bottom:2rem;">A private appliance running entirely on your network. Here is what it looks like in practice.</p>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
     <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
-        <img src="01-dashboard.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Live Dashboard">
+        <img class=\"gallery-img\" src=\"01-dashboard.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Live Dashboard">
         <div style="padding: 1.5rem;">
             <strong style="color: #c0a878; font-size: 1.1rem;">The Floor View</strong>
             <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">What is happening right now? The live dashboard shows the state of every line, the active job, and the elapsed time.</p>
         </div>
     </div>
     <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
-        <img src="03-telegram.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Telegram Bot">
+        <img class=\"gallery-img\" src=\"03-telegram.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Telegram Bot">
         <div style="padding: 1.5rem;">
             <strong style="color: #c0a878; font-size: 1.1rem;">The Floor Voice</strong>
             <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">Operators log production in seconds via Telegram. The bot validates numbers and refuses implausible entries.</p>
         </div>
     </div>
     <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
-        <img src="12-reconciliation-line4.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Reconciliation">
+        <img class=\"gallery-img\" src=\"12-reconciliation-line4.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Reconciliation">
         <div style="padding: 1.5rem;">
             <strong style="color: #c0a878; font-size: 1.1rem;">The Two Measures</strong>
             <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">Total OEE and Operator Performance, side by side. You see the true loss without blaming the operator for machine failures.</p>
         </div>
     </div>
     <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
-        <img src="20-maintenance-detail.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Root Cause">
+        <img class=\"gallery-img\" src=\"20-maintenance-detail.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Root Cause">
         <div style="padding: 1.5rem;">
             <strong style="color: #c0a878; font-size: 1.1rem;">Root Cause & Memory</strong>
             <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">Symptom, resolution, parts, and technician. Captured as it happens. Ask what happened the last time the labeler failed.</p>
         </div>
     </div>
     <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
-        <img src="02-koorsus.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Koorsus AI">
+        <img class=\"gallery-img\" src=\"02-koorsus.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Koorsus AI">
         <div style="padding: 1.5rem;">
             <strong style="color: #c0a878; font-size: 1.1rem;">The Answer Engine</strong>
             <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">Koorsus indexes your SOPs and manuals. Ask a question, get an answer with the exact source cited. No hallucinations.</p>
         </div>
     </div>
     <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
-        <img src="16-pdca.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="PDCA Board">
+        <img class=\"gallery-img\" src=\"16-pdca.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="PDCA Board">
         <div style="padding: 1.5rem;">
             <strong style="color: #c0a878; font-size: 1.1rem;">The Improvement Loop</strong>
             <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">Every experiment with its priority, condition, and target. The Check step measures the result against the floor, not a spreadsheet.</p>
@@ -413,7 +420,7 @@ Open source, or installed on your device from $1,500.
 <p>The tool that gets used is the one that fits in a pocket and takes ten seconds. Myarra is not a form. It is a Telegram message.</p>
 <p>The lead sends: <em>"running job WO-2026-001, hour 5, 7,000 units, 4 minutes down jam at the filler."</em> The bot replies with a receipt. The dashboard updates. If the count is implausible, if voice-to-text has eaten a digit and 35,022 has become 3,022, the bot refuses and asks the lead to re-say. A lost digit in a transcript is not a data point, it is a data casualty, and Myarra does not log it.</p>
 <p>When the lead is ready to end the job, the bot prompts the changeover. It walks each station, records the actual time against the standard, and if the changeover takes longer than the standard, that is what the record says. Nothing is entered twice. Nothing is entered a day late. Nothing is entered by someone who was not there.</p>
-<img src="03-telegram.png" alt="Telegram conversation with Myarra bot" style="display:block;width:100%;max-width:400px;margin:1.5rem auto 0;border-radius:8px;border:1px solid #444;">
+<img class=\"gallery-img\" src=\"03-telegram.png" alt="Telegram conversation with Myarra bot" style="display:block;width:100%;max-width:400px;margin:1.5rem auto 0;border-radius:8px;border:1px solid #444;">
 </div>
 
 <div class="section" style="max-width:720px;">
@@ -595,5 +602,25 @@ Artifexo Fabrika, Columbus, Ohio &nbsp;|&nbsp;
 </footer>
 
 </div>
+
+<div id="imageModal" class="modal">
+    <img class="modal-content" id="modalImg">
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var modal = document.getElementById("imageModal");
+    var modalImg = document.getElementById("modalImg");
+    var images = document.querySelectorAll(".gallery-img");
+    images.forEach(function(img) {
+        img.addEventListener("click", function() {
+            modal.style.display = "block";
+            modalImg.src = this.src;
+        });
+    });
+    modal.addEventListener("click", function() {
+        modal.style.display = "none";
+    });
+});
+</script>
 </body>
 </html>
