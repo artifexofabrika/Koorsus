@@ -180,6 +180,43 @@ def narrate_capacity_gap(stats, context):
     return "\n".join(parts)
 
 
+def get_downtime_attribution(conn, job_number):
+    """Return accounted downtime by station and total unaccounted minutes for a job."""
+    job = conn.execute("SELECT id, job_number FROM jobs WHERE job_number = ?", (job_number,)).fetchone()
+    if not job:
+        return {"error": f"Job {job_number} not found."}
+
+    job_id = job["id"]
+
+    # Accounted downtime grouped by station
+    station_rows = conn.execute("""
+        SELECT d.station, COALESCE(SUM(d.minutes), 0) AS minutes
+        FROM downtime_events d
+        JOIN hourly_runs r ON r.id = d.run_id
+        WHERE r.job_id = ?
+        GROUP BY d.station
+        ORDER BY minutes DESC
+    """, (job_id,)).fetchall()
+
+    by_station = {r["station"]: round(r["minutes"], 1) for r in station_rows}
+    total_recorded = sum(by_station.values())
+
+    # Unaccounted minutes from the view
+    unacc_row = conn.execute("""
+        SELECT COALESCE(SUM(unaccounted_min), 0) AS unaccounted
+        FROM v_unaccounted_minutes_by_run
+        WHERE job_id = ?
+    """, (job_id,)).fetchone()
+    total_unaccounted = round(unacc_row["unaccounted"], 1) if unacc_row else 0.0
+
+    return {
+        "job_number": job["job_number"],
+        "recorded_downtime_min": round(total_recorded, 1),
+        "downtime_by_station": by_station,
+        "unaccounted_min": total_unaccounted,
+    }
+
+
 def get_job_summary(conn, job_number):
     """Return FTQ, P2P, scrap, downtime, and hourly breakdown for one job."""
     job = conn.execute("""
