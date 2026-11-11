@@ -1,55 +1,50 @@
 # Herbie — The AI Counselor Architecture
 
-## What Herbie Is
-Herbie is the AI diagnostic engine for Myarra. Named after Herbie in *The Goal*, 
-he is the module that finds the constraint. He does not do math in the LLM. 
-The math is done in Python/SQL, and the LLM is only used to translate the math 
-and the operator notes into a plain-English narrative.
+## Product Philosophy
+Herbie is not a summarizer. Herbie is a router and a coach. The core problem Myarra solves is the "Check" step of PDCA. Herbie is the missing feedback loop. He must never guess, never hallucinate, and never summarize a standard into a lie.
 
-## The Hardware & Model Constraint
-- **Current Hardware (Jetson Nano 8GB):** We will use Qwen 2.5 3B (Q4_K_M). 
-  Expect ~6 seconds per response. It fits in memory and proves the concept.
-- **Future Hardware (Jetson NX 16GB):** We will upgrade to Qwen 2.5 7B or 14B. 
-  Expect ~12-15 seconds, but with much higher nuance and instruction-following.
+## The Hardware Tier Split
+To make this commercially viable, we are building a two-tier product:
+- **The Nano (Base Model):** Runs Qwen 2.5 3B. Handles single-turn queries, point lookups, and strict template-based narratives. Fast enough (~6 seconds) to feel responsive. No multi-turn conversation memory.
+- **The NX (Premium Model):** Runs Qwen 2.5 7B or 14B. Handles multi-turn conversation state, proactive coaching ("You have 17 unaccounted minutes, go find them"), and complex root-cause analysis. This is the upsell.
 
-## The Four Functions of `herbie.py`
+## The Three-Layer Architecture
 
-### 1. `get_line_summary(conn, line_id, date)`
-The math engine. It queries the database for:
-- Total actual units (`units_filled`)
-- Total scrap units (`scrap_units`)
-- Total downtime minutes (`downtime_events`)
-- The standard rate (`ideal_rate`)
+### Layer 1: The Classifier (The Router)
+When a user asks a question (either via Web UI or Telegram starting with "Hey Herbie"), the LLM classifies the query into one of five types:
+1.  **Job Lookup:** "What was the FTQ for WO-2611-004?"
+2.  **Attribution:** "Why did we lose time on that job?"
+3.  **Reconciliation:** "How many minutes are unaccounted for?"
+4.  **Aggregation (Threshold):** "Which jobs had more than 30 minutes of downtime?"
+5.  **Aggregation (Time Window):** "What is our unaccounted downtime for the last 30 days?"
 
-It calculates the **Capacity Gap**:
-- `Lost Capacity = (Total Downtime / 60) * Standard Rate`
-- `Gross Production = Good Units + Scrap`
-- `Theoretical Capacity = Gross Production + Lost Capacity`
-- `Variance = Theoretical Capacity - Target`
+### Layer 2: The Function Library (Hard Math)
+The classifier triggers a deterministic Python function. The LLM is *never* allowed to do math or write raw SQL that aggregates data. It only calls these functions:
+-   `get_job_summary(job_number)`
+-   `get_downtime_attribution(job_number)`
+-   `get_unaccounted_minutes(filters)`
+-   `get_jobs_with_downtime_over(threshold, days)`
+-   `get_line_summary(line_id, date)`
 
-It returns a dict of these hard numbers.
+### Layer 3: The Narrator (The Voice)
+The LLM receives the exact dictionary of numbers from Layer 2 and writes the response. 
+**Strict Rule:** If the LLM references a number, it must be in the dictionary. If it quotes an operator note, it must quote it *verbatim*. No summarizing. No characterizing.
 
-### 2. `get_floor_context(conn, line_id, date)`
-The context engine. It queries:
-- Free-text `notes` from `hourly_runs`
-- `symptom` and `resolution` from `maintenance_events`
-- Active `experiments` (PDCAs) for that line
+## The New Metric: Unaccounted Minutes
+The core metric that drives Herbie's proactive coaching is the gap between expected output and explained downtime.
 
-It returns a string of combined text, so the LLM can read what actually happened.
+We will create a new SQL view: `v_unaccounted_minutes_by_run`.
+**Formula:**
+-   `Expected Units = (duration_min * ideal_rate) / 60`
+-   `Gap Units = Expected Units - units_filled`
+-   `Gap Minutes = (Gap Units / ideal_rate) * 60`
+-   `Unaccounted Minutes = Gap Minutes - recorded_downtime_minutes` (Floor at 0).
 
-### 3. `ask_herbie(line_id, date, question)`
-The orchestrator. It calls `get_line_summary` and `get_floor_context`, 
-formats the `SYSTEM_PROMPT` with the `PHILOSOPHY.md` constraints, 
-and sends the request to the local LLM at `http://127.0.0.1:8080/v1/chat/completions`.
+If `Unaccounted Minutes > 0`, the operator failed to log a reason for the loss. This is the glaring hole.
 
-### 4. `narrate_capacity_gap(stats, context, question)`
-The fallback. If the LLM is offline or times out, this function uses 
-Python string formatting to return a rigid summary of the math so the user 
-still gets an answer. No AI required.
+## The Interface
+-   **Web UI:** A dedicated `/herbie` page. A chat-like interface.
+-   **Telegram:** The bot listens for "Hey Herbie" and routes to the counselor logic. Otherwise, it behaves as the standard floor data capture bot.
 
-## The System Prompt Guidelines
-The LLM prompt must enforce the following:
-- Be direct. No fluff, no "I hope this helps."
-- Do not blame the operator.
-- Always mention the Capacity Gap.
-- If the data is insufficient to answer, say "I cannot answer that."
+## The Proactive Loop (NX Only)
+On the NX, Herbie doesn't just wait for questions. At the end of a shift, he reviews the data. If he finds a job with >15 minutes of unaccounted time, he sends a Telegram message to the plant manager: *"Hey, Line 3 had 22 minutes of unaccounted downtime on WO-2611-004 today. The operator notes say 'minor filler jam'. That doesn't explain the 22 minutes. You might want to talk to the line lead."*
