@@ -205,6 +205,29 @@ FROM maintenance_events
 WHERE started_at IS NOT NULL
 GROUP BY line_id, station, date(started_at);
 
+CREATE VIEW IF NOT EXISTS v_unaccounted_minutes_by_run AS
+SELECT
+    r.id AS run_id,
+    r.job_id,
+    r.line_id,
+    r.period,
+    r.recorded_at,
+    r.duration_min,
+    r.units_filled,
+    lsr.ideal_rate,
+    ROUND(((r.duration_min * lsr.ideal_rate) / 60.0) - r.units_filled, 0) AS gap_units,
+    ROUND((((r.duration_min * lsr.ideal_rate) / 60.0) - r.units_filled) / (lsr.ideal_rate / 60.0), 1) AS gap_min,
+    COALESCE(SUM(d.minutes), 0) AS recorded_downtime_min,
+    ROUND(MAX(0, ((((r.duration_min * lsr.ideal_rate) / 60.0) - r.units_filled) / (lsr.ideal_rate / 60.0)) - COALESCE(SUM(d.minutes), 0)), 1) AS unaccounted_min
+FROM hourly_runs r
+JOIN jobs j ON j.id = r.job_id
+LEFT JOIN line_sku_rates lsr ON lsr.line_id = r.line_id AND lsr.sku_id = j.sku_id
+LEFT JOIN downtime_events d ON d.run_id = r.id
+WHERE r.recorded_at IS NOT NULL
+  AND (r.superseded IS NULL OR r.superseded = 0)
+  AND lsr.ideal_rate > 0
+GROUP BY r.id;
+
 CREATE VIEW IF NOT EXISTS v_pdca_trend AS
 SELECT e.id AS experiment_id, e.pdca_id, e.title,
        date(ev.started_at) AS day,
@@ -233,6 +256,7 @@ ALL_VIEWS = [
     "v_changeover_by_station",
     "v_changeover_variance",
     "v_unaccounted_by_line_day",
+    "v_unaccounted_minutes_by_run",
     "v_maintenance_by_station",
     "v_pdca_trend",
 ]
