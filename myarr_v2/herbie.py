@@ -180,6 +180,67 @@ def narrate_capacity_gap(stats, context):
     return "\n".join(parts)
 
 
+def get_job_summary(conn, job_number):
+    """Return FTQ, P2P, scrap, downtime, and hourly breakdown for one job."""
+    job = conn.execute("""
+        SELECT j.id, j.job_number, j.line_id, j.sku_id, j.target_quantity, j.status,
+               s.description AS sku_description, l.name AS line_name
+        FROM jobs j
+        LEFT JOIN skus s ON s.id = j.sku_id
+        LEFT JOIN lines l ON l.id = j.line_id
+        WHERE j.job_number = ?
+    """, (job_number,)).fetchone()
+
+    if not job:
+        return {"error": f"Job {job_number} not found."}
+
+    job_id = job["id"]
+
+    totals = conn.execute("""
+        SELECT COALESCE(SUM(units_filled), 0) AS actual_units,
+               COALESCE(SUM(scrap_units), 0) AS scrap_units,
+               COALESCE(SUM(duration_min), 0) AS run_minutes
+        FROM hourly_runs
+        WHERE job_id = ? AND (superseded IS NULL OR superseded = 0)
+    """, (job_id,)).fetchone()
+
+    actual_units = totals["actual_units"]
+    scrap_units = totals["scrap_units"]
+    run_minutes = totals["run_minutes"]
+
+    hourly = conn.execute("""
+        SELECT period, shift, units_filled, scrap_units, notes,
+               recorded_downtime_min, unaccounted_min, gap_min
+        FROM v_unaccounted_minutes_by_run
+        WHERE job_id = ?
+        ORDER BY recorded_at, period
+    """, (job_id,)).fetchall()
+
+    total_downtime = sum(r["recorded_downtime_min"] for r in hourly)
+    total_unaccounted = sum(r["unaccounted_min"] for r in hourly)
+
+    target_units = job["target_quantity"] or 0
+    ftq = ((actual_units - scrap_units) / actual_units * 100) if actual_units else 0
+    p2p = (actual_units / target_units * 100) if target_units else 0
+
+    return {
+        "job_number": job["job_number"],
+        "line_id": job["line_id"],
+        "line_name": job["line_name"],
+        "sku_description": job["sku_description"],
+        "status": job["status"],
+        "target_units": int(target_units),
+        "actual_units": int(actual_units),
+        "scrap_units": int(scrap_units),
+        "run_minutes": int(run_minutes),
+        "recorded_downtime_min": round(total_downtime, 1),
+        "unaccounted_min": round(total_unaccounted, 1),
+        "ftq": round(ftq, 1),
+        "p2p": round(p2p, 1),
+        "hourly": [dict(r) for r in hourly],
+    }
+
+
 def ask_herbie(line_id, date, question=None):
     """The orchestrator. Calls the math, the context, and the LLM."""
     conn = sqlite3.connect(DB_PATH)
