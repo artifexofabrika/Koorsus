@@ -47,4 +47,4 @@ If `Unaccounted Minutes > 0`, the operator failed to log a reason for the loss. 
 -   **Telegram:** The bot listens for "Hey Herbie" and routes to the counselor logic. Otherwise, it behaves as the standard floor data capture bot.
 
 ## The Proactive Loop (NX Only)
-On the NX, Herbie doesn't just wait for questions. At the end of a shift, he reviews the data. If he finds a job with >15 minutes of unaccounted time, he sends a Telegram message to the plant manager: *"Hey, Line 3 had 22 minutes of unaccounted downtime on WO-2611-004 today. The operator notes say 'minor filler jam'. That doesn't explain the 22 minutes. You might want to talk to the line lead."*
+On the NX, Herbie doesn't just wait for questions. At the end of a shift, he reviews the data. If he finds a job with >15 minutes of unaccounted time, he sends a Telegram message to the plant manager: *"Line 3 had 22 minutes of unaccounted downtime on WO-2611-004 today. You might want to talk to the line lead. The operator notes say 'minor filler jam'. That doesn't explain the 22 minutes."*
