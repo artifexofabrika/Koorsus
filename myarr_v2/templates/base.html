@@ -5,6 +5,10 @@
   <title>{% block title %}Myarra{% endblock %}</title>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#c0a878">
 </head>
 <body>
   <nav>
@@ -13,5 +17,14 @@
   <br>
   {% block content %}{% endblock %}
   <footer>Myarra is the measure. Most plants work hard. Few close the loop.</footer>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/static/sw.js').catch(function(e) {
+          console.log('SW registration failed:', e);
+        });
+      });
+    }
+  </script>
 </body>
 </html>

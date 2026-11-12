@@ -959,6 +959,80 @@ def herbie_view():
                            recent_jobs=recent, co_jobs=co_jobs)
 
 
+@app.route("/floor", methods=["GET", "POST"])
+def floor_view():
+    conn = get_db_connection()
+    conn.row_factory = sqlite3.Row
+    msg = None
+    selected_line = None
+    if request.method == "POST":
+        try:
+            line_id = int(request.form.get("line_id") or 0)
+            job_number = (request.form.get("job_number") or "").strip()
+            period = (request.form.get("period") or "").strip()
+            units = int(request.form.get("units_filled") or 0)
+            scrap = int(request.form.get("scrap_units") or 0)
+            notes = (request.form.get("notes") or "").strip()
+            if line_id and job_number and period and units > 0:
+                job = conn.execute(
+                    "SELECT id, sku_id, line_id FROM jobs WHERE job_number = ? COLLATE NOCASE",
+                    (job_number,)
+                ).fetchone()
+                if job:
+                    now = datetime.now().isoformat()
+                    conn.execute("""
+                        INSERT INTO hourly_runs (job_id, line_id, sku_id, shift, period, recorded_at, units_filled, scrap_units, duration_min, notes)
+                        VALUES (?, ?, ?, '1', ?, ?, ?, ?, 60, ?)
+                    """, (job["id"], line_id, job["sku_id"], period, now, units, scrap, notes))
+                    conn.commit()
+                    msg = f"Logged {period} for {job_number}: {units:,} units, {scrap} scrap."
+                    selected_line = line_id
+                else:
+                    msg = f"Job {job_number} not found."
+            else:
+                msg = "Missing required fields."
+        except Exception as e:
+            msg = f"Error: {e}"
+
+    lines = conn.execute("SELECT * FROM lines ORDER BY id").fetchall()
+    cards = []
+    for line in lines:
+        cur = conn.execute(
+            "SELECT * FROM line_events WHERE line_id=? AND ended_at IS NULL ORDER BY started_at DESC LIMIT 1",
+            (line["id"],)
+        ).fetchone()
+        card = {
+            "line_id": line["id"],
+            "line_name": line["name"],
+            "state": "idle",
+            "job_number": None,
+            "next_period": "H1",
+            "sku_description": None,
+        }
+        if cur and cur["state"] == "production" and cur["job_id"]:
+            job = conn.execute(
+                "SELECT j.*, s.description as sku_description FROM jobs j LEFT JOIN skus s ON s.id = j.sku_id WHERE j.id = ?",
+                (cur["job_id"],)
+            ).fetchone()
+            if job:
+                card["state"] = "production"
+                card["job_number"] = job["job_number"]
+                card["sku_description"] = job["sku_description"]
+                last = conn.execute(
+                    "SELECT MAX(period) as p FROM hourly_runs WHERE job_id = ? AND date(recorded_at) = date('now')",
+                    (job["id"],)
+                ).fetchone()
+                if last and last["p"] and last["p"].startswith("H"):
+                    try:
+                        n = int(last["p"][1:]) + 1
+                        card["next_period"] = f"H{n}"
+                    except ValueError:
+                        pass
+        cards.append(card)
+    conn.close()
+    return render_template("floor.html", cards=cards, msg=msg, today=datetime.now().strftime("%Y-%m-%d"), selected_line=selected_line)
+
+
 @app.route("/favicon.ico")
 def favicon():
     from flask import send_from_directory

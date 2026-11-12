@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Myarra Floor{% endblock %}
+{% block content %}
+<style>
+  .floor-header { text-align: center; margin-bottom: 1rem; }
+  .floor-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .floor-tile {
+    aspect-ratio: 1;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.1s;
+    box-sizing: border-box;
+  }
+  .floor-tile:hover, .floor-tile:active { border-color: var(--accent); transform: scale(1.02); }
+  .floor-tile.idle { opacity: 0.4; cursor: default; }
+  .floor-tile .tile-line { font-size: 0.95rem; font-weight: bold; color: var(--accent); line-height: 1.2; }
+  .floor-tile .tile-job { font-family: monospace; font-size: 0.72rem; color: var(--text); margin-top: 0.4rem; word-break: break-all; }
+  .floor-tile .tile-sku { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .floor-tile .tile-status { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-top: 0.4rem; }
+  .floor-tile.idle .tile-line { color: var(--muted); }
+
+  .floor-detail { display: none; max-width: 520px; margin: 0 auto; }
+  .floor-detail.active { display: block; }
+  .floor-detail .back-btn { background: none; border: none; color: var(--accent); font-size: 0.9rem; cursor: pointer; padding: 0.4rem 0; margin-bottom: 0.5rem; font-family: Georgia, serif; }
+  .floor-detail h2 { color: var(--accent); margin: 0 0 0.25rem; font-size: 1.25rem; }
+  .floor-detail .job { color: var(--text); font-size: 0.95rem; margin-bottom: 0.5rem; }
+  .floor-detail .period { font-size: 1rem; color: var(--accent); font-weight: bold; margin: 1rem 0 0.5rem; }
+  .floor-detail label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 0.9rem 0 0.3rem; }
+  .floor-detail input[type=number], .floor-detail input[type=text] {
+    width: 100%; padding: 1rem; font-size: 1.15rem;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    box-sizing: border-box; font-family: Georgia, serif;
+  }
+  .floor-detail button.submit {
+    width: 100%; margin-top: 1.25rem; padding: 1.1rem;
+    background: var(--accent); color: var(--bg);
+    border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer;
+  }
+  .floor-detail button.submit:active { opacity: 0.8; }
+
+  .floor-msg { background: rgba(46, 125, 50, 0.2); color: var(--success); padding: 0.9rem 1rem; border-radius: 6px; margin: 0 auto 1rem; text-align: center; max-width: 520px; }
+</style>
+
+<div class="floor-header">
+  <h1 style="margin-bottom: 0.25rem;">Floor Log</h1>
+  <div class="sub" style="margin-bottom: 0;">{{ today }}</div>
+</div>
+
+{% if msg %}
+<div class="floor-msg">{{ msg }}</div>
+{% endif %}
+
+<div id="floor-tiles" class="floor-tiles">
+  {% for c in cards %}
+  <div class="floor-tile {% if c.state != 'production' %}idle{% endif %}"
+       data-line="{{ c.line_id }}"
+       {% if c.state == 'production' %}onclick="openLine({{ c.line_id }})"{% endif %}>
+    <div>
+      <div class="tile-line">{{ c.line_name }}</div>
+      {% if c.job_number %}
+      <div class="tile-job">{{ c.job_number }}</div>
+      {% if c.sku_description %}<div class="tile-sku">{{ c.sku_description }}</div>{% endif %}
+      {% endif %}
+    </div>
+    <div class="tile-status">
+      {% if c.state == 'production' %}{{ c.next_period }} ready{% else %}idle{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% for c in cards %}
+{% if c.state == 'production' and c.job_number %}
+<div id="detail-{{ c.line_id }}" class="floor-detail">
+  <button type="button" class="back-btn" onclick="closeAll()">&larr; All lines</button>
+  <h2>{{ c.line_name }}</h2>
+  <div class="job">{{ c.job_number }}{% if c.sku_description %} &middot; {{ c.sku_description }}{% endif %}</div>
+  <form method="post">
+    <input type="hidden" name="line_id" value="{{ c.line_id }}">
+    <input type="hidden" name="job_number" value="{{ c.job_number }}">
+    <input type="hidden" name="period" value="{{ c.next_period }}">
+    <div class="period">Logging {{ c.next_period }}</div>
+    <label>Units filled</label>
+    <input type="number" name="units_filled" min="1" required inputmode="numeric" autofocus>
+    <label>Scrap / rework</label>
+    <input type="number" name="scrap_units" min="0" value="0" inputmode="numeric">
+    <label>Notes</label>
+    <input type="text" name="notes" placeholder="Optional - what happened this hour?">
+    <button type="submit" class="submit">Log {{ c.next_period }}</button>
+  </form>
+</div>
+{% endif %}
+{% endfor %}
+
+<script>
+function openLine(lineId) {
+  document.getElementById('floor-tiles').style.display = 'none';
+  document.querySelectorAll('.floor-detail').forEach(function(el) { el.classList.remove('active'); });
+  var detail = document.getElementById('detail-' + lineId);
+  if (detail) {
+    detail.classList.add('active');
+    history.replaceState(null, '', '#line-' + lineId);
+    var first = detail.querySelector('input[type=number]');
+    if (first) setTimeout(function() { first.focus(); }, 100);
+  }
+}
+function closeAll() {
+  document.querySelectorAll('.floor-detail').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('floor-tiles').style.display = '';
+  history.replaceState(null, '', window.location.pathname);
+}
+(function() {
+  var hash = window.location.hash;
+  if (hash && hash.indexOf('#line-') === 0) {
+    openLine(hash.replace('#line-', ''));
+  }
+  {% if selected_line %}openLine({{ selected_line }});{% endif %}
+})();
+</script>
+{% endblock %}
