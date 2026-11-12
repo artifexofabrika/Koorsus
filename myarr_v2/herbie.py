@@ -217,6 +217,55 @@ def get_downtime_attribution(conn, job_number):
     }
 
 
+def get_unaccounted_minutes(conn, line_id, days=30, shift=None):
+    """Return total recorded and unaccounted downtime for a line over a window."""
+    params = [line_id, f'-{days} days']
+    shift_clause = ''
+    if shift is not None:
+        shift_clause = ' AND v.shift = ?'
+        params.append(str(shift))
+
+    totals = conn.execute(f"""
+        SELECT
+            ROUND(COALESCE(SUM(v.recorded_downtime_min), 0), 1) AS recorded,
+            ROUND(COALESCE(SUM(v.unaccounted_min), 0), 1) AS unaccounted,
+            COUNT(DISTINCT v.job_id) AS job_count
+        FROM v_unaccounted_minutes_by_run v
+        WHERE v.line_id = ?
+          AND date(v.recorded_at) >= date('now', ?)
+          {shift_clause}
+    """, params).fetchone()
+
+    by_shift = conn.execute("""
+        SELECT
+            v.shift,
+            ROUND(COALESCE(SUM(v.recorded_downtime_min), 0), 1) AS recorded,
+            ROUND(COALESCE(SUM(v.unaccounted_min), 0), 1) AS unaccounted
+        FROM v_unaccounted_minutes_by_run v
+        WHERE v.line_id = ?
+          AND date(v.recorded_at) >= date('now', ?)
+        GROUP BY v.shift
+        ORDER BY v.shift
+    """, (line_id, f'-{days} days')).fetchall()
+
+    total_recorded = totals["recorded"] if totals else 0
+    total_unaccounted = totals["unaccounted"] if totals else 0
+    total_lost = round(total_recorded + total_unaccounted, 1)
+    pct_unaccounted = round((total_unaccounted / total_lost * 100), 1) if total_lost else 0
+
+    return {
+        "line_id": line_id,
+        "days": days,
+        "shift_filter": shift,
+        "job_count": totals["job_count"] if totals else 0,
+        "recorded_min": total_recorded,
+        "unaccounted_min": total_unaccounted,
+        "total_lost_min": total_lost,
+        "pct_unaccounted": pct_unaccounted,
+        "by_shift": [dict(r) for r in by_shift],
+    }
+
+
 def get_jobs_with_downtime_over(conn, threshold_min, days=30):
     """Return jobs whose total recorded downtime exceeds threshold_min within the last N days."""
     rows = conn.execute("""
