@@ -217,6 +217,73 @@ def get_downtime_attribution(conn, job_number):
     }
 
 
+def get_changeover_summary(conn, identifier):
+    """Return changeover actual vs standard and per-station breakdown.
+
+    identifier can be a job number (from or to) or a co_event id.
+    """
+    event = None
+    try:
+        event_id = int(identifier)
+        event = conn.execute("""
+            SELECT e.id, e.line_id, e.started_at, e.ended_at, e.aggregate_actual_min,
+                   e.from_job_number, e.to_job_number, p.name AS procedure_name,
+                   p.aggregate_standard_min AS standard_min
+            FROM co_events e
+            LEFT JOIN co_procedures_v2 p ON p.id = e.procedure_id
+            WHERE e.id = ?
+        """, (event_id,)).fetchone()
+    except (ValueError, TypeError):
+        pass
+
+    if not event:
+        event = conn.execute("""
+            SELECT e.id, e.line_id, e.started_at, e.ended_at, e.aggregate_actual_min,
+                   e.from_job_number, e.to_job_number, p.name AS procedure_name,
+                   p.aggregate_standard_min AS standard_min
+            FROM co_events e
+            LEFT JOIN co_procedures_v2 p ON p.id = e.procedure_id
+            WHERE e.to_job_number = ? OR e.from_job_number = ?
+            ORDER BY e.started_at DESC LIMIT 1
+        """, (identifier, identifier)).fetchone()
+
+    if not event:
+        return {"error": f"No changeover found for '{identifier}'."}
+
+    event_id = event["id"]
+    actual = event["aggregate_actual_min"]
+    standard = event["standard_min"]
+
+    variance = None
+    variance_pct = None
+    if actual is not None and standard is not None and standard > 0:
+        variance = round(actual - standard, 1)
+        variance_pct = round((variance / standard) * 100, 1)
+
+    steps = conn.execute("""
+        SELECT s.station, s.step_name, s.standard_min, es.actual_min,
+               ROUND(es.actual_min - s.standard_min, 1) AS variance_min
+        FROM co_event_steps es
+        JOIN co_steps_v2 s ON s.id = es.step_id
+        WHERE es.event_id = ?
+        ORDER BY s.seq
+    """, (event_id,)).fetchall()
+
+    return {
+        "event_id": event_id,
+        "line_id": event["line_id"],
+        "procedure_name": event["procedure_name"],
+        "from_job": event["from_job_number"],
+        "to_job": event["to_job_number"],
+        "started_at": event["started_at"],
+        "actual_min": round(actual, 1) if actual is not None else None,
+        "standard_min": round(standard, 1) if standard is not None else None,
+        "variance_min": variance,
+        "variance_pct": variance_pct,
+        "steps": [dict(s) for s in steps],
+    }
+
+
 def get_unaccounted_minutes(conn, line_id, days=30, shift=None):
     """Return total recorded and unaccounted downtime for a line over a window."""
     params = [line_id, f'-{days} days']
