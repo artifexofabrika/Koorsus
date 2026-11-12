@@ -217,6 +217,33 @@ def get_downtime_attribution(conn, job_number):
     }
 
 
+def get_jobs_with_downtime_over(conn, threshold_min, days=30):
+    """Return jobs whose total recorded downtime exceeds threshold_min within the last N days."""
+    rows = conn.execute("""
+        SELECT
+            j.job_number,
+            j.line_id,
+            l.name AS line_name,
+            MAX(date(v.recorded_at)) AS last_date,
+            ROUND(COALESCE(SUM(v.recorded_downtime_min), 0), 1) AS total_recorded,
+            ROUND(COALESCE(SUM(v.unaccounted_min), 0), 1) AS total_unaccounted
+        FROM v_unaccounted_minutes_by_run v
+        JOIN jobs j ON j.id = v.job_id
+        LEFT JOIN lines l ON l.id = j.line_id
+        WHERE date(v.recorded_at) >= date('now', ?)
+        GROUP BY j.id
+        HAVING total_recorded > ?
+        ORDER BY total_recorded DESC
+    """, (f'-{days} days', threshold_min)).fetchall()
+
+    return {
+        "threshold_min": threshold_min,
+        "days": days,
+        "count": len(rows),
+        "jobs": [dict(r) for r in rows],
+    }
+
+
 def get_job_summary(conn, job_number):
     """Return FTQ, P2P, scrap, downtime, and hourly breakdown for one job."""
     job = conn.execute("""
