@@ -168,13 +168,16 @@ def seed():
                     """, (job_id, line_id, sku_id, shift_name, f"H{h}", recorded_at.isoformat(), units, scrap, comments))
                     run_id = c.lastrowid
 
-                    if units < (bpm * 0.92):
-                        gap_mins = round(((bpm - units) / bpm) * 60, 1)
-                        station = random.choice([r[3] for r in stations if r[0] == line_id and r[1] == sku_id])
-                        c.execute("""
-                            INSERT INTO downtime_events (run_id, station, reason, minutes)
-                            VALUES (?, ?, ?, ?)
-                        """, (run_id, station, "Unplanned stop", gap_mins))
+                    unaccounted_target = {1: 0.28, 2: 0.20, 3: 0.18, 4: 0.32, 5: 0.12, 6: 0.10, 7: 0.22}
+                    gap_units = bpm - units
+                    if gap_units > 0:
+                        gap_mins = round((gap_units / bpm) * 60, 1)
+                        if random.random() > unaccounted_target.get(line_id, 0.20):
+                            station = random.choice([r[3] for r in stations if r[0] == line_id and r[1] == sku_id])
+                            c.execute("""
+                                INSERT INTO downtime_events (run_id, station, reason, minutes)
+                                VALUES (?, ?, ?, ?)
+                            """, (run_id, station, "Unplanned stop", gap_mins))
 
                 if line_id == 3 and shift_idx == 1:
                     if current_date.date() >= datetime.strptime(pdca_start, '%Y-%m-%d').date():
