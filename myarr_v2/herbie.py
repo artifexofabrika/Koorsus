@@ -22,6 +22,74 @@ LLM_URL = "http://127.0.0.1:8080/v1/chat/completions"
 LLM_TIMEOUT = 60
 
 
+INTENT_NOTES = {
+    "changeover": """CHANGEOVER-SPECIFIC RULES:
+- The 'summary' field is the authoritative characterization. Paraphrase it; do not contradict it.
+- variance_min = (actual - standard). A NEGATIVE variance means FASTER than standard (GOOD). A POSITIVE variance means SLOWER (BAD). The summary field already states the direction correctly.
+- The ONLY fields that exist for changeover questions are: event_id, line_id, procedure_name, from_job, to_job, started_at, actual_min, standard_min, variance_min, variance_pct, steps, summary.
+- Do NOT mention FTQ, P2P, capacity_gap, losses_unexplained, scrap_units, downtime, or lost capacity. Those fields do not exist for changeovers. If you mention them, you are inventing data.
+- actual_min is the changeover duration, NOT lost capacity. Do not confuse the two.
+- The steps list is supporting detail. Mention the two or three largest deviations, but the summary field is the primary source.
+""",
+    "jobs_over": """TOP-DOWNTIME-JOBS SPECIFIC RULES:
+- The 'summary' field is the authoritative answer. Paraphrase it; do not contradict or re-rank it.
+- The summary already names the count and the top three jobs in the correct order. Quote them in that order.
+- Do not list any job that is not in the summary.
+- The jobs array is supporting data. Do not enumerate it.
+""",
+    "unaccounted": """UNACCOUNTED-MINUTES SPECIFIC RULES:
+- unaccounted_min is the minutes of production loss with no logged reason.
+- pct_unaccounted is unaccounted as a percentage of total lost time (recorded + unaccounted).
+- The by_shift breakdown shows the same for each shift separately.
+- If pct_unaccounted is above 25, state that it is a significant gap.
+""",
+}
+
+
+GENERIC_NARRATIVE_PROMPT = """You are Herbie, a Lean manufacturing counselor.
+
+Every number below was calculated in Python. You may quote these numbers
+exactly as written. You may NOT add, subtract, multiply, divide, or otherwise
+derive new numbers. If you need a total, it is already computed and listed.
+
+DIAGNOSTIC PRINCIPLE:
+- A standard that has been run to for months is not wrong because one shift
+  underperformed. Do not tell the manager the standard may need reevaluation.
+- When losses_unexplained is larger than losses_accounted, the correct
+  diagnosis is that the data is incomplete. Tell the manager to revisit the
+  job with the line lead and find out what happened that was not captured.
+- Quote the operator notes directly when they are relevant.
+
+RULES:
+- Be direct. No fluff.
+- Never blame the operator.
+- Under 180 words.
+- FTQ is First Time Quality. P2P is Produce to Plan (Actual / Target).
+- If you cannot answer something from the data, say so.
+
+DATA (Python-computed, quote numbers exactly):
+{data}
+
+FIELD GLOSSARY (use these definitions, never invent alternatives):
+- recorded_downtime_min: minutes the operator logged as downtime
+- unaccounted_min: minutes of production loss with no logged explanation
+- lost_capacity: theoretical unit capacity lost due to recorded downtime
+- capacity_gap: variance against target in units (negative = under target)
+- losses_accounted: scrap units + lost_capacity units
+- losses_unexplained: capacity_gap minus losses_accounted
+- ftq: First Time Quality (%)
+- p2p: Produce to Plan, Actual divided by Target (%)
+
+CONTEXT:
+{context}
+
+INTENT-SPECIFIC RULES:
+{intent_notes}
+
+Manager question: {question}
+"""
+
+
 def get_line_summary(conn, line_id, date):
     """The math engine. All arithmetic happens here, in Python."""
     row = conn.execute("""
@@ -182,13 +250,12 @@ def narrate_capacity_gap(stats, context):
 
 def get_downtime_attribution(conn, job_number):
     """Return accounted downtime by station and total unaccounted minutes for a job."""
-    job = conn.execute("SELECT id, job_number FROM jobs WHERE job_number = ?", (job_number,)).fetchone()
+    job = conn.execute("SELECT id, job_number FROM jobs WHERE job_number = ? COLLATE NOCASE", (job_number,)).fetchone()
     if not job:
         return {"error": f"Job {job_number} not found."}
 
     job_id = job["id"]
 
-    # Accounted downtime grouped by station
     station_rows = conn.execute("""
         SELECT d.station, COALESCE(SUM(d.minutes), 0) AS minutes
         FROM downtime_events d
@@ -201,7 +268,6 @@ def get_downtime_attribution(conn, job_number):
     by_station = {r["station"]: round(r["minutes"], 1) for r in station_rows}
     total_recorded = sum(by_station.values())
 
-    # Unaccounted minutes from the view
     unacc_row = conn.execute("""
         SELECT COALESCE(SUM(unaccounted_min), 0) AS unaccounted
         FROM v_unaccounted_minutes_by_run
@@ -217,11 +283,40 @@ def get_downtime_attribution(conn, job_number):
     }
 
 
-def get_changeover_summary(conn, identifier):
-    """Return changeover actual vs standard and per-station breakdown.
+def _build_changeover_summary(actual, standard, variance, variance_pct, steps):
+    """Pre-compute the changeover narrative so the LLM paraphrases instead of interpreting."""
+    parts = []
+    if actual is not None and standard is not None and variance is not None:
+        if variance == 0:
+            parts.append(f"Total changeover was {actual:.1f} minutes, exactly at the standard of {standard:.1f} minutes.")
+        elif variance < 0:
+            parts.append(f"Total changeover was {actual:.1f} minutes against a standard of {standard:.1f}. "
+                         f"This is {abs(variance):.1f} minutes FASTER than standard, a {abs(variance_pct):.1f}% improvement.")
+        else:
+            parts.append(f"Total changeover was {actual:.1f} minutes against a standard of {standard:.1f}. "
+                         f"This is {variance:.1f} minutes SLOWER than standard, a {variance_pct:.1f}% overrun.")
 
-    identifier can be a job number (from or to) or a co_event id.
-    """
+    highlights = []
+    for s in steps:
+        std = s.get("standard_min")
+        act = s.get("actual_min")
+        var = s.get("variance_min")
+        if std is None or act is None or var is None:
+            continue
+        if abs(var) < 0.5:
+            continue
+        station = s.get("station") or s.get("step_name") or "unknown"
+        if var < 0:
+            highlights.append(f"{station} SAVED {abs(var):.1f} minutes (actual {act:.1f}m vs standard {std:.1f}m).")
+        else:
+            highlights.append(f"{station} ran {var:.1f} minutes OVER standard (actual {act:.1f}m vs standard {std:.1f}m).")
+    if highlights:
+        parts.append(" ".join(highlights[:4]))
+    return " ".join(parts)
+
+
+def get_changeover_summary(conn, identifier):
+    """Return changeover actual vs standard, per-station breakdown, and a pre-computed summary."""
     event = None
     try:
         event_id = int(identifier)
@@ -243,7 +338,7 @@ def get_changeover_summary(conn, identifier):
                    p.aggregate_standard_min AS standard_min
             FROM co_events e
             LEFT JOIN co_procedures_v2 p ON p.id = e.procedure_id
-            WHERE e.to_job_number = ? OR e.from_job_number = ?
+            WHERE e.to_job_number = ? COLLATE NOCASE OR e.from_job_number = ? COLLATE NOCASE
             ORDER BY e.started_at DESC LIMIT 1
         """, (identifier, identifier)).fetchone()
 
@@ -260,7 +355,7 @@ def get_changeover_summary(conn, identifier):
         variance = round(actual - standard, 1)
         variance_pct = round((variance / standard) * 100, 1)
 
-    steps = conn.execute("""
+    steps_rows = conn.execute("""
         SELECT s.station, s.step_name, s.standard_min, es.actual_min,
                ROUND(es.actual_min - s.standard_min, 1) AS variance_min
         FROM co_event_steps es
@@ -268,6 +363,9 @@ def get_changeover_summary(conn, identifier):
         WHERE es.event_id = ?
         ORDER BY s.seq
     """, (event_id,)).fetchall()
+    steps = [dict(s) for s in steps_rows]
+
+    summary = _build_changeover_summary(actual, standard, variance, variance_pct, steps)
 
     return {
         "event_id": event_id,
@@ -280,7 +378,8 @@ def get_changeover_summary(conn, identifier):
         "standard_min": round(standard, 1) if standard is not None else None,
         "variance_min": variance,
         "variance_pct": variance_pct,
-        "steps": [dict(s) for s in steps],
+        "summary": summary,
+        "steps": steps,
     }
 
 
@@ -341,22 +440,35 @@ def get_jobs_with_downtime_over(conn, threshold_min, days=30):
             j.line_id,
             l.name AS line_name,
             MAX(date(v.recorded_at)) AS last_date,
-            ROUND(COALESCE(SUM(v.recorded_downtime_min), 0), 1) AS total_recorded,
-            ROUND(COALESCE(SUM(v.unaccounted_min), 0), 1) AS total_unaccounted
+            ROUND(COALESCE(SUM(v.recorded_downtime_min), 0), 1) AS recorded_downtime_min,
+            ROUND(COALESCE(SUM(v.unaccounted_min), 0), 1) AS unaccounted_min
         FROM v_unaccounted_minutes_by_run v
         JOIN jobs j ON j.id = v.job_id
         LEFT JOIN lines l ON l.id = j.line_id
         WHERE date(v.recorded_at) >= date('now', ?)
         GROUP BY j.id
-        HAVING total_recorded > ?
-        ORDER BY total_recorded DESC
+        HAVING ROUND(COALESCE(SUM(v.recorded_downtime_min), 0), 1) > ?
+        ORDER BY recorded_downtime_min DESC
     """, (f'-{days} days', threshold_min)).fetchall()
 
+    jobs_list = [dict(r) for r in rows]
+    count = len(jobs_list)
+    if count == 0:
+        summary = f"No jobs exceeded {threshold_min} minutes of recorded downtime in the last {days} days."
+    else:
+        top = jobs_list[:3]
+        top_str = "; ".join(
+            f"{t['job_number']} on {t['line_name'] or 'unknown line'} with {t['recorded_downtime_min']} minutes recorded and {t['unaccounted_min']} minutes unaccounted"
+            for t in top
+        )
+        summary = f"{count} jobs exceeded {threshold_min} minutes of recorded downtime in the last {days} days. The top three by recorded downtime: {top_str}."
+    
     return {
         "threshold_min": threshold_min,
         "days": days,
-        "count": len(rows),
-        "jobs": [dict(r) for r in rows],
+        "count": count,
+        "summary": summary,
+        "jobs": jobs_list,
     }
 
 
@@ -368,7 +480,7 @@ def get_job_summary(conn, job_number):
         FROM jobs j
         LEFT JOIN skus s ON s.id = j.sku_id
         LEFT JOIN lines l ON l.id = j.line_id
-        WHERE j.job_number = ?
+        WHERE j.job_number = ? COLLATE NOCASE
     """, (job_number,)).fetchone()
 
     if not job:
@@ -421,53 +533,52 @@ def get_job_summary(conn, job_number):
     }
 
 
-def ask_herbie(line_id, date, question=None):
-    """The orchestrator. Calls the math, the context, and the LLM."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    stats = get_line_summary(conn, line_id, date)
-    context = get_floor_context(conn, line_id, date)
-    conn.close()
+def _fallback_narrative(intent, stats):
+    """Template fallback for each intent type when the LLM is unavailable."""
+    if intent == "job":
+        return (f"Job {stats.get('job_number', '?')}: FTQ {stats.get('ftq', 0)}%, P2P {stats.get('p2p', 0)}%. "
+                f"Actual {stats.get('actual_units', 0):,} units, scrap {stats.get('scrap_units', 0):,}, "
+                f"recorded downtime {stats.get('recorded_downtime_min', 0)}m, unaccounted {stats.get('unaccounted_min', 0)}m.")
+    if intent == "jobs_over":
+        return (f"{stats.get('count', 0)} jobs exceeded {stats.get('threshold_min', 0)}m of recorded downtime "
+                f"in the last {stats.get('days', 0)} days.")
+    if intent == "unaccounted":
+        return (f"Line {stats.get('line_id', '?')} last {stats.get('days', 0)} days: "
+                f"{stats.get('recorded_min', 0)}m recorded, {stats.get('unaccounted_min', 0)}m unaccounted "
+                f"({stats.get('pct_unaccounted', 0)}% of total lost time).")
+    if intent == "changeover":
+        summary = stats.get("summary", "")
+        if summary:
+            return summary
+        return (f"Changeover {stats.get('from_job', '?')} to {stats.get('to_job', '?')}: "
+                f"actual {stats.get('actual_min', 0)}m vs standard {stats.get('standard_min', 0)}m "
+                f"({stats.get('variance_min', 0)}m variance, {stats.get('variance_pct', 0)}%).")
+    if intent == "line_day":
+        return narrate_capacity_gap(stats, "")
+    return str(stats)
 
-    fallback = narrate_capacity_gap(stats, context)
 
-    if stats["actual_units"] == 0 and stats["run_minutes"] == 0:
-        return {"narrative": fallback, "stats": stats, "context": context,
-                "fallback": fallback, "source": "no-data"}
+def narrate(intent, stats, context=None, question=""):
+    """Generic narrator for the /herbie web route. LLM-driven with template fallback."""
+    if isinstance(stats, dict) and stats.get("actual_units") == 0 and stats.get("run_minutes") == 0 and stats.get("line_id"):
+        return {"narrative": f"Line {stats.get('line_id')} on {stats.get('date')}: no production recorded.",
+                "source": "no-data"}
 
-    if question is None:
-        question = f"Summarize Line {line_id} on {date} and tell me where to look next."
+    if isinstance(stats, dict) and "error" in stats:
+        return {"narrative": stats["error"], "source": "error"}
 
-    prompt = f"""You are Herbie, a Lean manufacturing counselor.
-
-Every number below was calculated in Python. You may quote these numbers
-exactly as written. You may NOT add, subtract, multiply, divide, or
-otherwise derive new numbers. If you need a total, it is already computed
-and listed below.
-
-DIAGNOSTIC PRINCIPLE:
-- A standard that has been run to for months is not wrong because one shift
-  underperformed. Do not tell the manager the standard may need reevaluation.
-- When losses_unexplained is larger than losses_accounted, the correct
-  diagnosis is that the data is incomplete. Tell the manager to revisit the
-  job with the line lead and find out what happened that was not captured.
-- Quote the operator notes directly when they are relevant.
-
-RULES:
-- Be direct. No fluff.
-- Never blame the operator by name or role.
-- Under 180 words.
-- FTQ is First Time Quality. P2P is Produce to Plan (Actual / Target).
-- If you cannot answer something from the data, say so.
-
-HARD NUMBERS (Python-computed, quote exactly):
-{json.dumps(stats, indent=2)}
-
-CONTEXT:
-{context}
-
-Manager's question: {question}
-"""
+    intent_notes = INTENT_NOTES.get(intent, "(none)")
+    # For jobs_over, the raw jobs array confuses small models. Strip it.
+    # The summary field already contains the authoritative answer.
+    payload = dict(stats)
+    if intent == "jobs_over" and isinstance(payload.get("jobs"), list):
+        payload["jobs"] = f"[{len(payload['jobs'])} jobs - see summary]"
+    prompt = GENERIC_NARRATIVE_PROMPT.format(
+        data=json.dumps(payload, indent=2, default=str),
+        context=context or "(none)",
+        intent_notes=intent_notes,
+        question=question
+    )
 
     try:
         r = requests.post(LLM_URL, json={
@@ -480,11 +591,23 @@ Manager's question: {question}
         }, timeout=LLM_TIMEOUT)
         r.raise_for_status()
         narrative = r.json()["choices"][0]["message"]["content"].strip()
-        return {"narrative": narrative, "stats": stats, "context": context,
-                "fallback": fallback, "source": "llm"}
+        return {"narrative": narrative, "source": "llm"}
     except Exception as e:
-        return {"narrative": fallback, "stats": stats, "context": context,
-                "fallback": fallback, "source": "fallback", "error": str(e)}
+        return {"narrative": _fallback_narrative(intent, stats), "source": "fallback", "error": str(e)}
+
+
+def ask_herbie(line_id, date, question=None):
+    """The orchestrator for line/day queries. Kept for backwards compatibility."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    stats = get_line_summary(conn, line_id, date)
+    context = get_floor_context(conn, line_id, date)
+    conn.close()
+
+    if question is None:
+        question = f"Summarize Line {line_id} on {date} and tell me where to look next."
+
+    return narrate("line_day", stats, context, question)
 
 
 if __name__ == "__main__":

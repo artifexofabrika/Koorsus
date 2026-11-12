@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Myarra - Herbie{% endblock %}
+{% block content %}
+<h1>Herbie</h1>
+<div class="sub">The AI Counselor &middot; Herbie Light</div>
+
+<style>
+  .herbie-tabs { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 1rem 0 1.25rem; }
+  .herbie-tab { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); padding: 0.55rem 0.9rem; border-radius: 6px; cursor: pointer; font-size: 0.82rem; font-family: Georgia, serif; }
+  .herbie-tab.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: bold; }
+  .herbie-tab:hover:not(.active) { border-color: var(--accent); }
+  .herbie-panel { display: none; }
+  .herbie-panel.active { display: block; }
+  .herbie-field { display: inline-block; vertical-align: top; margin-right: 1rem; margin-bottom: 0.75rem; min-width: 160px; }
+  .herbie-field label { display: block; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+  .herbie-field input, .herbie-field select { padding: 0.5rem; background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: Georgia, serif; font-size: 0.9rem; box-sizing: border-box; width: 100%; }
+  .herbie-submit { background: var(--accent); color: var(--bg); border: none; padding: 0.65rem 1.4rem; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.9rem; margin-top: 0.25rem; }
+  .herbie-submit:disabled { opacity: 0.6; cursor: wait; }
+  .herbie-answer { margin: 0 0 1.5rem; }
+  .herbie-answer .narrative { background: var(--card-bg); border-left: 3px solid var(--accent); padding: 1.1rem 1.4rem; border-radius: 4px; line-height: 1.6; white-space: pre-wrap; }
+  .herbie-answer .meta { color: var(--muted); font-size: 0.72rem; margin-top: 0.5rem; }
+  .herbie-answer .actions { margin-top: 0.6rem; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .herbie-answer .actions button { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); padding: 0.35rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.78rem; }
+  .herbie-answer .actions button:hover { border-color: var(--accent); color: var(--accent); }
+  .herbie-loading { color: var(--accent); font-style: italic; }
+  .nx-note { margin-top: 1.75rem; padding: 0.9rem 1.1rem; background: rgba(192,168,120,0.08); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 0.82rem; color: var(--muted); }
+  .nx-note strong { color: var(--accent); }
+</style>
+
+<div id="answer-area" class="herbie-answer" style="display:none">
+  <h2 style="color: var(--accent); margin-bottom: 0.6rem; font-size: 1rem;">Herbie says:</h2>
+  <div class="narrative" id="herbie-narrative"></div>
+  <div class="meta" id="herbie-meta"></div>
+  <div class="actions">
+    <button type="button" onclick="copyNarrative()">Copy</button>
+    <button type="button" onclick="downloadNarrative()">Download .txt</button>
+    <button type="button" onclick="window.print()">Print</button>
+    <button type="button" onclick="clearAnswer()">Ask another</button>
+  </div>
+</div>
+
+<div class="herbie-tabs">
+  <button type="button" class="herbie-tab" data-intent="job">1. Job summary</button>
+  <button type="button" class="herbie-tab" data-intent="jobs_over">2. Top downtime jobs</button>
+  <button type="button" class="herbie-tab" data-intent="unaccounted">3. Unaccounted time</button>
+  <button type="button" class="herbie-tab" data-intent="changeover">4. Changeover</button>
+  <button type="button" class="herbie-tab" data-intent="line_day">5. Line day</button>
+</div>
+
+<form id="herbie-form">
+  <input type="hidden" name="intent" id="herbie-intent" value="job">
+
+  <div class="herbie-panel" data-intent="job">
+    <div class="herbie-field">
+      <label>Job number</label>
+      <input type="text" name="job_number" list="job-list" placeholder="WO-2611-196" autocomplete="off">
+      <datalist id="job-list">
+        {% for jn in recent_jobs %}<option value="{{ jn }}"></option>{% endfor %}
+      </datalist>
+    </div>
+  </div>
+
+  <div class="herbie-panel" data-intent="jobs_over">
+    <div class="herbie-field">
+      <label>Threshold (minutes)</label>
+      <input type="number" name="threshold_min" value="20">
+    </div>
+    <div class="herbie-field">
+      <label>Days back</label>
+      <input type="number" name="jobs_over_days" value="7">
+    </div>
+  </div>
+
+  <div class="herbie-panel" data-intent="unaccounted">
+    <div class="herbie-field">
+      <label>Line</label>
+      <select name="unaccounted_line_id">
+        {% for i in range(1, 8) %}<option value="{{ i }}">Line {{ i }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="herbie-field">
+      <label>Days back</label>
+      <input type="number" name="unaccounted_days" value="7">
+    </div>
+    <div class="herbie-field">
+      <label>Shift (optional)</label>
+      <select name="shift">
+        <option value="">All shifts</option>
+        <option value="1">Shift 1</option>
+        <option value="2">Shift 2</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="herbie-panel" data-intent="changeover">
+    <div class="herbie-field">
+      <label>Job number (from or to)</label>
+      <input type="text" name="changeover_job_number" list="co-job-list" placeholder="WO-2611-398" autocomplete="off">
+      <datalist id="co-job-list">
+        {% for jn in co_jobs %}<option value="{{ jn }}"></option>{% endfor %}
+      </datalist>
+    </div>
+  </div>
+
+  <div class="herbie-panel" data-intent="line_day">
+    <div class="herbie-field">
+      <label>Line</label>
+      <select name="line_day_line_id">
+        {% for i in range(1, 8) %}<option value="{{ i }}">Line {{ i }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="herbie-field">
+      <label>Date</label>
+      <input type="date" name="date" value="{{ today }}">
+    </div>
+  </div>
+
+  <button type="submit" class="herbie-submit" id="herbie-submit">Ask Herbie</button>
+</form>
+
+<div class="nx-note">
+  <strong>This is Herbie Light.</strong> Five fixed questions answered by the local AI on this appliance.
+  For natural language questions, follow-up conversation, and proactive end-of-shift coaching, see
+  <strong>Herbie Counselor</strong> on the Orin NX.
+</div>
+
+<script>
+(function() {
+  var tabs = document.querySelectorAll('.herbie-tab');
+  var panels = document.querySelectorAll('.herbie-panel');
+  var intentInput = document.getElementById('herbie-intent');
+  var form = document.getElementById('herbie-form');
+  var submitBtn = document.getElementById('herbie-submit');
+  var answerArea = document.getElementById('answer-area');
+  var narrative = document.getElementById('herbie-narrative');
+  var meta = document.getElementById('herbie-meta');
+
+  function activate(intent) {
+    tabs.forEach(function(t) { t.classList.toggle('active', t.getAttribute('data-intent') === intent); });
+    panels.forEach(function(p) {
+      var active = p.getAttribute('data-intent') === intent;
+      p.classList.toggle('active', active);
+      p.querySelectorAll('input, select').forEach(function(el) {
+        el.disabled = !active;
+      });
+    });
+    intentInput.value = intent;
+    window.location.hash = intent;
+  }
+
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      activate(tab.getAttribute('data-intent'));
+    });
+  });
+
+  var initial = window.location.hash.replace('#', '');
+  if (!initial || !document.querySelector('[data-intent="' + initial + '"]')) {
+    initial = 'job';
+  }
+  activate(initial);
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Herbie is thinking...';
+    answerArea.style.display = 'block';
+    narrative.innerHTML = '<span class="herbie-loading">Herbie is thinking...</span>';
+    meta.innerText = '';
+    window.scrollTo({top: 0, behavior: 'smooth'});
+
+    var formData = new FormData(form);
+    fetch('/herbie', {
+      method: 'POST',
+      body: formData,
+      headers: {'X-Requested-With': 'XMLHttpRequest'}
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      narrative.innerText = data.narrative || '(no response)';
+      meta.innerText = 'Source: ' + (data.source || 'unknown') + (data.error ? ' · ' + data.error : '');
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Ask Herbie';
+    })
+    .catch(function(err) {
+      narrative.innerText = 'Error: ' + err.message;
+      meta.innerText = 'Source: error';
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Ask Herbie';
+    });
+  });
+
+  window.clearAnswer = function() {
+    answerArea.style.display = 'none';
+    narrative.innerText = '';
+    meta.innerText = '';
+  };
+  window.copyNarrative = function() { navigator.clipboard.writeText(narrative.innerText); };
+  window.downloadNarrative = function() {
+    var blob = new Blob([narrative.innerText], {type: 'text/plain'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'herbie-' + new Date().toISOString().slice(0,10) + '.txt';
+    a.click();
+  };
+})();
+</script>
+{% endblock %}

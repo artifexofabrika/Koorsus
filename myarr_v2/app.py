@@ -6,8 +6,12 @@ from db import get_db_connection, ingest_csv
 from onboarding import TEMPLATES, generate_csv, ingest_template, INGEST_ORDER
 from recon import summary_for_window
 from ask import ask as ask_question
+from herbie import (get_job_summary, get_jobs_with_downtime_over,
+                    get_unaccounted_minutes, get_changeover_summary,
+                    get_line_summary, get_floor_context, narrate)
 from datetime import datetime, timedelta
 import json
+import sqlite3
 
 app = Flask(__name__)
 
@@ -891,6 +895,69 @@ def ask_view():
         if question:
             result = ask_question(question)
     return render_template("ask.html", question=question, result=result)
+
+@app.route("/herbie", methods=["GET", "POST"])
+def herbie_view():
+    today = datetime.now().strftime("%Y-%m-%d")
+    result = None
+    if request.method == "POST":
+        intent = request.form.get("intent")
+        conn = get_db_connection()
+        conn.row_factory = sqlite3.Row
+        try:
+            if intent == "job":
+                job_number = (request.form.get("job_number") or "").strip()
+                stats = get_job_summary(conn, job_number)
+                if "error" in stats:
+                    result = {"narrative": stats["error"], "source": "error"}
+                else:
+                    result = narrate("job", stats, None, "Summarize job " + job_number + ".")
+            elif intent == "jobs_over":
+                threshold = int(request.form.get("threshold_min") or 20)
+                days = int(request.form.get("jobs_over_days") or 7)
+                stats = get_jobs_with_downtime_over(conn, threshold, days)
+                result = narrate("jobs_over", stats, None, "Which jobs had more than " + str(threshold) + " minutes of downtime in the last " + str(days) + " days?")
+            elif intent == "unaccounted":
+                line_id = int(request.form.get("unaccounted_line_id") or 1)
+                days = int(request.form.get("unaccounted_days") or 7)
+                shift = request.form.get("shift") or None
+                stats = get_unaccounted_minutes(conn, line_id, days, shift)
+                result = narrate("unaccounted", stats, None, "How much unaccounted time on Line " + str(line_id) + " in the last " + str(days) + " days?")
+            elif intent == "changeover":
+                job_number = (request.form.get("changeover_job_number") or "").strip()
+                stats = get_changeover_summary(conn, job_number)
+                if "error" in stats:
+                    result = {"narrative": stats["error"], "source": "error"}
+                else:
+                    result = narrate("changeover", stats, None, "How did the changeover to job " + job_number + " go?")
+            elif intent == "line_day":
+                line_id = int(request.form.get("line_day_line_id") or 1)
+                date = request.form.get("date") or today
+                stats = get_line_summary(conn, line_id, date)
+                context = get_floor_context(conn, line_id, date)
+                result = narrate("line_day", stats, context, "What happened on Line " + str(line_id) + " on " + date + "?")
+        finally:
+            conn.close()
+        
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify(result or {"narrative": "No result.", "source": "error"})
+    
+    conn2 = get_db_connection()
+    recent = [r["job_number"] for r in conn2.execute(
+        """SELECT DISTINCT j.job_number FROM jobs j
+           JOIN hourly_runs r ON r.job_id = j.id
+           WHERE (r.superseded IS NULL OR r.superseded = 0)
+           ORDER BY j.id DESC LIMIT 30"""
+    ).fetchall()]
+    co_jobs = [r["to_job_number"] for r in conn2.execute(
+        """SELECT DISTINCT to_job_number FROM co_events
+           WHERE to_job_number IS NOT NULL
+           ORDER BY started_at DESC LIMIT 20"""
+    ).fetchall()]
+    conn2.close()
+    return render_template("herbie.html", today=today, result=result,
+                           recent_jobs=recent, co_jobs=co_jobs)
+
 
 @app.route("/favicon.ico")
 def favicon():
