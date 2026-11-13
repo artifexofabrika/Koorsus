@@ -1,12 +1,16 @@
-"""bot/production.py — Hourly production logging with scrap capture.
+"""bot/production.py - Hourly production logging with scrap capture.
 
 Agreed 2026-11-07: "600 parts, 20 scrap" means 600 total, 20 bad, 580 good.
     units_filled = total produced
     scrap_units = the bad subset
     FTQ = (units_filled - scrap_units) / units_filled * 100
 
-Both entry paths pass scrap_units to db.write_hour.
+Agreed 2026-11-13: conversational record flow.
+    record H5 -> prompts for minutes, units, scrap, and (if gap > 1 min)
+    downtime. Each prompt accepts skip where the philosophy permits.
+    One-shot form still works: record H5, 60 min, 9048 units, 72 scrap.
 """
+import json
 import re
 
 from . import db
@@ -47,17 +51,52 @@ def _next_job_hour(conn, job_id):
     return (r['m'] or 0.0) if r else 0.0
 
 
-def _summarize(conn, job, hour, units, scrap, duration, jh_start, jh_end, gap, user=None):
+def _load_pending(s):
+    raw = s.get('pending_text')
+    if not raw:
+        return {}
+    try:
+        return json.loads(raw)
+    except Exception:
+        return {}
+
+
+def _save_pending(s, d):
+    s.set('pending_text', json.dumps(d))
+
+
+def _safe_int(t):
+    m = re.search(r'(\d+)', t or '')
+    return int(m.group(1)) if m else None
+
+
+def _summarize(conn, job, hour, units, scrap, duration, jh_start, jh_end, gap, user=None, dts=None, rate=None):
+    if rate is None:
+        rate = db.ideal_rate(conn, job['line_id'], job['sku_id'])
+    if dts is None:
+        dts = []
     cp = db.case_pack(conn, job['sku_id'])
     cases = db.case_count(units, cp)
     ul = db.unit_label(conn)
     cl = db.case_label(conn)
     scrap_bit = f", {scrap:,} scrap" if scrap else ""
-    reply = (
-        f"Logged: {job['job_number']} H{hour}, {cases:,} {cl} "
-        f"({units:,} {ul}{scrap_bit}), {duration:.0f} min. "
-        f"Job-hours {jh_start:.1f}-{jh_end:.1f}. Gap {gap:.2f}m."
-    )
+    expected_units = rate * duration / 60.0
+    gap_units = expected_units - units
+    downtime_min = sum((d or {}).get('minutes', 0) for d in dts)
+    downtime_units = downtime_min * rate / 60.0
+    unaccounted_units = max(0.0, gap_units - downtime_units)
+    unaccounted_min = unaccounted_units / (rate / 60.0) if rate else 0.0
+    ftq = ((units - scrap) / units * 100) if units else 0.0
+    parts = [
+        f"Recorded: {job['job_number']} H{hour}, {cases:,} {cl} ({units:,} {ul}{scrap_bit}), {duration:.0f} min.",
+        f"Expected {expected_units:,.0f} at {rate:,.0f}/hr. Gap: {gap_units:,.0f} units ({gap:.1f} min).",
+    ]
+    if downtime_min > 0:
+        parts.append(f"Downtime: {downtime_min:.1f} min ({downtime_units:,.0f} units).")
+    if unaccounted_units > 0:
+        parts.append(f"Unaccounted: {unaccounted_units:,.0f} units ({unaccounted_min:.1f} min).")
+    parts.append(f"Job-hours {jh_start:.1f}-{jh_end:.1f}. FTQ {ftq:.1f}%.")
+    reply = ' '.join(parts)
     if user and user.get('line_id') and user['line_id'] != job['line_id']:
         reply += (' (Logged against Line ' + str(job['line_id'])
                   + '; you are assigned to Line ' + str(user['line_id']) + '.)')
@@ -134,67 +173,213 @@ def h_running_job(conn, s, text, user, force=False):
     s.set('shift_hour', hour + 1)
     s.save()
 
-    return _summarize(conn, job, hour, units, scrap, duration, jh_start, jh_end, gap, user=user)
+    return _summarize(conn, job, hour, units, scrap, duration, jh_start, jh_end, gap, user=user, dts=dts, rate=rate)
 
 
-def h_record_hour(conn, s, text, user, force=False):
+def h_record_hour(conn, s, text, user, force=False, _is_continuation=False):
+    pending = _load_pending(s) if _is_continuation else {}
+    if _is_continuation and not pending:
+        s.set('state', 'idle')
+        s.set('pending_text', None)
+        s.save()
+        return "Record session lost. Start over with record H5 ..."
+
     job_no = parse_job_number(text)
     if job_no:
         job = _resolve_job(conn, job_no)
         if not job:
-            return f"No job found for '{job_no}'."
+            return "No job found for " + repr(job_no)
+    elif pending.get('job_number'):
+        job = _resolve_job(conn, pending['job_number'])
     elif s.get('active_job_id'):
-        r = conn.execute(
-            "SELECT job_number FROM jobs WHERE id=?", (s['active_job_id'],)).fetchone()
+        r = conn.execute("SELECT job_number FROM jobs WHERE id=?", (s['active_job_id'],)).fetchone()
         job = _resolve_job(conn, r['job_number']) if r else None
     else:
-        return "Which job? Say: 'record production hour 5, 60 minutes, 7000 units for WO-2026-001'."
+        job = None
     if not job:
-        return "Job not found."
+        return "Which job? Say: record WO-XXXX-XXX H5, 60 minutes, 7000 units, 20 scrap."
+
+    _status = (job.get('status') or '').lower()
+    if _status == 'completed':
+        return job['job_number'] + ' is completed. It cannot receive new production.'
+    if _status == 'paused':
+        return job['job_number'] + ' is paused. Say resume ' + job['job_number'] + ' before logging production.'
 
     hour = parse_hour(text)
+    if hour is None and pending.get('hour'):
+        hour = pending['hour']
     if hour is None:
-        return "Which hour?"
+        s.set('state', 'awaiting_record_hour')
+        _save_pending(s, {'job_number': job['job_number']})
+        s.save()
+        return "Which hour? (e.g. H5 or hour 5)"
 
     m = re.search(r'(\d+(?:\.\d+)?)\s*(?:min|minutes?)', text, re.IGNORECASE)
-    if not m:
-        return "How many minutes?"
-    mins = float(m.group(1))
+    mins = float(m.group(1)) if m else pending.get('minutes')
+    if mins is None:
+        s.set('state', 'awaiting_record_minutes')
+        _save_pending(s, {'job_number': job['job_number'], 'hour': hour})
+        s.save()
+        return "Hour " + str(hour) + ": how many minutes?"
 
     units = parse_bottles(text)
     if units is None:
-        return "How many units?"
+        units = pending.get('units')
+    if units is None:
+        s.set('state', 'awaiting_record_units')
+        _save_pending(s, {'job_number': job['job_number'], 'hour': hour, 'minutes': mins})
+        s.save()
+        return "Hour " + str(hour) + " (" + str(int(mins)) + " min): how many units produced?"
 
-    scrap = db.parse_scrap(text)
+    has_scrap_word = bool(re.search(r'\b(scrap|rework|reject|bad)\b', text, re.IGNORECASE))
+    if has_scrap_word:
+        scrap = db.parse_scrap(text)
+    else:
+        scrap = pending.get('scrap')
+    if scrap is None:
+        s.set('state', 'awaiting_record_scrap')
+        _save_pending(s, {'job_number': job['job_number'], 'hour': hour, 'minutes': mins, 'units': units})
+        s.save()
+        return "Hour " + str(hour) + " (" + str(int(mins)) + " min, " + str(units) + " units): scrap or rework? (say skip for none)"
 
     rate = db.ideal_rate(conn, job['line_id'], job['sku_id'])
     expected = rate * mins / 60.0
+    gap_units = expected - units
+    gap_min = gap_units / (rate / 60.0) if rate else 0.0
+
     ok, reason = check_plausibility(units, expected, force=force)
     if not ok:
         return reason
 
+    dts = parse_downtime(text)
+    if not dts and pending.get('downtime_text'):
+        dts = parse_downtime(pending['downtime_text'])
+    if not dts and gap_min > 1.0 and not pending.get('downtime_asked'):
+        s.set('state', 'awaiting_record_downtime')
+        _save_pending(s, {'job_number': job['job_number'], 'hour': hour, 'minutes': mins, 'units': units, 'scrap': scrap})
+        s.save()
+        return "Hour " + str(hour) + ": gap is " + str(round(gap_min, 1)) + " min. Any downtime to record? (e.g. 2 min filler jam, or skip)"
+
     if job.get('status') != 'running':
-        conn.execute("UPDATE jobs SET status='running' WHERE id=?", (job['id'],))
+        conn.execute("UPDATE jobs SET status=? WHERE id=?", ('running', job['id']))
         conn.commit()
 
     line_id = db.derive_line(conn, job, s, user)
-    db.transition_line(conn, line_id, 'production', job_id=job['id'],
-                       user_id=user['id'] if user else None)
+    db.transition_line(conn, line_id, 'production', job_id=job['id'], user_id=user['id'] if user else None)
 
     jh_start = _next_job_hour(conn, job['id'])
     jh_end = jh_start + mins / 60.0
-    gap = (expected - units) / (rate / 60.0) if rate else 0.0
+    gap = gap_min
     shift = s.get('shift') or current_shift_code()
 
-    db.write_hour(
-        conn, job, shift, f"H{hour}", units, mins,
-        user['id'] if user else None, text, jh_start, jh_end, gap, [],
-        scrap_units=scrap, override_reason=s.get('override_reason'),
-    )
+    db.write_hour(conn, job, shift, "H" + str(hour), units, mins,
+                  user['id'] if user else None, text, jh_start, jh_end, gap, dts,
+                  scrap_units=scrap, override_reason=s.get('override_reason'))
 
     s.set('active_job_id', job['id'])
     s.set('shift', shift)
     s.set('shift_hour', hour + 1)
+    s.set('pending_text', None)
+    s.set('state', 'idle')
     s.save()
 
-    return _summarize(conn, job, hour, units, scrap, mins, jh_start, jh_end, gap, user=user)
+    return _summarize(conn, job, hour, units, scrap, mins, jh_start, jh_end, gap, user=user, dts=dts, rate=rate)
+
+
+def h_record_confirm(conn, s, text, user):
+    pending = _load_pending(s)
+    if not pending or not pending.get('job_number'):
+        s.set('state', 'idle')
+        s.set('pending_text', None)
+        s.save()
+        return 'Nothing to confirm. Say the full record.'
+    pending['downtime_asked'] = True
+    _save_pending(s, pending)
+    s.set('state', 'idle')
+    s.save()
+    return h_record_hour(conn, s, '', user, force=True, _is_continuation=True)
+
+
+_WORD_NUMBERS = {
+    'zero': 0, 'one': 1, 'two': 2, 'to': 2, 'too': 2, 'three': 3,
+    'four': 4, 'for': 4, 'five': 5, 'six': 6, 'seven': 7,
+    'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12,
+}
+
+
+def _parse_small_number(text):
+    t = (text or '').strip().lower()
+    m = re.search(r'(\d+)', t)
+    if m:
+        return int(m.group(1))
+    for tok in re.findall(r'[a-z]+', t):
+        if tok in _WORD_NUMBERS:
+            return _WORD_NUMBERS[tok]
+    return None
+
+
+def _cont_record_hour(conn, s, text, user):
+    pending = _load_pending(s)
+    hour = parse_hour('hour ' + text) or _safe_int(text)
+    if hour is None or hour < 1 or hour > 12:
+        return "Just a number please (e.g. 5)."
+    pending['hour'] = hour
+    _save_pending(s, pending)
+    s.set('state', 'idle')
+    s.save()
+    return h_record_hour(conn, s, '', user, _is_continuation=True)
+
+
+def _cont_record_minutes(conn, s, text, user):
+    pending = _load_pending(s)
+    m = re.search(r'(\d+(?:\.\d+)?)', text or '')
+    if not m:
+        return "Just a number please (minutes)."
+    pending['minutes'] = float(m.group(1))
+    _save_pending(s, pending)
+    s.set('state', 'idle')
+    s.save()
+    return h_record_hour(conn, s, '', user, _is_continuation=True)
+
+
+def _cont_record_units(conn, s, text, user):
+    pending = _load_pending(s)
+    m = re.search(r'(\d[\d, ]*\d|\d)', text or '')
+    if not m:
+        return "How many units produced?"
+    units = int(re.sub(r'[ ,]', '', m.group(1)))
+    pending['units'] = units
+    _save_pending(s, pending)
+    s.set('state', 'idle')
+    s.save()
+    return h_record_hour(conn, s, '', user, _is_continuation=True)
+
+
+def _cont_record_scrap(conn, s, text, user):
+    pending = _load_pending(s)
+    low = (text or '').strip().lower()
+    if low in ('skip', 'none', 'no', ''):
+        pending['scrap'] = 0
+    else:
+        n = _parse_small_number(text)
+        if n is None:
+            return "Just a number please, or say skip."
+        pending['scrap'] = n
+    _save_pending(s, pending)
+    s.set('state', 'idle')
+    s.save()
+    return h_record_hour(conn, s, '', user, _is_continuation=True)
+
+
+def _cont_record_downtime(conn, s, text, user):
+    pending = _load_pending(s)
+    low = (text or '').strip().lower()
+    if low in ('skip', 'none', ''):
+        pending['downtime_text'] = ''
+    else:
+        pending['downtime_text'] = text
+    pending['downtime_asked'] = True
+    _save_pending(s, pending)
+    s.set('state', 'idle')
+    s.save()
+    return h_record_hour(conn, s, '', user, _is_continuation=True)

@@ -72,6 +72,16 @@ def dispatch(conn, s, text, user):
         return handover.cont_handover_notes(conn, s, text, user)
     if state == 'awaiting_hour':
         return _cont_awaiting_hour(conn, s, text, user)
+    if state == 'awaiting_record_hour':
+        return production._cont_record_hour(conn, s, text, user)
+    if state == 'awaiting_record_minutes':
+        return production._cont_record_minutes(conn, s, text, user)
+    if state == 'awaiting_record_units':
+        return production._cont_record_units(conn, s, text, user)
+    if state == 'awaiting_record_scrap':
+        return production._cont_record_scrap(conn, s, text, user)
+    if state == 'awaiting_record_downtime':
+        return production._cont_record_downtime(conn, s, text, user)
     if state == 'awaiting_lunch_dir':
         return maintenance.cont_lunch_dir(conn, s, text, user)
     if state == 'awaiting_cip_dir':
@@ -90,6 +100,9 @@ def dispatch(conn, s, text, user):
     low = text.lower()
 
     # ---- Command matching ----
+    if low == 'confirm':
+        return production.h_record_confirm(conn, s, text, user)
+
     # Help / unknown
     if low in ('help', '/help'):
         return support.h_help(conn, s, text, user)
@@ -134,7 +147,7 @@ def dispatch(conn, s, text, user):
     # Production
     if re.match(r'^(running|run)\b', low):
         return production.h_running_job(conn, s, text, user, force=force)
-    if re.match(r'^record\b', low) and 'production hour' in low:
+    if re.match(r'^record\b', low):
         return production.h_record_hour(conn, s, text, user, force=force)
 
     # Job lifecycle

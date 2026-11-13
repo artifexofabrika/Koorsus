@@ -16,6 +16,7 @@ HOUR_RE = re.compile(r'\bhour\s*(\d+)\b', re.IGNORECASE)
 HOUR_WORD_RE = re.compile(
     r'\bhour\s+(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b',
     re.IGNORECASE)
+HOUR_PREFIX_RE = re.compile(r'(?<![a-zA-Z])h\s*(\d+)\b', re.IGNORECASE)
 LINE_DIGIT_RE = re.compile(r'\bline\s*(\d+)\b', re.IGNORECASE)
 LINE_WORD_RE = re.compile(
     r'\bline\s+(one|two|three|four|five|six|seven|eight)\b', re.IGNORECASE)
@@ -29,7 +30,10 @@ DOWNTIME_RE = re.compile(
 
 def _strip_job_and_hour(text):
     """Remove job number and hour tokens so bottle counting cannot bleed into them."""
-    return HOUR_RE.sub(' ', JOB_RE.sub(' ', text))
+    s = HOUR_RE.sub(' ', text)
+    s = HOUR_PREFIX_RE.sub(' ', s)
+    s = JOB_RE.sub(' ', s)
+    return s
 
 
 def parse_job_number(text):
@@ -49,6 +53,8 @@ def parse_hour(text):
     if m: return int(m.group(1))
     m = HOUR_WORD_RE.search(text)
     if m: return NUMBER_WORDS[m.group(1).lower()]
+    m = HOUR_PREFIX_RE.search(text)
+    if m: return int(m.group(1))
     return None
 
 
