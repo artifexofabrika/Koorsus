@@ -1,5 +1,6 @@
 # MYARRA — SESSION DELTA, 2026-11-13 (Deployment Readiness)
 
+**Superseded by SESSION-DELTA-2026-11-13-SPINE-AUTHORITY.md.** Read only when that delta points you here.
 This delta supersedes SESSION-DELTA-2026-11-12-PWA.md.
 Read alongside PHILOSOPHY.md, HERBIE-ARCHITECTURE.md, and SESSION-DELTA-2026-11-07-REWRITE.md.
 
