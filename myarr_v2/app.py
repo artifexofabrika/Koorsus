@@ -2,7 +2,7 @@
 Myarra Web Application
 """
 from flask import Flask, render_template, request, redirect, url_for, Response, jsonify
-from db import get_db_connection, ingest_csv
+from db import get_db_connection
 from onboarding import TEMPLATES, generate_csv, ingest_template, INGEST_ORDER
 from recon import summary_for_window
 from ask import ask as ask_question
