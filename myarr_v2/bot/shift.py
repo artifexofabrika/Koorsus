@@ -77,16 +77,31 @@ def compute_reconciliation(conn, line_id, shift_code, day):
           AND (r.superseded IS NULL OR r.superseded=0)
     """, (line_id, start.isoformat(), end.isoformat())).fetchall()
 
+    # Agreed 2026-11-13: score each run at its own rate.
+    # The old code took the first run's rate for the entire shift.
     actual = 0
     scrap = 0
-    rate = None
+    production_time = 0.0
+    scrap_time = 0.0
+    weighted_rate_sum = 0.0
+    weighted_min = 0.0
+    distinct_rates = set()
     for r in runs:
-        actual += (r['units_filled'] or 0)
-        scrap += (r['scrap_units'] or 0)
-        if rate is None:
-            rate = db.ideal_rate(conn, line_id, r['sku_id'])
-    if not rate or rate <= 0:
-        rate = 600.0
+        units = r['units_filled'] or 0
+        s_ = r['scrap_units'] or 0
+        actual += units
+        scrap += s_
+        run_rate = db.ideal_rate(conn, line_id, r['sku_id'])
+        if not run_rate or run_rate <= 0:
+            run_rate = 600.0
+        production_time += ((units - s_) / run_rate) * 60.0
+        scrap_time += (s_ / run_rate) * 60.0
+        dur = r['duration_min'] or 60
+        weighted_rate_sum += dur * run_rate
+        weighted_min += dur
+        distinct_rates.add(run_rate)
+    rate = (weighted_rate_sum / weighted_min) if weighted_min else 600.0
+    rate_mixed = len(distinct_rates) > 1
 
     good = actual - scrap
 
@@ -122,8 +137,7 @@ def compute_reconciliation(conn, line_id, shift_code, day):
     shift_len = (end - start).total_seconds() / 60.0
     usable = shift_len - lunch
 
-    production_time = (good / rate) * 60.0 if rate else 0.0
-    scrap_time = (scrap / rate) * 60.0 if rate else 0.0
+    # production_time and scrap_time are computed per run above.
     residual = usable - production_time - scrap_time - downtime
     ftq_pct = (good / actual * 100.0) if actual else 0.0
 
@@ -132,7 +146,8 @@ def compute_reconciliation(conn, line_id, shift_code, day):
         'usable_min': usable, 'actual_units': actual, 'scrap_units': scrap,
         'good_units': good, 'downtime_min': downtime,
         'production_time_min': production_time, 'scrap_time_min': scrap_time,
-        'residual_min': residual, 'rate': rate, 'ftq_pct': ftq_pct,
+        'residual_min': residual, 'rate': rate, 'rate_mixed': rate_mixed,
+        'ftq_pct': ftq_pct,
         'run_count': len(runs),
     }
 

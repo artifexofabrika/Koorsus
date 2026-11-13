@@ -127,12 +127,41 @@ def get_line_summary(conn, line_id, date):
     """, (line_id, date)).fetchall()
     downtime_by_station = {s["station"]: round(s["minutes"], 1) for s in station_rows}
 
-    rate = conn.execute("""
-        SELECT COALESCE(AVG(lsr.ideal_rate), 0) AS rate
-        FROM line_sku_rates lsr
-        WHERE lsr.line_id = ?
-    """, (line_id,)).fetchone()
-    standard_rate = rate["rate"] if rate else 0
+    # Agreed 2026-11-13: the rate is a property of (line, sku), never an average.
+    # Compute lost capacity per downtime event at the run's own SKU rate.
+    lost_row = conn.execute("""
+        SELECT COALESCE(SUM(d.minutes * COALESCE(lsr.ideal_rate, 0) / 60.0), 0) AS lost_capacity
+        FROM downtime_events d
+        JOIN hourly_runs r ON r.id = d.run_id
+        LEFT JOIN jobs j ON j.id = r.job_id
+        LEFT JOIN line_sku_rates lsr
+               ON lsr.line_id = r.line_id
+              AND lsr.sku_id = COALESCE(r.sku_id, j.sku_id)
+        WHERE r.line_id = ?
+          AND date(r.recorded_at) = ?
+    """, (line_id, date)).fetchone()
+    lost_capacity = (lost_row["lost_capacity"] if lost_row else 0) or 0
+
+    # Weighted rate is for narrative phrasing only. rate_mixed flags >1 rate.
+    rate_row = conn.execute("""
+        SELECT
+            COALESCE(SUM(r.duration_min * lsr.ideal_rate), 0) AS weighted_rate_sum,
+            COALESCE(SUM(CASE WHEN lsr.ideal_rate IS NOT NULL THEN r.duration_min ELSE 0 END), 0) AS rated_min,
+            COUNT(DISTINCT lsr.ideal_rate) AS distinct_rates
+        FROM hourly_runs r
+        LEFT JOIN jobs j ON j.id = r.job_id
+        LEFT JOIN line_sku_rates lsr
+               ON lsr.line_id = r.line_id
+              AND lsr.sku_id = COALESCE(r.sku_id, j.sku_id)
+        WHERE r.line_id = ?
+          AND date(r.recorded_at) = ?
+          AND (r.superseded IS NULL OR r.superseded = 0)
+    """, (line_id, date)).fetchone()
+    weighted_rate_sum = (rate_row["weighted_rate_sum"] if rate_row else 0) or 0
+    rated_min = (rate_row["rated_min"] if rate_row else 0) or 0
+    distinct_rates = (rate_row["distinct_rates"] if rate_row else 0) or 0
+    standard_rate = (weighted_rate_sum / rated_min) if rated_min else 0
+    rate_mixed = distinct_rates > 1
 
     target = conn.execute("""
         SELECT COALESCE(SUM(target_quantity), 0) AS target
@@ -142,7 +171,7 @@ def get_line_summary(conn, line_id, date):
     """, (line_id, date)).fetchone()
     target_units = target["target"] if target else 0
 
-    lost_capacity = (downtime_min / 60.0) * standard_rate if standard_rate else 0
+    # lost_capacity is computed above, per run at the run's own SKU rate.
     gross_production = actual_units + scrap_units
     theoretical_capacity = gross_production + lost_capacity
     capacity_gap = (theoretical_capacity - target_units) if target_units else 0
@@ -163,6 +192,7 @@ def get_line_summary(conn, line_id, date):
         "downtime_min": round(downtime_min, 1),
         "downtime_by_station": downtime_by_station,
         "standard_rate": round(standard_rate, 0),
+        "rate_mixed": rate_mixed,
         "target_units": int(target_units),
         "lost_capacity": int(lost_capacity),
         "gross_production": int(gross_production),
@@ -226,10 +256,16 @@ def narrate_capacity_gap(stats, context):
     if s["actual_units"] == 0 and s["run_minutes"] == 0:
         return f"Line {s['line_id']} on {s['date']}: no production recorded. Nothing to diagnose."
 
+    if s.get('rate_mixed'):
+        downtime_line = (f"Downtime: {s['downtime_min']} minutes across runs at the rates "
+                         f"on file is {s['lost_capacity']:,} units of lost capacity.")
+    else:
+        downtime_line = (f"Downtime: {s['downtime_min']} minutes, which at "
+                         f"{s['standard_rate']:,.0f}/hr is {s['lost_capacity']:,} units of lost capacity.")
     parts = [
         f"Line {s['line_id']} on {s['date']}.",
         f"Target: {s['target_units']:,}. Actual good output: {s['actual_units']:,}. Scrap: {s['scrap_units']:,}.",
-        f"Downtime: {s['downtime_min']} minutes, which at {s['standard_rate']:,.0f}/hr is {s['lost_capacity']:,} units of lost capacity.",
+        downtime_line,
         f"Capacity gap: {s['capacity_gap']:+,} units against target.",
         f"Losses accounted for: {s['losses_accounted']:,} units (scrap plus lost capacity).",
         f"Losses unexplained: {s['losses_unexplained']:,} units.",
