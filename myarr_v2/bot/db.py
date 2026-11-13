@@ -261,3 +261,20 @@ def get_user_by_tg(conn, telegram_id):
         "SELECT * FROM users WHERE telegram_id=? AND active=1",
         (str(telegram_id),)).fetchone()
     return dict(row) if row else None
+
+def reconcile_session(conn, s):
+    # Agreed 2026-11-13: clear stale session pointers. Spine is authority.
+    jid = s.get('active_job_id')
+    if jid:
+        live = conn.execute(
+            'SELECT 1 FROM line_events WHERE job_id=? AND ended_at IS NULL LIMIT 1',
+            (jid,)).fetchone()
+        if not live:
+            s.set('active_job_id', None)
+    cid = s.get('active_changeover_id')
+    if cid:
+        ev = conn.execute(
+            'SELECT ended_at FROM co_events WHERE id=?', (cid,)).fetchone()
+        if not ev or ev['ended_at'] is not None:
+            s.set('active_changeover_id', None)
+    s.save()

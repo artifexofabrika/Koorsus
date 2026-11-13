@@ -41,6 +41,7 @@ def _cont_awaiting_hour(conn, s, text, user):
 
 
 def dispatch(conn, s, text, user):
+    db.reconcile_session(conn, s)
     _audit(conn, user, text)
     text = (text or '').strip()
     if not text:

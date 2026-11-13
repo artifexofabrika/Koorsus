@@ -57,15 +57,22 @@ def try_note(conn, s, text, user):
         if not target:
             return f"No existing {period} entry found today for your line."
     else:
-        if not s.get('active_job_id'):
+        job_id = s.get('active_job_id')
+        if not job_id:
+            line_id = s.get('line_id') or (user.get('line_id') if user else None)
+            if line_id:
+                cur = db.current_line_event(conn, line_id)
+                if cur and cur['job_id']:
+                    job_id = cur['job_id']
+        if not job_id:
             return "No active job. Say 'note hour N: text' to target a specific hour."
         target = conn.execute("""
             SELECT id, period FROM hourly_runs
             WHERE job_id=? AND (superseded IS NULL OR superseded=0)
             ORDER BY id DESC LIMIT 1
-        """, (s['active_job_id'],)).fetchone()
+        """, (job_id,)).fetchone()
         if not target:
-            return "No hourly entries found for the active job."
+            return "No hourly entries found for the current job."
         period = target['period']
 
     conn.execute("UPDATE hourly_runs SET notes=? WHERE id=?", (note_text, target['id']))

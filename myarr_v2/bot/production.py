@@ -47,17 +47,21 @@ def _next_job_hour(conn, job_id):
     return (r['m'] or 0.0) if r else 0.0
 
 
-def _summarize(conn, job, hour, units, scrap, duration, jh_start, jh_end, gap):
+def _summarize(conn, job, hour, units, scrap, duration, jh_start, jh_end, gap, user=None):
     cp = db.case_pack(conn, job['sku_id'])
     cases = db.case_count(units, cp)
     ul = db.unit_label(conn)
     cl = db.case_label(conn)
     scrap_bit = f", {scrap:,} scrap" if scrap else ""
-    return (
+    reply = (
         f"Logged: {job['job_number']} H{hour}, {cases:,} {cl} "
         f"({units:,} {ul}{scrap_bit}), {duration:.0f} min. "
         f"Job-hours {jh_start:.1f}-{jh_end:.1f}. Gap {gap:.2f}m."
     )
+    if user and user.get('line_id') and user['line_id'] != job['line_id']:
+        reply += (' (Logged against Line ' + str(job['line_id'])
+                  + '; you are assigned to Line ' + str(user['line_id']) + '.)')
+    return reply
 
 
 def h_running_job(conn, s, text, user, force=False):
@@ -66,11 +70,12 @@ def h_running_job(conn, s, text, user, force=False):
     if not job:
         return f"No job found for '{job_no or text}'."
 
-    if s.get('active_job_id') and s['active_job_id'] != job['id']:
-        active = conn.execute(
-            "SELECT job_number FROM jobs WHERE id=?", (s['active_job_id'],)).fetchone()
-        if active:
-            return f"You have {active['job_number']} active. End or pause it first."
+    _status = (job.get('status') or '').lower()
+    if _status == 'completed':
+        return job['job_number'] + ' is completed. It cannot receive new production.'
+    if _status == 'paused':
+        return (job['job_number'] + ' is paused. Say resume '
+                + job['job_number'] + ' before logging production.')
 
     active_line = conn.execute("""
         SELECT j.job_number, le.state FROM jobs j
@@ -129,7 +134,7 @@ def h_running_job(conn, s, text, user, force=False):
     s.set('shift_hour', hour + 1)
     s.save()
 
-    return _summarize(conn, job, hour, units, scrap, duration, jh_start, jh_end, gap)
+    return _summarize(conn, job, hour, units, scrap, duration, jh_start, jh_end, gap, user=user)
 
 
 def h_record_hour(conn, s, text, user, force=False):
@@ -192,4 +197,4 @@ def h_record_hour(conn, s, text, user, force=False):
     s.set('shift_hour', hour + 1)
     s.save()
 
-    return _summarize(conn, job, hour, units, scrap, mins, jh_start, jh_end, gap)
+    return _summarize(conn, job, hour, units, scrap, mins, jh_start, jh_end, gap, user=user)

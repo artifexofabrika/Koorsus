@@ -24,11 +24,22 @@ def h_start_job(conn, s, text, user):
     if not job:
         return _explain_no_job(conn, job_no or text, conf, alts)
 
+    _status = (job.get('status') or '').lower()
+    if _status == 'completed':
+        return job['job_number'] + ' is completed. It cannot be started again.'
+    if _status == 'paused':
+        return (job['job_number'] + ' is paused. Say resume '
+                + job['job_number'] + ' to resume it.')
+
+    db.reconcile_session(conn, s)
+
     if s.get('active_job_id') and s['active_job_id'] != job['id']:
         active = conn.execute(
-            "SELECT job_number FROM jobs WHERE id=?", (s['active_job_id'],)).fetchone()
+            "SELECT job_number, line_id FROM jobs WHERE id=?", (s['active_job_id'],)).fetchone()
         if active:
-            return f"You have {active['job_number']} active. End or pause it first."
+            return ('You have ' + active['job_number'] + ' active on Line '
+                    + str(active['line_id']) + '. End or pause it first, '
+                    'or say status line ' + str(active['line_id']) + '.')
 
     # Strict line enforcement: refuse if the line is running something else.
     active_line = conn.execute("""
