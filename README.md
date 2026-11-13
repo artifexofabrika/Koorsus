@@ -16,7 +16,7 @@ After that, the newest session delta supersedes everything else. Read in
 this order:
 
 1. `PHILOSOPHY.md` — philosophy and inviolable commitments
-2. `SESSION-DELTA-2026-11-12-PWA.md` — Odoo Apps Store publication,
+2. `SESSION-DELTA-2026-11-13-DEPLOYMENT-READY.md` — Odoo Apps Store publication,
    Apify lead scraping, Odoo CRM setup, current state and next steps
 3. `HANDOFF.md` — architecture, hardware, network, history
 4. Older `SESSION-DELTA-*.md` — only when the newest delta points you there
