@@ -130,3 +130,77 @@ def h_unscheduled(conn, s, text, user):
     s.set('state', 'idle')
     s.save()
     return f"Line {lid} now UNSCHEDULED. Reason: {reason}"
+
+
+def _prior_line_event(conn, line_id, before_iso):
+    return conn.execute(
+        'SELECT * FROM line_events WHERE line_id=? AND started_at < ? '
+        'ORDER BY started_at DESC LIMIT 1', (line_id, before_iso)).fetchone()
+
+
+def _resume_after(conn, s, user, context):
+    lid = s.get('line_id') or (user.get('line_id') if user else None) or 1
+    cur = db.current_line_event(conn, lid)
+    if not cur or cur['state'] not in ('lunch', 'cip'):
+        return 'Line ' + str(lid) + ' is not in ' + context.lower() + '.'
+    prev = _prior_line_event(conn, lid, cur['started_at'])
+    if prev and prev['state'] == 'production' and prev['job_id']:
+        row = conn.execute('SELECT job_number FROM jobs WHERE id=?', (prev['job_id'],)).fetchone()
+        db.transition_line(conn, lid, 'production', job_id=prev['job_id'],
+                           user_id=user['id'] if user else None)
+        return context + ' ended. Back to production on ' + (row['job_number'] if row else 'the last job') + '.'
+    if prev and prev['state'] == 'changeover' and prev['co_event_id']:
+        ce = conn.execute('SELECT ended_at FROM co_events WHERE id=?', (prev['co_event_id'],)).fetchone()
+        if ce and ce['ended_at'] is None:
+            db.transition_line(conn, lid, 'changeover', co_event_id=prev['co_event_id'],
+                               user_id=user['id'] if user else None)
+            return context + ' ended. Back to changeover.'
+    db.transition_line(conn, lid, 'idle', reason='post-' + context.lower(),
+                       user_id=user['id'] if user else None)
+    return context + ' ended. Line ' + str(lid) + ' IDLE.'
+
+
+def h_lunch(conn, s, text, user):
+    low = (text or '').lower()
+    if re.match(r'^end\s+lunch\b', low):
+        return _resume_after(conn, s, user, 'Lunch')
+    if re.match(r'^start\s+lunch\b', low):
+        lid = _set_line_state(conn, s, user, 'lunch')
+        s.set('state', 'idle'); s.save()
+        return 'Line ' + str(lid) + ' now in LUNCH.'
+    s.set('state', 'awaiting_lunch_dir'); s.save()
+    return 'Starting or ending lunch?'
+
+
+def h_cip(conn, s, text, user):
+    low = (text or '').lower()
+    if re.match(r'^end\s+cip\b', low):
+        return _resume_after(conn, s, user, 'CIP')
+    if re.match(r'^start\s+cip\b', low):
+        lid = _set_line_state(conn, s, user, 'cip')
+        s.set('state', 'idle'); s.save()
+        return 'Line ' + str(lid) + ' now in CIP.'
+    s.set('state', 'awaiting_cip_dir'); s.save()
+    return 'Starting or ending CIP?'
+
+
+def cont_lunch_dir(conn, s, text, user):
+    low = (text or '').strip().lower()
+    if low.startswith(('start', 'begin', 'yes')):
+        s.set('state', 'idle'); s.save()
+        return h_lunch(conn, s, 'start lunch', user)
+    if low.startswith(('end', 'stop', 'done', 'finish')):
+        s.set('state', 'idle'); s.save()
+        return h_lunch(conn, s, 'end lunch', user)
+    return 'Say start or end.'
+
+
+def cont_cip_dir(conn, s, text, user):
+    low = (text or '').strip().lower()
+    if low.startswith(('start', 'begin', 'yes')):
+        s.set('state', 'idle'); s.save()
+        return h_cip(conn, s, 'start cip', user)
+    if low.startswith(('end', 'stop', 'done', 'finish')):
+        s.set('state', 'idle'); s.save()
+        return h_cip(conn, s, 'end cip', user)
+    return 'Say start or end.'

@@ -13,7 +13,7 @@ from datetime import datetime
 from . import db
 from . import production, changeover, maintenance, handover, notes, support, jobs, shift
 
-from parsers import (parse_job_number, parse_hour, parse_line_number)
+from parsers import (parse_job_number, parse_hour, parse_line_number, parse_int)
 
 
 # Agreed 2026-11-06: every incoming message is logged before routing.
@@ -22,6 +22,22 @@ def _audit(conn, user, text):
         "INSERT INTO audit_log (user_id, raw_text, created_at) VALUES (?,?,?)",
         (user['id'] if user else None, text, datetime.now().isoformat()))
     conn.commit()
+
+
+# Agreed 2026-11-13: restored from bot_v2.py at ec65562^.
+# h_running_job sets state=awaiting_hour when no hour is parsed;
+# nothing caught it and the operator was trapped. F1 in the audit.
+def _cont_awaiting_hour(conn, s, text, user):
+    hour = parse_hour('hour ' + text) or parse_int(text)
+    if hour is None or hour < 1 or hour > 12:
+        return 'Just a number, please (for example: 5).'
+    pending = s.get('pending_text') or ''
+    s.set('pending_text', None)
+    s.set('state', 'idle')
+    s.save()
+    cleaned = re.sub(r'\bhour\s+\w+\b', '', pending, flags=re.IGNORECASE).strip()
+    cleaned = re.sub(r'\s+', ' ', cleaned)
+    return production.h_running_job(conn, s, cleaned + ' hour ' + str(hour), user)
 
 
 def dispatch(conn, s, text, user):
@@ -53,6 +69,24 @@ def dispatch(conn, s, text, user):
         return changeover.cont_co_step(conn, s, text, user)
     if state == 'awaiting_handover_notes':
         return handover.cont_handover_notes(conn, s, text, user)
+    if state == 'awaiting_hour':
+        return _cont_awaiting_hour(conn, s, text, user)
+    if state == 'awaiting_lunch_dir':
+        return maintenance.cont_lunch_dir(conn, s, text, user)
+    if state == 'awaiting_cip_dir':
+        return maintenance.cont_cip_dir(conn, s, text, user)
+
+    # Agreed 2026-11-13: confirm prefix and voice 'and'->'end',
+    # restored from bot_v2.py and bot_v3.py at ec65562^.
+    force = False
+    if re.match(r'^confirm[\s,]+', text, re.IGNORECASE):
+        force = True
+        text = re.sub(r'^confirm[\s,]+', '', text, count=1, flags=re.IGNORECASE).strip()
+        if not text:
+            return 'Say the full command after confirm, please.'
+    text = re.sub(r'^(and|en)\s+(lunch|cip|maintenance|change|job|shift|wo|work|order)\b',
+                  lambda m: 'end ' + m.group(2), text, flags=re.IGNORECASE)
+    low = text.lower()
 
     # ---- Command matching ----
     # Help / unknown
@@ -74,6 +108,12 @@ def dispatch(conn, s, text, user):
     if re.match(r'^end\s+shift\b', low):
         return shift.h_end_shift(conn, s, text, user)
 
+    # Lunch and CIP. A bare lunch or cip prompts for direction.
+    if re.match(r'^(start\s+)?lunch\b|^end\s+lunch\b', low):
+        return maintenance.h_lunch(conn, s, text, user)
+    if re.match(r'^(start\s+)?cip\b|^end\s+cip\b', low):
+        return maintenance.h_cip(conn, s, text, user)
+
     # Maintenance
     if re.match(r'^end\s+maintenance\b', low):
         return maintenance.h_end_maintenance(conn, s, text, user)
@@ -92,9 +132,9 @@ def dispatch(conn, s, text, user):
 
     # Production
     if re.match(r'^(running|run)\b', low):
-        return production.h_running_job(conn, s, text, user)
+        return production.h_running_job(conn, s, text, user, force=force)
     if re.match(r'^record\b', low) and 'production hour' in low:
-        return production.h_record_hour(conn, s, text, user)
+        return production.h_record_hour(conn, s, text, user, force=force)
 
     # Job lifecycle
     if re.match(r'^(end(ing)?|finish(ing)?|clos\w*)\b', low):
