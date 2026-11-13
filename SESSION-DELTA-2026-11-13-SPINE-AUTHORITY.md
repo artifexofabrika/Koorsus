@@ -1,5 +1,6 @@
 # SESSION DELTA 2026-11-13 - SPINE AUTHORITY
 
+**Supplemented by SESSION-DELTA-2026-11-13-AFTERNOON.md.** Read both for the full day.
 This delta supersedes SESSION-DELTA-2026-11-13-DEPLOYMENT-READY.md.
 Read alongside PHILOSOPHY.md, HERBIE-ARCHITECTURE.md, and the audit
 document delivered to the prior instance on the morning of 2026-11-13.
