@@ -45,10 +45,11 @@ def _resolve_job(conn, job_no):
 
 
 def _next_job_hour(conn, job_id):
+    # Agreed 2026-11-13: fall back to SUM(duration_min)/60 when job_hour_end is NULL.
     r = conn.execute(
-        "SELECT MAX(job_hour_end) AS m FROM hourly_runs WHERE job_id=?",
-        (job_id,)).fetchone()
-    return (r['m'] or 0.0) if r else 0.0
+        'SELECT COALESCE(MAX(job_hour_end), (SELECT SUM(duration_min) FROM hourly_runs WHERE job_id=?)/60.0, 0.0) AS m FROM hourly_runs WHERE job_id=?',
+        (job_id, job_id)).fetchone()
+    return float(r['m']) if r and r['m'] is not None else 0.0
 
 
 def _load_pending(s):
