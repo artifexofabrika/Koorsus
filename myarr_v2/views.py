@@ -106,11 +106,11 @@ FROM v_oee_by_line_day
 V_STAGE_C = """
 CREATE VIEW IF NOT EXISTS v_oee_summary AS
 SELECT line_id, day,
-       production_min, changeover_min, unplanned_maint_min, idle_min, actual_units, expected_units, scrap_units,
-       ROUND(production_min / NULLIF(production_min + changeover_min + unplanned_maint_min + idle_min, 0), 3) AS availability,
+       production_min, changeover_min, unplanned_maint_min, idle_min, unscheduled_min, actual_units, expected_units, scrap_units,
+       ROUND(production_min / NULLIF(production_min + changeover_min + unplanned_maint_min + idle_min + unscheduled_min, 0), 3) AS availability,
        ROUND(actual_units / NULLIF(expected_units, 0), 3) AS performance,
        ROUND((actual_units - scrap_units) / NULLIF(actual_units, 0), 3) AS quality,
-       ROUND((production_min / NULLIF(production_min + changeover_min + unplanned_maint_min + idle_min, 0)) *
+       ROUND((production_min / NULLIF(production_min + changeover_min + unplanned_maint_min + idle_min + unscheduled_min, 0)) *
              (actual_units / NULLIF(expected_units, 0)) *
              ((actual_units - scrap_units) / NULLIF(actual_units, 0)), 3) AS oee
 FROM v_oee_by_line_day;

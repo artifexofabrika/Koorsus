@@ -5,6 +5,10 @@ LLM_URL = "http://127.0.0.1:8080/v1/chat/completions"
 LLM_TIMEOUT = 60
 DB_PATH = "/mnt/lake/myarra.db"
 
+# Agreed 2026-11-13: v_unaccounted_minutes_by_run is the canonical view.
+# It is the one Herbie uses; it nets recorded downtime and floors at zero.
+# v_unaccounted_by_line_day is a raw capacity gap and must not be offered
+# under the name unaccounted, or /ask and Herbie give different answers.
 AVAILABLE_VIEWS = [
     "v_oee_by_line_day",
     "v_oee_summary",
@@ -12,7 +16,7 @@ AVAILABLE_VIEWS = [
     "v_production_vs_standard",
     "v_changeover_variance",
     "v_changeover_by_station",
-    "v_unaccounted_by_line_day",
+    "v_unaccounted_minutes_by_run",
     "v_maintenance_by_station",
     "v_pdca_trend",
 ]
@@ -43,7 +47,7 @@ SYSTEM_PROMPT = (
     "- If asked about line names (e.g. 'Line 1'), use line_id = 1.\n"
     "- If asked about stations (e.g. 'labeler'), use the 'station' column.\n"
     "- If the question cannot be answered with these views, return 'UNANSWERABLE'.\n"
-    "- If the question is ambiguous, make a reasonable assumption and return the SQL."
+    "- If the question is ambiguous, or the answer is not derivable from these views with confidence, return UNANSWERABLE. Do not guess. A refusal is better than a wrong query."
 )
 
 def ask(question, timeout=LLM_TIMEOUT):
@@ -63,7 +67,7 @@ def ask(question, timeout=LLM_TIMEOUT):
         return {"error": "LLM request failed: " + str(e)}
 
     if raw.upper().strip() == 'UNANSWERABLE':
-        return {"error": "I cannot answer that question with the available data."}
+        return {"error": "I do not have the data to answer that question. The views available do not cover it."}
 
     sql = raw.strip().strip('`').strip()
     if not sql.upper().startswith('SELECT'):
