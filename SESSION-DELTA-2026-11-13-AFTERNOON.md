@@ -180,6 +180,45 @@ Action: watch item only. Do not mention them in marketing. If AuditHive
 ever announces production-line or OEE features, reassess. Until then,
 monitoring is enough.
 
+## Parking lot additions, 2026-11-13 evening
+
+### Myarra MCP server for strategy-layer interop
+
+Myarra's existing views exposed as MCP tools, so a customer's AI client
+(Claude Desktop, Cursor) can query the floor through a standard connector,
+and so a strategy layer can read Myarra directly. Read-only first: six to
+ten tools wrapping herbie.get_job_summary, get_unaccounted_minutes,
+get_changeover_summary, get_line_summary, plus a list_lines_status. Record
+and relog tools second, only after the read-only set proves stable.
+
+Reference implementation and interop target: Hoshin Kanri MCP server,
+github.com/wellknownmcp/hoshin-kanri (MIT). Their plant-pulse-to-matrix
+skill expects to read a plant's daily records. Today the source is a
+Claude artifact; it could be Myarra on the customer's Jetson. Two
+sovereign tools, one connector, no cloud in between. That is the version
+worth pitching.
+
+The server.json at the repo root is the manifest pattern to follow when
+we get there: reverse-DNS name (io.github.artifexofabrika/myarra),
+streamable HTTP bound to the Jetson over the LAN, no cloud remote,
+_meta.highlights as the feature list a registry consumer reads first.
+
+Outreach: DM to the developer (u/animam-tech) planned for this weekend,
+substance first, no link, opening with their sovereign default and the
+shared Hoshin Kanri ground. Await reply.
+
+Status: parked behind the testing pass and the deployment gate (backup,
+installation procedure, config extraction). Not revenue this month. A
+positioning and portfolio item.
+
+### Three files to read if we proceed with the MCP server
+
+- mcp-server/lib/tool-definitions.js (how they declare tool schemas)
+- mcp-server/lib/json-store.js (atomicity in a small sovereign store)
+- server.json (the manifest, already read 2026-11-13)
+
+Roughly 400 lines total. Do not read the whole repo.
+
 ## Remaining queue
 
 Immediate (small, before the testing pass):
