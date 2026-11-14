@@ -1,15 +1,23 @@
-"""bot/changeover.py — Changeover capture and per-step timing.
+"""bot/changeover.py ? Changeover capture and per-step timing.
+
+Whole-file rewrite 2026-11-14. The file had been patched five times in one
+day and the two-job path of h_changeover_start had been orphaned into
+cont_changeover_confirm by an anchor that matched the wrong region. This
+is the clean version.
 
 Agreed 2026-11-07: modular rewrite. Changeover is one concern.
-Steps captured per station; aggregate actual is operator-stated wall clock,
-never the sum of steps (steps overlap in packaging).
+Agreed 2026-11-14: yes/no confirmation for single-job suggestions.
+Steps captured per station; aggregate actual is operator-stated wall
+clock, never the sum of steps (steps overlap in packaging).
 
 Commands:
-    changeover job WO-A to WO-B     (start)
+    changeover job WO-A to WO-B     (start, two jobs)
+    changeover WO-A                 (suggest next, yes/no)
     end changeover                  (begin the duration prompt)
     <N>                             (total minutes)
     <N>                             (each step, in order)
 """
+import json
 from datetime import datetime
 
 from . import db
@@ -43,17 +51,8 @@ def _log_bom_changes(conn, co_id, from_sku, to_sku):
     conn.commit()
 
 
-def h_changeover_start(conn, s, text, user):
-    jobs = parse_all_job_numbers(text)
-    if len(jobs) < 2:
-        return "Changeover needs two jobs. Say: 'changeover job WO-2026-001 to WO-2026-002'."
-    fj = _resolve_job(conn, jobs[0])
-    if not fj:
-        return f"No job found for '{jobs[0]}'."
-    tj = _resolve_job(conn, jobs[1])
-    if not tj:
-        return f"No job found for '{jobs[1]}'."
-
+def _start_changeover(conn, s, fj, tj, user):
+    """Create the co_event, log BOM changes, transition line, save session."""
     proc = conn.execute(
         "SELECT * FROM co_procedures_v2 WHERE line_id=? AND from_sku_id=? AND to_sku_id=?",
         (fj['line_id'], fj['sku_id'], tj['sku_id'])).fetchone()
@@ -82,9 +81,93 @@ def h_changeover_start(conn, s, text, user):
 
     t = now.strftime('%H:%M')
     if proc:
-        return f"Changeover started at {t}: {fj['job_number']} -> {tj['job_number']}. Say 'end changeover' when done."
-    return (f"Changeover started at {t}: {fj['job_number']} -> {tj['job_number']}. "
-            f"No procedure on file — will record actual time only.")
+        return (f"Changeover started at {t}: {fj['job_number']} -> "
+                f"{tj['job_number']}. Say 'end changeover' when done.")
+    return (f"Changeover started at {t}: {fj['job_number']} -> "
+            f"{tj['job_number']}. No procedure on file ? will record actual time only.")
+
+
+def h_changeover_start(conn, s, text, user):
+    jobs = parse_all_job_numbers(text)
+
+    # Two jobs named: start immediately.
+    if len(jobs) >= 2:
+        fj = _resolve_job(conn, jobs[0])
+        if not fj:
+            return f"No job found for '{jobs[0]}'."
+        tj = _resolve_job(conn, jobs[1])
+        if not tj:
+            return f"No job found for '{jobs[1]}'."
+        return _start_changeover(conn, s, fj, tj, user)
+
+    # One job named: suggest the next scheduled on the same line, yes/no.
+    if len(jobs) == 1:
+        fj = _resolve_job(conn, jobs[0])
+        if not fj:
+            return f"No job found for '{jobs[0]}'."
+        nxt = conn.execute(
+            "SELECT id, job_number FROM jobs WHERE line_id=? "
+            "AND status IN ('scheduled','running') "
+            "AND id != ? ORDER BY scheduled_start LIMIT 1",
+            (fj['line_id'], fj['id'])).fetchone()
+        if not nxt:
+            return ("No next job scheduled on Line " + str(fj['line_id'])
+                    + ". Say 'changeover " + jobs[0] + " to <target job>'.")
+        s.set('state', 'awaiting_changeover_confirm')
+        s.set('pending_text', json.dumps({
+            'from_job': jobs[0],
+            'to_job': nxt['job_number'],
+            'line_id': fj['line_id'],
+        }))
+        s.set('pending_job_id', fj['id'])
+        s.set('pending_target_job_id', nxt['id'])
+        s.save()
+        return ("Next scheduled on Line " + str(fj['line_id']) + " is "
+                + nxt['job_number'] + ". Change over from " + jobs[0]
+                + " to " + nxt['job_number'] + "? Yes or no.")
+
+    # No job named.
+    return ("Changeover needs two jobs. Say: 'changeover <from job> to <to job>'.")
+
+
+def cont_changeover_confirm(conn, s, text, user):
+    low = (text or '').strip().lower()
+    from_id = s.get('pending_job_id')
+    to_id = s.get('pending_target_job_id')
+    from_job = None
+    to_job = None
+    if from_id and to_id:
+        fr = conn.execute("SELECT job_number FROM jobs WHERE id=?", (from_id,)).fetchone()
+        tr = conn.execute("SELECT job_number FROM jobs WHERE id=?", (to_id,)).fetchone()
+        if fr and tr:
+            from_job = fr['job_number']
+            to_job = tr['job_number']
+    if not from_job or not to_job:
+        try:
+            p = json.loads(s.get('pending_text') or '')
+            from_job = from_job or p.get('from_job')
+            to_job = to_job or p.get('to_job')
+        except Exception:
+            pass
+    s.set('state', 'idle')
+    s.set('pending_text', None)
+    s.set('pending_job_id', None)
+    s.set('pending_target_job_id', None)
+    s.save()
+    if not from_job or not to_job:
+        return ("I lost track of the changeover. Say 'changeover <from> to <to>' to restart.")
+    if low in ('yes', 'y', 'yeah', 'yep', 'sure', 'ok', 'okay', 'confirm', 'go',
+               'yup', 'do it', 'proceed', 'affirmative', 'correct', 'right', 'roger'):
+        result = h_changeover_start(conn, s, 'changeover ' + from_job + ' to ' + to_job, user)
+        if not result or not str(result).strip():
+            return ("Changeover from " + from_job + " to " + to_job
+                    + " attempted. Say 'status line' to verify.")
+        return result
+    if low in ('no', 'n', 'nope', 'cancel', 'stop', 'never', 'abort', 'negative', 'skip'):
+        return ("Changeover cancelled. Line state unchanged. "
+                "Say 'changeover <from> to <to>' to try a different job.")
+    return ("Say yes to change over from " + from_job + " to " + to_job
+            + ", or no to cancel.")
 
 
 def h_end_changeover(conn, s, text, user):
@@ -193,10 +276,23 @@ def finish_co(conn, s):
 
     line_id = ev['line_id'] if ev else (s.get('line_id') or 1)
     target_job_id = ev['to_job_id'] if ev else None
+    # Agreed 2026-11-14: changeover ends when the new job starts. Transition
+    # the line to production on the target job, not to idle. Otherwise the
+    # spine shows idle, reconcile_session clears active_job_id, and the next
+    # 'record H1' has nothing to resolve against.
     if target_job_id:
         tj = conn.execute("SELECT job_number FROM jobs WHERE id=?", (target_job_id,)).fetchone()
         if tj:
-            msg += f"\nStart the target job with: 'start {tj['job_number']}'."
-    db.transition_line(conn, line_id, 'idle',
-                       user_id=None)
+            conn.execute("UPDATE jobs SET status='running' WHERE id=?", (target_job_id,))
+            conn.commit()
+            db.transition_line(conn, line_id, 'production', job_id=target_job_id, user_id=None)
+            s.set('active_job_id', target_job_id)
+            s.set('line_id', line_id)
+            s.set('shift_hour', 1)
+            s.save()
+            msg += f"\nLine {line_id} now in production on {tj['job_number']}. Log with 'record H1' when ready."
+        else:
+            db.transition_line(conn, line_id, 'idle', user_id=None)
+    else:
+        db.transition_line(conn, line_id, 'idle', user_id=None)
     return msg

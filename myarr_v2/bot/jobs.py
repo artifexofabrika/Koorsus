@@ -269,6 +269,16 @@ def cont_variance_reason(conn, s, text, user):
     reason = (text or '').strip()
     if not reason:
         return "Please provide a reason to close the job."
+    # Agreed 2026-11-14: refuse command-like input as a variance reason.
+    # A trapped operator typing "changeover WO-X" must not have it saved as
+    # a reason. Offer cancel.
+    _cmd_verbs = ('changeover', 'end', 'start', 'record', 'running', 'status',
+                  'note', 'relog', 'pause', 'resume', 'handover', 'maintenance',
+                  'help')
+    _first = reason.lower().split()[0] if reason.split() else ''
+    if _first in _cmd_verbs or reason.lower().startswith('taking over'):
+        return ("That looks like a command, not a reason. "
+                "Give a brief reason, or say 'cancel'.")
 
     job_id = s.get('pending_job_id')
     if not job_id:

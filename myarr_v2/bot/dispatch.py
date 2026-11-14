@@ -48,6 +48,12 @@ def dispatch(conn, s, text, user):
         return None
     low = text.lower()
 
+    # Agreed 2026-11-14: cancel works in any state, before any other
+    # matching. An operator must always be able to escape a stuck prompt.
+    if low in ('cancel', 'stop', 'quit', 'exit', 'never mind', 'nevermind'):
+        s.clear()
+        return 'Cancelled.'
+
     # ---- State machine ----
     state = s.get('state')
     if state == 'awaiting_variance_reason':
@@ -66,6 +72,8 @@ def dispatch(conn, s, text, user):
         return jobs.cont_end_minutes(conn, s, text, user)
     if state == 'awaiting_co_minutes':
         return changeover.cont_co_minutes(conn, s, text, user)
+    if state == 'awaiting_changeover_confirm':
+        return changeover.cont_changeover_confirm(conn, s, text, user)
     if state == 'awaiting_co_step':
         return changeover.cont_co_step(conn, s, text, user)
     if state == 'awaiting_handover_notes':
@@ -90,9 +98,10 @@ def dispatch(conn, s, text, user):
     # Agreed 2026-11-13: confirm prefix and voice 'and'->'end',
     # restored from bot_v2.py and bot_v3.py at ec65562^.
     force = False
-    if re.match(r'^confirm[\s,]+', text, re.IGNORECASE):
+    _CONFIRM_PREFIX = r'^(confirm|confrim|conferm|confim|comfirm)[\s,]+'
+    if re.match(_CONFIRM_PREFIX, text, re.IGNORECASE):
         force = True
-        text = re.sub(r'^confirm[\s,]+', '', text, count=1, flags=re.IGNORECASE).strip()
+        text = re.sub(_CONFIRM_PREFIX, '', text, count=1, flags=re.IGNORECASE).strip()
         if not text:
             return 'Say the full command after confirm, please.'
     text = re.sub(r'^(and|en)\s+(lunch|cip|maintenance|change|job|shift|wo|work|order)\b',
@@ -100,7 +109,7 @@ def dispatch(conn, s, text, user):
     low = text.lower()
 
     # ---- Command matching ----
-    if low == 'confirm':
+    if low in ('confirm', 'confrim', 'conferm', 'confim', 'comfirm'):
         return production.h_record_confirm(conn, s, text, user)
 
     # Help / unknown

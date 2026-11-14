@@ -73,6 +73,10 @@ def parse_bottles(text):
 
 
 def parse_downtime(text):
+    # Agreed 2026-11-14: tolerate common typos in numeric contexts.
+    # "3o minutes" -> "30 minutes", "1l minutes" -> "11 minutes".
+    text = re.sub(r'(\d+)[oO]', lambda m: m.group(1) + '0', text)
+    text = re.sub(r'(\d+)[lLiI]', lambda m: m.group(1) + '1', text)
     m = DOWNTIME_RE.search(text)
     if not m: return []
     mins = float(m.group(1))

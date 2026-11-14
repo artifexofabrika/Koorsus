@@ -44,6 +44,32 @@ def _resolve_job(conn, job_no):
     return dict(r) if r else None
 
 
+def _resolve_from_spine(conn, s, user, text=''):
+    # Agreed 2026-11-14: if the operator did not name a job, fall back to the
+    # line named in the message, then the session line, then the user's
+    # assigned line. The spine is authority (2026-11-13 morning delta).
+    # The message line wins because a supervisor can query any line.
+    line_id = None
+    try:
+        from parsers import parse_line_number as _pln
+        line_id = _pln(text or '')
+    except Exception:
+        line_id = None
+    if line_id is None:
+        line_id = s.get('line_id') or (user.get('line_id') if user else None)
+    if not line_id:
+        return None
+    if line_id and not s.get('line_id'):
+        s.set('line_id', line_id)
+    cur = db.current_line_event(conn, line_id)
+    if not cur:
+        return None
+    if cur['state'] == 'production' and cur['job_id']:
+        jr = conn.execute("SELECT job_number FROM jobs WHERE id=?", (cur['job_id'],)).fetchone()
+        return _resolve_job(conn, jr['job_number']) if jr else None
+    return None
+
+
 def _next_job_hour(conn, job_id):
     # Agreed 2026-11-13: fall back to SUM(duration_min)/60 when job_hour_end is NULL.
     r = conn.execute(
@@ -107,6 +133,11 @@ def _summarize(conn, job, hour, units, scrap, duration, jh_start, jh_end, gap, u
 def h_running_job(conn, s, text, user, force=False):
     job_no = parse_job_number(text)
     job = _resolve_job(conn, job_no)
+    if not job and s.get('active_job_id'):
+        _r = conn.execute("SELECT job_number FROM jobs WHERE id=?", (s['active_job_id'],)).fetchone()
+        job = _resolve_job(conn, _r['job_number']) if _r else None
+    if not job:
+        job = _resolve_from_spine(conn, s, user, text)
     if not job:
         return f"No job found for '{job_no or text}'."
 
@@ -184,6 +215,9 @@ def h_record_hour(conn, s, text, user, force=False, _is_continuation=False):
         s.set('pending_text', None)
         s.save()
         return "Record session lost. Start over with record H5 ..."
+    # Agreed 2026-11-14: a confirmed number overrides plausibility on every
+    # pass through the flow, including continuations like downtime.
+    force = force or pending.get('confirmed', False)
 
     job_no = parse_job_number(text)
     if job_no:
@@ -196,7 +230,8 @@ def h_record_hour(conn, s, text, user, force=False, _is_continuation=False):
         r = conn.execute("SELECT job_number FROM jobs WHERE id=?", (s['active_job_id'],)).fetchone()
         job = _resolve_job(conn, r['job_number']) if r else None
     else:
-        job = None
+        # Agreed 2026-11-14: spine fallback. Line is authority.
+        job = _resolve_from_spine(conn, s, user, text)
     if not job:
         return "Which job? Say: record WO-XXXX-XXX H5, 60 minutes, 7000 units, 20 scrap."
 
@@ -222,6 +257,8 @@ def h_record_hour(conn, s, text, user, force=False, _is_continuation=False):
         _save_pending(s, {'job_number': job['job_number'], 'hour': hour})
         s.save()
         return "Hour " + str(hour) + ": how many minutes?"
+    if mins < 1 or mins > 60:
+        return "Minutes must be between 1 and 60 for one hourly record. Try again."
 
     units = parse_bottles(text)
     if units is None:
@@ -257,7 +294,11 @@ def h_record_hour(conn, s, text, user, force=False, _is_continuation=False):
         dts = parse_downtime(pending['downtime_text'])
     if not dts and gap_min > 1.0 and not pending.get('downtime_asked'):
         s.set('state', 'awaiting_record_downtime')
-        _save_pending(s, {'job_number': job['job_number'], 'hour': hour, 'minutes': mins, 'units': units, 'scrap': scrap})
+        # Agreed 2026-11-14: preserve all pending fields (including confirmed)
+        # so a confirmed number does not re-trigger plausibility after downtime.
+        _pending = dict(pending)
+        _pending.update({'job_number': job['job_number'], 'hour': hour, 'minutes': mins, 'units': units, 'scrap': scrap})
+        _save_pending(s, _pending)
         s.save()
         return "Hour " + str(hour) + ": gap is " + str(round(gap_min, 1)) + " min. Any downtime to record? (e.g. 2 min filler jam, or skip)"
 
@@ -294,7 +335,9 @@ def h_record_confirm(conn, s, text, user):
         s.set('pending_text', None)
         s.save()
         return 'Nothing to confirm. Say the full record.'
-    pending['downtime_asked'] = True
+    # Agreed 2026-11-14: confirm overrides plausibility, not the downtime
+    # prompt. A confirmed number still needs a reason for a large gap.
+    pending['confirmed'] = True
     _save_pending(s, pending)
     s.set('state', 'idle')
     s.save()
@@ -336,7 +379,12 @@ def _cont_record_minutes(conn, s, text, user):
     m = re.search(r'(\d+(?:\.\d+)?)', text or '')
     if not m:
         return "Just a number please (minutes)."
-    pending['minutes'] = float(m.group(1))
+    _mins = float(m.group(1))
+    # Agreed 2026-11-14: one hourly record is 1 to 60 minutes. 600 is a
+    # typo, not a ten-hour hour.
+    if _mins < 1 or _mins > 60:
+        return "Minutes must be between 1 and 60 for one hourly record. Try again."
+    pending['minutes'] = _mins
     _save_pending(s, pending)
     s.set('state', 'idle')
     s.save()
