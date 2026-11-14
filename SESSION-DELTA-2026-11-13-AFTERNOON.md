@@ -219,6 +219,29 @@ positioning and portfolio item.
 
 Roughly 400 lines total. Do not read the whole repo.
 
+## Repository polish before peer review
+
+If a peer or partner is given access to the repository, these five items
+are what makes it read as a project with a clear shape rather than one in
+transition. Ten minutes of file work, thirty minutes for the handoff.
+
+1. Delete bot/db.py.bak_live and bot/shift.py.bak_shiftcode. Residue from
+   the shift-code patch, dated 2026-11-07.
+2. Delete or move to an archive/ directory: bot_live.py, telegram_bot.py,
+   bot_v3.py. All three reference bot_v2.py, which does not exist. None
+   is in the live path.
+3. Rewrite HANDOFF.md whole. It is dated 2026-11-03 and describes a
+   project that no longer exists: bot_v2.py, Waitress, five lines. The
+   two deltas from 2026-11-13 are the current record in the meantime.
+4. Fix the TEMPORARY BRIDGE comment in bot/jobs.py. It says the file
+   imports from bot_v2 for extraction later. It imports from resolve,
+   which was repaired 2026-11-13. The comment is now false.
+5. Rename or note bot_live_v3.py. The name implies a v3 lineage that no
+   longer exists; the live entry point is the modular bot package.
+
+Not done 2026-11-13. Recorded for the first quiet moment before any
+outside reader sees the code.
+
 ## Remaining queue
 
 Immediate (small, before the testing pass):
