@@ -242,6 +242,41 @@ transition. Ten minutes of file work, thirty minutes for the handoff.
 Not done 2026-11-13. Recorded for the first quiet moment before any
 outside reader sees the code.
 
+## Strategic direction, decided 2026-11-14
+
+### Expand RAG business beyond manufacturing
+
+Decision: in addition to Myarra/Koorsus for manufacturing, expand the RAG
+business in Columbus. Initial target verticals: medical offices and law
+offices. Same engine, same posture, different document estate.
+
+Positioning for the Artifexo Fabrika site: "AI appliances you own, no
+subscription, no cloud." For legal and medical, on-premise is not a
+preference; it is a compliance and privilege requirement. The device
+sits in the office, feeds on the practice's documents, answers with
+cited sources, refuses when the answer is absent.
+
+Price point discussed: ,500 as a starting appliance. Example use case:
+"find every case that mentions this wall, this instance, this clause"
+answered instantly from the firm's own document library.
+
+Compliance preconditions before any legal or medical sale:
+- HIPAA: business associate agreements, encryption at rest and in transit,
+  access controls, audit logging, breach notification path.
+- Attorney-client privilege and state bar rules: access controls that
+  respect matter walls, audit trails, and a clear position that the
+  appliance operator is the firm, not Artifexo.
+- A qualified compliance review before the first commercial engagement.
+  This is a different regulatory regime than manufacturing.
+
+This is a strategic pivot, not a code change. The Myarra work continues.
+When the RAG estate for legal/medical is designed, the Koorsus model
+(RAG over documents, cited answers, refusal) is the foundation; the
+document types, compliance posture, and sales channel are what change.
+
+Not revenue this month. The weekend goal remains the deployment gate
+(backup, installation procedure, config extraction) and the testing pass.
+
 ## Remaining queue
 
 Immediate (small, before the testing pass):
