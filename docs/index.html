@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -8,278 +8,61 @@
 <link rel="apple-touch-icon" href="favicon.png">
 <style>
 html, body { margin: 0; padding: 0; background: #1a1a1a; }
-.artifexo-page {
-background: #1a1a1a;
-color: #d4d4d4;
-font-family: Georgia, serif;
-min-height: 100vh;
-overflow-y: auto;
-font-size: 16px;
-line-height: 1.6;
-}
-.artifexo-page, .artifexo-page * {
-word-break: normal;
-overflow-wrap: break-word;
-hyphens: none;
-box-sizing: border-box;
-}
-.hero {
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-min-height: 100vh;
-text-align: center;
-padding: 2rem 1.25rem;
-background: linear-gradient(rgba(26, 26, 26, 0.60), rgba(26, 26, 26, 0.80)), url('board_screenshot.png') center/cover no-repeat;
-background-attachment: fixed; /* Parallax effect */
-position: relative;
-text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.9); /* Makes text pop */
-}
-.hero .eyebrow {
-color: #c0a878; /* Brand gold to stand out */
-font-size: 0.88rem; /* Increased by ~20% */
-font-weight: 600;
-letter-spacing: 0.18em;
-text-transform: uppercase;
-margin-top: -6vh; /* Push it up away from the headline */
-margin-bottom: 1.5rem;
-}
-.hero h1 {
-font-size: clamp(1.5rem, 4.5vw, 2.75rem);
-color: #c0a878;
-margin-bottom: 0.75rem;
-font-weight: bold;
-letter-spacing: -0.015em;
-line-height: 1.2;
-}
-.hero p {
-font-size: clamp(0.9rem, 1.6vw, 1.05rem);
-color: #b0b0b0;
-max-width: 520px;
-margin-bottom: 2rem;
-line-height: 1.65;
-}
-.btn {
-display: inline-block;
-background: #c0a878;
-color: #1a1a1a;
-padding: 0.7rem 1.75rem;
-border-radius: 4px;
-text-decoration: none;
-font-weight: bold;
-font-size: 0.85rem;
-letter-spacing: 0.03em;
-margin: 0.4rem;
-}
-.section {
-padding: 4.5rem 1.5rem;
-max-width: 680px;
-margin: 0 auto;
-text-align: center;
-}
-.section h2 {
-font-size: clamp(1.2rem, 3vw, 1.6rem);
-color: #c0a878;
-margin-bottom: 1.35rem;
-font-weight: bold;
-line-height: 1.25;
-letter-spacing: -0.01em;
-}
-.section p {
-font-size: 0.95rem;
-color: #b0b0b0;
-line-height: 1.75;
-}
-.section p + p { margin-top: 1rem; }
-.section strong { color: #d4d4d4; font-weight: bold; }
-.pull {
-font-style: italic;
-color: #c0a878;
-font-size: 1.02rem;
-line-height: 1.65;
-margin: 1.6rem auto;
-max-width: 520px;
-}
-.features {
-display: flex;
-gap: 1.25rem;
-flex-wrap: wrap;
-justify-content: center;
-max-width: 900px;
-margin: 1.75rem auto 0;
-padding: 0 1rem;
-}
-.feature-card {
-background: #2c2c2c;
-border: 1px solid #444;
-border-radius: 6px;
-padding: 1.5rem 1.15rem;
-flex: 1 1 240px;
-min-width: 0;
-max-width: 300px;
-text-align: center;
-}
-.capabilities .feature-card {
-flex: 1 1 340px;
-max-width: 420px;
-}
-.feature-card .icon {
-font-size: 1.4rem;
-margin-bottom: 0.7rem;
-}
-.feature-card strong {
-display: block;
-color: #fff;
-margin-bottom: 0.5rem;
-font-size: 0.92rem;
-line-height: 1.3;
-}
-.feature-card span {
-color: #b0b0b0;
-line-height: 1.6;
-font-size: 0.85rem;
-}
-.card-link {
-display: block;
-margin-top: 0.7rem;
-font-size: 0.82rem;
-color: #c0a878;
-text-decoration: none;
-}
-.footnote {
-font-size: 0.78rem;
-color: #888;
-margin-top: 1.5rem;
-text-align: center;
-line-height: 1.7;
-font-style: italic;
-}
-.steps {
-max-width: 560px;
-margin: 1.75rem auto 0;
-text-align: left;
-}
-.step {
-display: flex;
-gap: 1.1rem;
-margin-bottom: 1.6rem;
-align-items: flex-start;
-}
-.step .num {
-color: #c0a878;
-font-size: 1.25rem;
-font-weight: bold;
-min-width: 1.5rem;
-line-height: 1.4;
-flex-shrink: 0;
-}
-.step .body > strong {
-display: block;
-color: #fff;
-font-size: 0.95rem;
-margin-bottom: 0.25rem;
-}
-.step .body span {
-color: #b0b0b0;
-line-height: 1.6;
-font-size: 0.88rem;
-}
-.step .body span strong {
-display: inline;
-color: #d4d4d4;
-font-size: inherit;
-margin: 0;
-font-weight: bold;
-}
-.diag-callout {
-background: #2c2c2c;
-border: 1px solid #444;
-border-left: 3px solid #c0a878;
-border-radius: 4px;
-padding: 1.25rem 1.4rem;
-margin: 1.75rem 0 0;
-text-align: left;
-}
-.diag-callout p {
-font-size: 0.88rem;
-color: #b0b0b0;
-line-height: 1.7;
-margin: 0;
-}
-.diag-callout p + p { margin-top: 0.6rem; }
-.diag-callout strong { color: #c0a878; }
-.waitlist {
-max-width: 420px;
-margin: 0 auto;
-text-align: center;
-padding: 4.5rem 1.5rem;
-}
-.waitlist h2 {
-font-size: clamp(1.15rem, 2.6vw, 1.5rem);
-color: #c0a878;
-margin-bottom: 0.9rem;
-line-height: 1.25;
-}
-.waitlist p {
-color: #b0b0b0;
-margin-bottom: 1.75rem;
-font-size: 0.9rem;
-line-height: 1.6;
-}
-.waitlist form { text-align: left; }
-.waitlist input {
-width: 100%;
-padding: 0.72rem 0.85rem;
-margin-bottom: 0.75rem;
-background: #2c2c2c;
-border: 1px solid #444;
-color: #fff;
-border-radius: 4px;
-font-size: 0.9rem;
-font-family: Georgia, serif;
-}
-.waitlist button {
-width: 100%;
-padding: 0.78rem;
-background: #c0a878;
-color: #1a1a1a;
-border: none;
-border-radius: 4px;
-font-weight: bold;
-font-size: 0.9rem;
-cursor: pointer;
-}
-footer {
-text-align: center;
-padding: 2.5rem 1.5rem;
-font-size: 0.78rem;
-color: #666;
-border-top: 1px solid #333;
-margin-top: 1.5rem;
-line-height: 1.7;
-}
+.artifexo-page { background: #1a1a1a; color: #d4d4d4; font-family: Georgia, serif; min-height: 100vh; overflow-y: auto; font-size: 16px; line-height: 1.6; }
+.artifexo-page, .artifexo-page * { word-break: normal; overflow-wrap: break-word; hyphens: none; box-sizing: border-box; }
+a { color: #c0a878; }
+.hero { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 92vh; text-align: center; padding: 2rem 1.25rem; background: linear-gradient(rgba(26, 26, 26, 0.72), rgba(26, 26, 26, 0.92)), url('board_screenshot.png') center/cover no-repeat; position: relative; text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.9); }
+.hero .eyebrow { color: #c0a878; font-size: 0.88rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 1.5rem; }
+.hero h1 { font-size: clamp(1.9rem, 5vw, 3.4rem); color: #c0a878; margin: 0 0 0.9rem; font-weight: bold; letter-spacing: -0.015em; line-height: 1.15; }
+.hero p { font-size: clamp(1rem, 1.8vw, 1.2rem); color: #cfc6b4; max-width: 620px; margin: 0 0 1.5rem; }
+.hero-promise { color: #b0b0b0; font-size: 0.92rem; letter-spacing: 0.06em; margin-bottom: 2rem; text-transform: uppercase; }
+.hero-promise span { margin: 0 0.6rem; }
+.btn { display: inline-block; padding: 0.85rem 1.6rem; background: #c0a878; color: #1a1a1a; text-decoration: none; font-weight: bold; letter-spacing: 0.06em; border-radius: 3px; text-shadow: none; font-size: 0.92rem; }
+.btn:hover { background: #d4bf96; }
+.btn.secondary { background: transparent; color: #c0a878; border: 1px solid #c0a878; }
+.btn.secondary:hover { background: #c0a878; color: #1a1a1a; }
+.section { max-width: 960px; margin: 0 auto; padding: 4rem 1.5rem; }
+.section h2 { color: #c0a878; font-size: clamp(1.35rem, 2.4vw, 1.85rem); margin: 0 0 1.25rem; font-weight: normal; letter-spacing: 0.01em; }
+.section p { color: #c0c0c0; }
+.pull { color: #e0d6c2; font-size: 1.15rem; font-style: italic; border-left: 3px solid #c0a878; padding-left: 1rem; margin: 1.5rem 0; }
+.product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; }
+@media (max-width: 800px) { .product-grid { grid-template-columns: 1fr; } }
+.product-card { border: 1px solid #3a3a3a; border-radius: 6px; padding: 1.75rem; background: #212121; display: flex; flex-direction: column; }
+.product-card.arkiv { border-top: 3px solid #c0a878; }
+.product-card.plant { border-top: 3px solid #7a8a6a; }
+.product-tag { color: #888; font-size: 0.78rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.6rem; }
+.product-card h3 { color: #e0d6c2; font-size: 1.5rem; margin: 0 0 0.5rem; font-weight: bold; letter-spacing: 0.01em; }
+.product-pitch { color: #c0a878; font-style: italic; margin: 0 0 1rem; font-size: 1rem; }
+.product-card p { color: #c0c0c0; margin: 0 0 1rem; font-size: 0.95rem; }
+.product-list { list-style: none; padding: 0; margin: 0 0 1.25rem; }
+.product-list li { color: #b8b8b8; font-size: 0.92rem; padding: 0.35rem 0 0.35rem 1.35rem; position: relative; }
+.product-list li:before { content: '\2713'; color: #c0a878; position: absolute; left: 0; font-weight: bold; }
+.product-price { color: #c0a878; font-size: 1.1rem; font-weight: bold; margin: 0 0 0.75rem; letter-spacing: 0.02em; }
+.card-link { color: #c0a878; text-decoration: underline; font-weight: bold; }
+.card-link:hover { color: #e0d6c2; }
+.features { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+.feature-card { flex: 1 1 260px; border: 1px solid #3a3a3a; border-radius: 6px; padding: 1.5rem; background: #212121; }
+.feature-card .icon { font-size: 1.75rem; margin-bottom: 0.5rem; }
+.feature-card strong { color: #e0d6c2; display: block; font-size: 1.02rem; margin-bottom: 0.5rem; }
+.feature-card span { color: #b0b0b0; font-size: 0.92rem; }
+.steps { margin-top: 1.5rem; }
+.step { display: flex; gap: 1.25rem; padding: 1.25rem 0; border-bottom: 1px solid #2f2f2f; }
+.step:last-child { border-bottom: none; }
+.step .num { color: #c0a878; font-size: 2rem; font-weight: bold; line-height: 1; min-width: 2.2rem; }
+.step .body strong { color: #e0d6c2; display: block; margin-bottom: 0.35rem; }
+.step .body span { color: #b8b8b8; font-size: 0.95rem; }
+.footnote { color: #888; font-size: 0.85rem; font-style: italic; margin-top: 1.25rem; }
+.waitlist { max-width: 640px; margin: 0 auto; padding: 4rem 1.5rem; text-align: center; }
+.waitlist h2 { color: #c0a878; font-size: clamp(1.35rem, 2.4vw, 1.85rem); margin: 0 0 0.75rem; font-weight: normal; }
+.waitlist p { color: #b0b0b0; margin: 0 0 1.5rem; }
+.waitlist input { display: block; width: 100%; padding: 0.8rem 1rem; margin: 0.65rem 0; background: #262626; color: #e0e0e0; border: 1px solid #3a3a3a; border-radius: 3px; font-size: 0.95rem; font-family: Georgia, serif; }
+.waitlist input:focus { outline: 2px solid #c0a878; outline-offset: -1px; }
+.waitlist button { display: block; width: 100%; padding: 0.9rem; margin-top: 0.75rem; background: #c0a878; color: #1a1a1a; border: none; font-weight: bold; letter-spacing: 0.06em; border-radius: 3px; font-size: 0.95rem; cursor: pointer; font-family: Georgia, serif; }
+.waitlist button:hover { background: #d4bf96; }
+footer { text-align: center; padding: 2rem 1.5rem 3rem; color: #888; font-size: 0.85rem; border-top: 1px solid #2a2a2a; }
 footer a { color: #c0a878; text-decoration: none; }
-@media (max-width: 640px) {
-.section { padding: 3rem 1.25rem; }
-.hero { padding: 2rem 1rem; }
-.hero h1 { font-size: 1.5rem; }
-.features { gap: 0.9rem; padding: 0 0.5rem; }
-.feature-card,
-.capabilities .feature-card {
-flex: 1 1 100%;
-max-width: 100%;
-padding: 1.35rem 1rem;
-}
-.step { gap: 0.9rem; }
-}
-</style>
-
-<style>
-.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); cursor: zoom-out; }
-.modal-content { margin: auto; display: block; max-width: 95%; max-height: 95vh; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-.gallery-img { cursor: zoom-in; transition: opacity 0.2s; }
-.gallery-img:hover { opacity: 0.7; }
+footer a:hover { text-decoration: underline; }
+@media print { .hero { min-height: auto; } .btn { display: none; } }
 </style>
 </head>
 <body>
@@ -287,217 +70,132 @@ padding: 1.35rem 1rem;
 
 <div class="hero">
 <div class="eyebrow">Artifexo Fabrika, Columbus, Ohio</div>
-<h1>Continuous improvement<br>stalls at Check.</h1>
-<p>
-Your people are not the problem. They come to work wanting to do a good job.<br>
-The problem is that getting the data costs a person, and that person stops improving and starts clerking.
-</p>
-<p style="max-width:560px;">
-Myarra fixes the capture, so the two measures compute themselves and PDCA closes weekly instead of annually. Koorsus answers from your documents. Both on hardware you own.
-</p>
-<p style="margin-top:0.5rem;color:#c0a878;font-weight:bold;font-size:0.95rem;">
-You own it. No monthly fees. No per-user fees. No upgrade fees.<br>
-Open source, or installed on your device from $1,500.
-</p>
-<a href="#contact" class="btn">Request an assessment</a>
-<a href="/demo/" class="btn" style="margin-left:0.75rem;">See the full demo</a>
+<h1>AI appliances you own.</h1>
+<p>No subscription. No cloud. No data leaving your building.</p>
+<div class="hero-promise">
+<span>You own the hardware</span>
+<span>&middot;</span>
+<span>No monthly fee</span>
+<span>&middot;</span>
+<span>On-site, always</span>
+<span>&middot;</span>
+<span>Source-available</span>
 </div>
-
+<a href="#products" class="btn">See the appliances</a>
+<a href="#contact" class="btn secondary" style="margin-left:0.75rem;">Request a conversation</a>
+</div>
 <div class="section">
-<h2>The problem with AI in a plant.</h2>
-<p>A confident wrong answer about lockout/tagout is a liability, not a feature.</p>
-<p>Every AI vendor will tell you their system is accurate. Most will confidently invent an answer when the document does not contain one. For a plant manager responsible for safety procedures, that is not an acceptable failure mode.</p>
+<h2>Why we build this way.</h2>
+<p>The general-purpose AI tools solve document and data problems by sending everything to someone else's server. For a law firm whose privilege obligations follow every page, or a plant whose process knowledge is the competitive advantage, that is not a solution.</p>
+<p>We build the other kind. A small appliance, on your network, that answers from your documents and measures your floor. It does not connect to the internet. It does not have a subscription. It is yours.</p>
 </div>
 
-<div class="section" style="max-width:900px;">
-<h2>What we build.</h2>
-<p style="margin-bottom:1.75rem;">Two systems on a single appliance. One answers questions from your documents. The other captures what happens on the floor, by voice, in the moment. Both run on hardware you own. Neither sends data anywhere.</p>
-<div class="features capabilities">
+<div id="products" class="section">
+<h2>Two appliances.</h2>
+<p>Same posture. Different subject. Both run on the NVIDIA Jetson, both are source-available, both stay in your building.</p>
 
-<div class="feature-card" style="flex:1 1 100%;max-width:100%;text-align:left;">
-<div class="icon">&#128218;</div>
-<strong style="font-size:1.05rem;">Koorsus. The course.</strong>
-<span style="display:block;margin-top:0.35rem;color:#c0a878;font-style:italic;font-size:0.85rem;">Latin <em>cursus</em>: the path from where your plant is to where it intends to be.</span>
-<span style="display:block;margin-top:0.9rem;">Your handbooks, SOPs, procedures, and maintenance logs, ingested and indexed on hardware you own. Ask a question in plain English. The answer comes back with the source cited. If the answer is not in your documents, Koorsus says so. It does not invent.</span>
-<span style="display:block;margin-top:0.9rem;">This is not a novelty. When a line is down and the answer is in a PDF nobody has opened since 2019, Koorsus finds it in four seconds and tells you which document and which section. When the answer is not in any document, it declines, and that refusal is what makes the answers it does give trustworthy.</span>
-<img class="gallery-img" src="02-koorsus.png" alt="Koorsus answering a question with source citation" style="display:block;width:100%;margin-top:1.25rem;border-radius:6px;border:1px solid #444;">
+<div class="product-grid">
+
+<div class="product-card arkiv">
+<div class="product-tag">Legal &middot; Medical &middot; Professional</div>
+<h3>Arkiv</h3>
+<p class="product-pitch">RAG for less than a laptop.</p>
+<p>Your firm's documents, reachable in plain English. Contracts, pleadings, discovery, correspondence, prior work product. Organised by matter. Answered with the source cited. Refuses when the answer is not in the documents.</p>
+<ul class="product-list">
+<li>Matter-scoped retrieval. A firm with a hundred cases gets the right answer.</li>
+<li>Text, Markdown, PDF, Word, OpenDocument files.</li>
+<li>Encrypted at rest. Encrypted backup to a USB in your safe.</li>
+<li>No internet. No subscription. No cloud.</li>
+</ul>
+<div class="product-price">From $2,500</div>
+<a href="#arkiv" class="card-link">How Arkiv works &rarr;</a>
 </div>
 
-<div class="feature-card" style="flex:1 1 100%;max-width:100%;text-align:left;">
-<div class="icon">&#128200;</div>
-<strong style="font-size:1.05rem;">Myarra. The measure.</strong>
-<span style="display:block;margin-top:0.35rem;color:#c0a878;font-style:italic;font-size:0.85rem;">Polish <em>miara</em>: current state, future state, and the distance between them.</span>
-<span style="display:block;margin-top:0.9rem;">What is Line 2 doing right now? How many cases has WO-2026-001 produced against its target, and how many remain? Where did the last changeover lose minutes, and at which station? Myarra captures it as it happens, by voice from the line, and shows you the answer in cases, because cases are what you sell.</span>
-<span style="display:block;margin-top:0.9rem;">Myarra shows you the unaccounted minutes that your current OEE tool cannot see. It compares each changeover component against its standard, so you can see which station helped and which station hurt. It runs PDCA experiments that close the loop weekly instead of annually.</span>
-<a href="/myarra.html" style="display:block;margin-top:1rem;color:#c0a878;font-weight:bold;text-decoration:underline;">Read the full Soup-to-Nuts guide &rarr;</a>
-<img class="gallery-img" src="01-dashboard.png" alt="Myarra dashboard" style="display:block;width:100%;margin-top:1.25rem;border-radius:6px;border:1px solid #444;">
-</div>
-
-</div>
-</div>
-
-<div class="section" style="max-width:1000px;">
-<h2>See the system.</h2>
-<p style="margin-bottom:2rem;">A private appliance running entirely on your network. Here is what it looks like in practice.</p>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
-    <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
-        <img class="gallery-img" src="01-dashboard.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Live Dashboard">
-        <div style="padding: 1.5rem;">
-            <strong style="color: #c0a878; font-size: 1.1rem;">The Floor View</strong>
-            <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">What is happening right now? The live dashboard shows the state of every line, the active job, and the elapsed time.</p>
-        </div>
-    </div>
-    <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
-        <img class="gallery-img" src="03-telegram.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Telegram Bot">
-        <div style="padding: 1.5rem;">
-            <strong style="color: #c0a878; font-size: 1.1rem;">The Floor Voice</strong>
-            <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">Operators log production in seconds via Telegram. The bot validates numbers and refuses implausible entries.</p>
-        </div>
-    </div>
-    <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
-        <img class="gallery-img" src="12-reconciliation-line4.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Reconciliation">
-        <div style="padding: 1.5rem;">
-            <strong style="color: #c0a878; font-size: 1.1rem;">The Two Measures</strong>
-            <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">Total OEE and Operator Performance, side by side. You see the true loss without blaming the operator for machine failures.</p>
-        </div>
-    </div>
-    <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
-        <img class="gallery-img" src="20-maintenance-detail.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Root Cause">
-        <div style="padding: 1.5rem;">
-            <strong style="color: #c0a878; font-size: 1.1rem;">Root Cause & Memory</strong>
-            <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">Symptom, resolution, parts, and technician. Captured as it happens. Ask what happened the last time the labeler failed.</p>
-        </div>
-    </div>
-    <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
-        <img class="gallery-img" src="02-koorsus.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="Koorsus AI">
-        <div style="padding: 1.5rem;">
-            <strong style="color: #c0a878; font-size: 1.1rem;">The Answer Engine</strong>
-            <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">Koorsus indexes your SOPs and manuals. Ask a question, get an answer with the exact source cited. No hallucinations.</p>
-        </div>
-    </div>
-    <div style="background: #2c2c2c; border: 1px solid #444; border-radius: 8px; overflow: hidden; text-align: left;">
-        <img class="gallery-img" src="16-pdca.png" style="width: 100%; display: block; border-bottom: 1px solid #444;" alt="PDCA Board">
-        <div style="padding: 1.5rem;">
-            <strong style="color: #c0a878; font-size: 1.1rem;">The Improvement Loop</strong>
-            <p style="font-size: 0.9rem; color: #b0b0b0; margin-top: 0.5rem;">Every experiment with its priority, condition, and target. The Check step measures the result against the floor, not a spreadsheet.</p>
-        </div>
-    </div>
-</div>
-</div>
-
-<div class="section" style="max-width:900px;">
-<h2>Pricing.</h2>
-<p style="margin-bottom:1.75rem;">The software is open source. You can download it, flash it, and run it yourself for nothing. The prices below are for hardware, setup, and support. Start wherever fits.</p>
-
-<div class="feature-card" style="flex:1 1 100%;max-width:100%;text-align:left;border-color:#c0a878;margin-bottom:1.25rem;">
-<div class="icon">&#128230;</div>
-<strong style="font-size:1.05rem;">Free Self-Hosted</strong>
-<span style="display:block;color:#c0a878;font-weight:bold;margin:0.5rem 0;">$0</span>
-<span>The full Myarra and Koorsus source under GPL v3. Clone it, flash a Jetson, install it yourself. No cost, no obligation, no support. If you can run it, you owe us nothing.</span>
-<a href="https://github.com/artifexofabrika" style="display:block;margin-top:0.7rem;color:#c0a878;font-weight:bold;text-decoration:underline;">See the source on GitHub &rarr;</a>
-</div>
-
-<div class="feature-card" style="flex:1 1 100%;max-width:100%;text-align:left;margin-bottom:1.25rem;">
-<strong style="font-size:1.05rem;">The Appliance Ladder</strong>
-<span style="display:block;margin-top:0.75rem;"><strong style="color:#c0a878;">$1,200. Hardware only.</strong> The Yahboom Jetson Orin Nano kit with SSD, Wi-Fi, and case. You flash it and build it yourself.</span>
-<span style="display:block;margin-top:0.6rem;"><strong style="color:#c0a878;">$1,500. Hardware and software.</strong> The same kit, flashed and installed with Myarra and Koorsus, demo data loaded. You enter your own master data.</span>
-<span style="display:block;margin-top:0.6rem;"><strong style="color:#c0a878;">$3,500. Turnkey on Orin Nano.</strong> Remote configuration and installation of master data. Up to 4 hours of live training and support for your team. 30 days of email support for installation and software issues.</span>
-<span style="display:block;margin-top:0.6rem;"><strong style="color:#c0a878;">$5,500. Turnkey on Orin NX.</strong> The same turnkey service on the heavier module, for larger plants and future vision work.</span>
-</div>
-
-<div class="feature-card" style="flex:1 1 100%;max-width:100%;text-align:left;margin-bottom:1.25rem;">
-<strong style="font-size:1.05rem;">Add-ons</strong>
-<span style="display:block;margin-top:0.75rem;"><strong style="color:#c0a878;">$99. Odoo Connector.</strong> A read-only bridge between Odoo Manufacturing and an existing Myarra installation. Requires Myarra. Published on the Odoo Apps Store.</span>
-<span style="display:block;margin-top:0.6rem;"><strong style="color:#c0a878;">$100 per hour. Spot consulting.</strong> One hour minimum. Screen-share help with installation, configuration, or troubleshooting for anyone doing it themselves.</span>
-</div>
-
-<p class="footnote">On-site installation is available on the turnkey tiers, quoted separately with travel at cost.</p>
-</div>
-
-<div class="section" style="max-width:720px;">
-<h2>The floor voice.</h2>
-<p class="pull">A line lead types four words. The dashboard updates before the shift ends.</p>
-<p>The tool that gets used is the one that fits in a pocket and takes ten seconds. Myarra is not a form. It is a Telegram message.</p>
-<p>The lead sends: <em>"running job WO-2026-001, hour 5, 7,000 units, 4 minutes down jam at the filler."</em> The bot replies with a receipt. The dashboard updates. If the count is implausible, if voice-to-text has eaten a digit and 35,022 has become 3,022, the bot refuses and asks the lead to re-say. A lost digit in a transcript is not a data point, it is a data casualty, and Myarra does not log it.</p>
-<p>When the lead is ready to end the job, the bot prompts the changeover. It walks each station, records the actual time against the standard, and if the changeover takes longer than the standard, that is what the record says. Nothing is entered twice. Nothing is entered a day late. Nothing is entered by someone who was not there.</p>
-<img class="gallery-img" src="03-telegram.png" alt="Telegram conversation with Myarra bot" style="display:block;width:100%;max-width:400px;margin:1.5rem auto 0;border-radius:8px;border:1px solid #444;">
-</div>
-
-<div class="section" style="max-width:720px;">
-<h2>How this works.</h2>
-<p>We do not sell software. We assess your operation, configure the appliance for your products and procedures, and install it on hardware you own. The code is open source. The data never leaves the building. The setup is one focused afternoon with your plant manager, and a line lead with a phone the next morning.</p>
-<p>The appliance is an <strong>NVIDIA Jetson</strong>: small, silent, low-power, running entirely on your network. The document platform uses <strong>ChromaDB</strong> for retrieval, and the language model is <strong>Qwen 2.5</strong>, running locally on <strong>llama.cpp</strong>. The web interface is <strong>Flask</strong>. The database is <strong>SQLite</strong>. Every component is open source. Every byte stays in your building.</p>
-<p style="margin-top:1rem;">The source is on GitHub under <strong>GPL v3</strong>. You can fork it. Your own team can maintain it. You can hire someone else entirely. The business we are in is setting it up, integrating it with your ERP, and supporting it when you need us. Not holding the source hostage.</p>
-</div>
-
-<div class="section" style="max-width:900px;">
-<h2>Beyond the floor.</h2>
-<p style="margin-bottom:1.75rem;">Koorsus and Myarra are the two systems we install at every client. On the same appliance, we can deploy additional private agents. Each runs on your equipment, under your control, with no data leaving the building.</p>
-<div class="features capabilities">
-
-<div class="feature-card">
-<div class="icon">&#9993;&#65039;</div>
-<strong>Email &amp; Communications Agent</strong>
-<span>Screens, drafts, and replies to routine mail. Manages scheduling. Runs privately, on your hardware.</span>
-</div>
-
-<div class="feature-card">
-<div class="icon">&#128172;</div>
-<strong>Customer Support Agent</strong>
-<span>Handles routine inquiries across email and messaging. Trained on your business, on your hardware.</span>
+<div class="product-card plant">
+<div class="product-tag">Manufacturing &middot; Operations</div>
+<h3>Koorsus &amp; Myarra</h3>
+<p class="product-pitch">Continuous improvement, closed.</p>
+<p>Production-to-standard tracking and a document platform on the same appliance. Hourly capture from the floor. OEE and operator performance in two measures. Changeover variance. PDCA. The Check step of the loop, without a data janitor.</p>
+<ul class="product-list">
+<li>Hourly runs from a phone. Free-text. Never a dropdown.</li>
+<li>Two measures, never collapsed. OEE counts every loss; operator performance excludes what the operator did not cause.</li>
+<li>Changeover timing per station. Aggregate wall clock.</li>
+<li>Document estate reachable by question, with citation.</li>
+</ul>
+<div class="product-price">From $3,500</div>
+<a href="#manufacturing" class="card-link">How the plant system works &rarr;</a>
 </div>
 
 </div>
-<p class="footnote">These agents are optional. Koorsus and Myarra are the foundation.</p>
+</div>
+<div id="arkiv" class="section">
+<h2>Arkiv, for the office.</h2>
+<p class="pull">Your documents are the substance of your practice. They should not live on someone else's server.</p>
+<p>The appliance sits in your office, connects to your network, and answers questions from your own documents. You ingest by matter. You ask in plain English. Arkiv cites the exact source passage of every claim, and refuses when the answer is not in the documents.</p>
+<p>The refusal is the feature. A confident wrong answer about a filing deadline or a contract term is a liability. An honest "I do not find that" is not.</p>
+<p>Every answer carries the source passage, so checking the work takes ten seconds. The disk is encrypted, the backup is encrypted with a passphrase your firm holds, and Artifexo does not hold your data.</p>
+<p><a href="https://github.com/artifexofabrika/Arkiv" class="card-link">Arkiv is source-available on GitHub &rarr;</a></p>
+</div>
+
+<div id="manufacturing" class="section">
+<h2>Koorsus &amp; Myarra, for the floor.</h2>
+<p class="pull">Most plants work hard. Few close the loop.</p>
+<p>Myarra is the measure: hourly production against standard, OEE, operator performance, changeover variance, downtime, PDCA. Koorsus is the course: the document estate the plant already has, made reachable by question.</p>
+<p>Both run on the same appliance. Both stay in the building. The line lead captures by phone in ten seconds. The plant manager reads the numbers the next morning.</p>
+<p>The two measures matter. OEE counts every loss; operator performance excludes what the operator did not cause. Do not collapse them into one number. That is the design, and it is why the numbers mean what they mean.</p>
+<p><a href="https://github.com/artifexofabrika/Koorsus" class="card-link">Koorsus and Myarra are on GitHub &rarr;</a></p>
 </div>
 
 <div class="section">
 <h2>How we work.</h2>
 <div class="steps">
-<div class="step">
-<div class="num">1</div>
-<div class="body">
-<strong>Assessment</strong>
-<span>We walk your floor, review your documents, and identify where time and money are being lost.</span>
-</div>
-</div>
-<div class="step">
-<div class="num">2</div>
-<div class="body">
-<strong>Deployment</strong>
-<span>We install the hardware, ingest your documents, configure your products and procedures, and tune the system to your operation.</span>
-</div>
-</div>
-<div class="step">
-<div class="num">3</div>
-<div class="body">
-<strong>Stewardship</strong>
-<span>An optional monthly retainer keeps the system healthy and the numbers meaningful. <strong>Monitoring</strong> begins at $250 per month and covers uptime, log review, software updates, and a quarterly call. <strong>Advisory</strong> begins at $850 per month and adds weekly metric review, anomaly response, and monthly operational support. Spot work is quoted separately.</span>
-</div>
-</div>
+<div class="step"><div class="num">1</div><div class="body"><strong>Assessment</strong><span>We learn your documents or your floor, and the questions you cannot currently answer. Fifteen minutes on the phone is usually enough to know whether we are a fit.</span></div></div>
+<div class="step"><div class="num">2</div><div class="body"><strong>Deployment</strong><span>We install the appliance, configure it for your firm or plant, and walk the person who will use it through the first document and the first question.</span></div></div>
+<div class="step"><div class="num">3</div><div class="body"><strong>Stewardship</strong><span>An optional monthly retainer keeps the system healthy: software updates, backup verification, a quarterly review. Or you maintain it yourself; the source is available.</span></div></div>
 </div>
 </div>
 
+<div class="section">
+<h2>Pricing.</h2>
+<p>One appliance, installed. No subscription. The software is source-available; if you or your IT staff want to run it yourself, you can.</p>
 
+<div class="feature-card" style="border-color: #c0a878; margin-top: 1.5rem;">
+<div class="icon">&#128220;</div>
+<strong>Arkiv &mdash; legal, medical, professional</strong>
+<span style="display:block;color:#c0a878;font-weight:bold;margin:0.5rem 0;">$2,500 base appliance</span>
+<span>The appliance, installed and configured on your office network. Includes a one-hour walk-through for the office manager, a printed Quick Start card, and one year of hardware warranty. Source-available software, yours to keep.</span>
+<span style="display:block;margin-top:0.75rem;"><strong style="color:#c0a878;">$3,500 to $4,000.</strong> Larger appliance for firms with five or more concurrent users or a larger document estate.</span>
+</div>
 
-<div class="section" style="max-width:900px;">
-<h2>Advisory Engagements.</h2>
-<p style="margin-bottom:1.75rem;">Beyond the appliance, these are the advisory engagements. Every operation is different. These are the starting points.</p>
-<div class="features capabilities">
+<div class="feature-card" style="margin-top: 1.25rem;">
+<div class="icon">&#127981;</div>
+<strong>Koorsus &amp; Myarra &mdash; manufacturing</strong>
+<span style="display:block;margin-top:0.75rem;"><strong style="color:#c0a878;">$1,200. Hardware only.</strong> The Jetson Orin Nano kit with SSD and case. Flash it yourself.</span>
+<span style="display:block;margin-top:0.6rem;"><strong style="color:#c0a878;">$3,500. Turnkey on Orin Nano.</strong> Remote configuration, master data load, live training, 30 days of email support.</span>
+<span style="display:block;margin-top:0.6rem;"><strong style="color:#c0a878;">$5,500. Turnkey on Orin NX.</strong> The heavier module, for larger plants and future vision work.</span>
+<span style="display:block;margin-top:0.6rem;"><strong style="color:#c0a878;">$99. Odoo Connector.</strong> Read-only bridge between Odoo Manufacturing and Myarra. Published on the Odoo Apps Store.</span>
+</div>
+
+<p class="footnote">On-site installation is available, quoted separately with travel at cost. Extended support plans are available.</p>
+</div>
+
+<div class="section">
+<h2>Advisory engagements.</h2>
+<p>Beyond the appliance, these are the advisory engagements. Every operation is different. These are the starting points.</p>
+<div class="features">
 
 <div class="feature-card">
 <div class="icon">&#128202;</div>
 <strong>Operational Diagnostic</strong>
 <span style="display:block;color:#c0a878;font-weight:bold;margin:0.5rem 0;">$2,500</span>
-<span>One day on-site. Current-state assessment, 60-day improvement plan, and a future-state roadmap. No obligation beyond the diagnostic.</span>
-<a href="#diagnostic" class="card-link">See what's included &rarr;</a>
+<span>One day on-site. Current-state assessment, 60-day improvement plan, future-state roadmap. No obligation beyond the diagnostic.</span>
 </div>
 
 <div class="feature-card">
 <div class="icon">&#127979;</div>
 <strong>On-Site Lean Training</strong>
 <span style="display:block;color:#c0a878;font-weight:bold;margin:0.5rem 0;">$3,500</span>
-<span>An eight-hour session on your floor for up to twenty people. We teach the tools your team will use: Plan-Do-Check-Act, the A3 problem-solving sheet, root-cause analysis with the fishbone diagram, the funnel diagram, and a hands-on lean simulation to make the theory land. Your team leaves with the methods, not a binder about them.</span>
+<span>Eight-hour session on your floor for up to twenty people. PDCA, A3, root-cause analysis, the lean simulation. Your team leaves with the methods, not a binder about them.</span>
 </div>
 
 <div class="feature-card">
@@ -510,87 +208,15 @@ Open source, or installed on your device from $1,500.
 </div>
 <p class="footnote">All engagements begin with a brief conversation. If we are not a fit, I will tell you.</p>
 </div>
-<div id="diagnostic" class="section" style="max-width:680px;">
-<h2>What the diagnostic includes.</h2>
-<p style="margin-bottom:1.75rem;">One day on-site. A written report delivered within five business days. Everything below, in a single bound document.</p>
-
-<div class="steps">
-
-<div class="step">
-<div class="num">1</div>
-<div class="body">
-<strong>Current-State Snapshot</strong>
-<span>A clear, written picture of how your operation runs today. Throughput at each constraint. Changeover times, by product family. Scrap and rework rates. Downtime, by cause. On-time delivery. You will know, for the first time, where you actually stand.</span>
-</div>
-</div>
-
-<div class="step">
-<div class="num">2</div>
-<div class="body">
-<strong>The Gap Analysis</strong>
-<span>We compare your current state to what is achievable. Not to an industry benchmark, but to your own operation's potential. The two or three constraints costing you the most. Where the losses are concentrated. Which improvements are within reach in the next thirty days.</span>
-</div>
-</div>
-
-<div class="step">
-<div class="num">3</div>
-<div class="body">
-<strong>Quick Wins: The First 30 Days</strong>
-<span>Three to five specific, low-cost actions you can take immediately. Not theory. Not best practices borrowed from a textbook. Things that fit your floor, your people, and your product.</span>
-</div>
-</div>
-
-<div class="step">
-<div class="num">4</div>
-<div class="body">
-<strong>The 60-Day Plan</strong>
-<span>A prioritized sequence of improvements for the following two months. Each item is scoped, assigned, and measurable. Written to be executed by your existing team, not to require an outside contractor.</span>
-</div>
-</div>
-
-<div class="step">
-<div class="num">5</div>
-<div class="body">
-<strong>Future-State Roadmap</strong>
-<span>Where this operation can be in six, twelve, and twenty-four months. A specific set of targets for throughput, changeover time, scrap rate, downtime, and OEE. These become the baseline for everything that follows.</span>
-</div>
-</div>
-
-<div class="step">
-<div class="num">6</div>
-<div class="body">
-<strong>What We Track From Here</strong>
-<span>The diagnostic establishes the metrics and the targets. If you choose to continue, those numbers are tracked daily by <strong>Koorsus</strong>, the course from where your plant is to where it intends to be, and read by <strong>Myarra</strong>, its measurement layer. Plan, Do, Check, Act. Not once a year in a binder, but every Monday morning, in plain English.</span>
-</div>
-</div>
-
-</div>
-
-<div class="diag-callout">
-<p><strong>Koorsus</strong> is the course: the path from where your plant is to where it intends to be.</p>
-<p><strong>Myarra</strong> is the measure: current state, future state, and the distance between them, updated every shift.</p>
-<p>Together they close the loop. Most plants work hard. Few close the loop.</p>
-</div>
-
-<p style="margin-top:1.5rem;"><strong>What we ask of you:</strong> one day of access to your floor, your numbers, and the people who run the machines. That is all.</p>
-<p><strong>What is not included:</strong> travel expenses, billed separately at cost.</p>
-<p><strong>If we are not a fit:</strong> we will say so, and the diagnostic stands on its own. There is no obligation to continue.</p>
-</div>
-
-<div class="section">
-<h2>Why it matters.</h2>
-<p class="pull">Your institutional memory is an asset. It should not live in a vendor's cloud.</p>
-<p>We build systems that stay in your building and answer only to you. The knowledge your team has accumulated over thirty years belongs on your shelf, not on someone else's server.</p>
-</div>
 
 <div id="contact" class="waitlist">
-<h2>Request an assessment.</h2>
+<h2>Request a conversation.</h2>
 <p>Tell us where to reach you. We will arrange a brief conversation.</p>
 <form action="https://formspree.io/f/xdarnqnj" method="POST">
 <input type="text" name="name" placeholder="Name" required>
 <input type="email" name="email" placeholder="Email" required>
 <input type="text" name="company" placeholder="Company (optional)">
-<button type="submit">Request an assessment</button>
+<button type="submit">Request a conversation</button>
 </form>
 </div>
 
@@ -602,25 +228,5 @@ Artifexo Fabrika, Columbus, Ohio &nbsp;|&nbsp;
 </footer>
 
 </div>
-
-<div id="imageModal" class="modal">
-    <img class="modal-content" id="modalImg">
-</div>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    var modal = document.getElementById("imageModal");
-    var modalImg = document.getElementById("modalImg");
-    var images = document.querySelectorAll(".gallery-img");
-    images.forEach(function(img) {
-        img.addEventListener("click", function() {
-            modal.style.display = "block";
-            modalImg.src = this.src;
-        });
-    });
-    modal.addEventListener("click", function() {
-        modal.style.display = "none";
-    });
-});
-</script>
 </body>
 </html>
