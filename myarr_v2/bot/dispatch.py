@@ -90,6 +90,8 @@ def dispatch(conn, s, text, user):
         return production._cont_record_scrap(conn, s, text, user)
     if state == 'awaiting_record_downtime':
         return production._cont_record_downtime(conn, s, text, user)
+    if state == 'awaiting_record_plausibility':
+        return production._cont_record_plausibility(conn, s, text, user)
     if state == 'awaiting_lunch_dir':
         return maintenance.cont_lunch_dir(conn, s, text, user)
     if state == 'awaiting_cip_dir':
