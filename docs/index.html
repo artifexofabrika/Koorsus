@@ -7,209 +7,83 @@
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="favicon.png">
 <style>
-html, body { margin: 0; padding: 0; background: #1a1a1a; }
-.artifexo-page { background: #1a1a1a; color: #d4d4d4; font-family: Georgia, serif; min-height: 100vh; overflow-y: auto; font-size: 16px; line-height: 1.6; }
-.artifexo-page, .artifexo-page * { word-break: normal; overflow-wrap: break-word; hyphens: none; box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #0e0e0e; }
+.page { background: #0e0e0e; color: #d4d4d4; font-family: Georgia, serif; min-height: 100vh; font-size: 16px; line-height: 1.6; }
+.page * { box-sizing: border-box; }
 a { color: #c0a878; }
-.hero { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 92vh; text-align: center; padding: 2rem 1.25rem; background: linear-gradient(rgba(26, 26, 26, 0.72), rgba(26, 26, 26, 0.92)), url('board_screenshot.png') center/cover no-repeat; position: relative; text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.9); }
-.hero .eyebrow { color: #c0a878; font-size: 0.88rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 1.5rem; }
-.hero h1 { font-size: clamp(1.9rem, 5vw, 3.4rem); color: #c0a878; margin: 0 0 0.9rem; font-weight: bold; letter-spacing: -0.015em; line-height: 1.15; }
-.hero p { font-size: clamp(1rem, 1.8vw, 1.2rem); color: #cfc6b4; max-width: 620px; margin: 0 0 1.5rem; }
-.hero-promise { color: #b0b0b0; font-size: 0.92rem; letter-spacing: 0.06em; margin-bottom: 2rem; text-transform: uppercase; }
-.hero-promise span { margin: 0 0.6rem; }
-.btn { display: inline-block; padding: 0.85rem 1.6rem; background: #c0a878; color: #1a1a1a; text-decoration: none; font-weight: bold; letter-spacing: 0.06em; border-radius: 3px; text-shadow: none; font-size: 0.92rem; }
-.btn:hover { background: #d4bf96; }
-.btn.secondary { background: transparent; color: #c0a878; border: 1px solid #c0a878; }
-.btn.secondary:hover { background: #c0a878; color: #1a1a1a; }
-.section { max-width: 960px; margin: 0 auto; padding: 4rem 1.5rem; }
-.section h2 { color: #c0a878; font-size: clamp(1.35rem, 2.4vw, 1.85rem); margin: 0 0 1.25rem; font-weight: normal; letter-spacing: 0.01em; }
-.section p { color: #c0c0c0; }
-.pull { color: #e0d6c2; font-size: 1.15rem; font-style: italic; border-left: 3px solid #c0a878; padding-left: 1rem; margin: 1.5rem 0; }
-.product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; }
-@media (max-width: 800px) { .product-grid { grid-template-columns: 1fr; } }
-.product-card { border: 1px solid #3a3a3a; border-radius: 6px; padding: 1.75rem; background: #212121; display: flex; flex-direction: column; }
-.product-card.arkiv { border-top: 3px solid #c0a878; }
-.product-card.plant { border-top: 3px solid #7a8a6a; }
-.product-tag { color: #888; font-size: 0.78rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.6rem; }
-.product-card h3 { color: #e0d6c2; font-size: 1.5rem; margin: 0 0 0.5rem; font-weight: bold; letter-spacing: 0.01em; }
-.product-pitch { color: #c0a878; font-style: italic; margin: 0 0 1rem; font-size: 1rem; }
-.product-card p { color: #c0c0c0; margin: 0 0 1rem; font-size: 0.95rem; }
-.product-list { list-style: none; padding: 0; margin: 0 0 1.25rem; }
-.product-list li { color: #b8b8b8; font-size: 0.92rem; padding: 0.35rem 0 0.35rem 1.35rem; position: relative; }
-.product-list li:before { content: '\2713'; color: #c0a878; position: absolute; left: 0; font-weight: bold; }
-.product-price { color: #c0a878; font-size: 1.1rem; font-weight: bold; margin: 0 0 0.75rem; letter-spacing: 0.02em; }
-.card-link { color: #c0a878; text-decoration: underline; font-weight: bold; }
-.card-link:hover { color: #e0d6c2; }
-.features { display: flex; flex-wrap: wrap; gap: 1.25rem; }
-.feature-card { flex: 1 1 260px; border: 1px solid #3a3a3a; border-radius: 6px; padding: 1.5rem; background: #212121; }
-.feature-card .icon { font-size: 1.75rem; margin-bottom: 0.5rem; }
-.feature-card strong { color: #e0d6c2; display: block; font-size: 1.02rem; margin-bottom: 0.5rem; }
-.feature-card span { color: #b0b0b0; font-size: 0.92rem; }
-.steps { margin-top: 1.5rem; }
-.step { display: flex; gap: 1.25rem; padding: 1.25rem 0; border-bottom: 1px solid #2f2f2f; }
-.step:last-child { border-bottom: none; }
-.step .num { color: #c0a878; font-size: 2rem; font-weight: bold; line-height: 1; min-width: 2.2rem; }
-.step .body strong { color: #e0d6c2; display: block; margin-bottom: 0.35rem; }
-.step .body span { color: #b8b8b8; font-size: 0.95rem; }
-.footnote { color: #888; font-size: 0.85rem; font-style: italic; margin-top: 1.25rem; }
-.waitlist { max-width: 640px; margin: 0 auto; padding: 4rem 1.5rem; text-align: center; }
-.waitlist h2 { color: #c0a878; font-size: clamp(1.35rem, 2.4vw, 1.85rem); margin: 0 0 0.75rem; font-weight: normal; }
-.waitlist p { color: #b0b0b0; margin: 0 0 1.5rem; }
-.waitlist input { display: block; width: 100%; padding: 0.8rem 1rem; margin: 0.65rem 0; background: #262626; color: #e0e0e0; border: 1px solid #3a3a3a; border-radius: 3px; font-size: 0.95rem; font-family: Georgia, serif; }
-.waitlist input:focus { outline: 2px solid #c0a878; outline-offset: -1px; }
-.waitlist button { display: block; width: 100%; padding: 0.9rem; margin-top: 0.75rem; background: #c0a878; color: #1a1a1a; border: none; font-weight: bold; letter-spacing: 0.06em; border-radius: 3px; font-size: 0.95rem; cursor: pointer; font-family: Georgia, serif; }
-.waitlist button:hover { background: #d4bf96; }
-footer { text-align: center; padding: 2rem 1.5rem 3rem; color: #888; font-size: 0.85rem; border-top: 1px solid #2a2a2a; }
+.hero { min-height: 78vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 4rem 1.25rem 2rem; background: radial-gradient(circle at 50% 40%, #1e1e1e 0%, #0e0e0e 70%); }
+.hero .eyebrow { color: #c0a878; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 1.5rem; }
+.hero h1 { font-size: clamp(2rem, 5.5vw, 3.8rem); color: #c0a878; margin: 0 0 1rem; font-weight: bold; letter-spacing: -0.015em; line-height: 1.1; }
+.hero .promise { font-size: clamp(1rem, 1.8vw, 1.2rem); color: #cfc6b4; max-width: 620px; margin: 0 0 1rem; }
+.hero .meta { color: #888; font-size: 0.88rem; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 0.5rem; }
+.hero .meta span.pt { margin: 0 0.55rem; }
+.hero .meta span.dot { color: #444; margin: 0; }
+.doors { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 1000px; margin: 2rem auto 0; padding: 0 1.25rem; }
+@media (max-width: 760px) { .doors { grid-template-columns: 1fr; gap: 1.25rem; } }
+.door { display: block; text-decoration: none; color: inherit; border: 1px solid #333; border-radius: 8px; padding: 2.5rem 2rem; background: #161616; transition: transform 0.2s ease, border-color 0.2s ease; text-align: left; min-height: 280px; }
+.door:hover { transform: translateY(-3px); border-color: #c0a878; background: #1a1a1a; }
+.door .tag { color: #888; font-size: 0.75rem; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 0.9rem; }
+.door h2 { color: #e0d6c2; font-size: 1.9rem; margin: 0 0 0.5rem; font-weight: bold; letter-spacing: 0.01em; }
+.door .pitch { color: #c0a878; font-style: italic; margin: 0 0 1.2rem; font-size: 1.05rem; }
+.door p { color: #b8b8b8; margin: 0 0 1.2rem; font-size: 0.95rem; }
+.door .enter { color: #c0a878; font-weight: bold; text-decoration: underline; }
+.door.arkiv { border-top: 3px solid #c0a878; }
+.door.plant { border-top: 3px solid #7a8a6a; }
+.why { max-width: 760px; margin: 4rem auto 0; padding: 0 1.5rem; text-align: center; }
+.why p { color: #a8a8a8; font-size: 1rem; margin-bottom: 1rem; }
+.contact { max-width: 620px; margin: 3rem auto 0; padding: 3rem 1.5rem 4rem; text-align: center; }
+.contact h2 { color: #c0a878; font-size: 1.6rem; margin: 0 0 0.6rem; font-weight: normal; }
+.contact p { color: #a8a8a8; margin: 0 0 1.5rem; }
+.contact input { display: block; width: 100%; padding: 0.8rem 1rem; margin: 0.6rem 0; background: #1c1c1c; color: #e0e0e0; border: 1px solid #333; border-radius: 3px; font-size: 0.95rem; font-family: Georgia, serif; }
+.contact input:focus { outline: 2px solid #c0a878; outline-offset: -1px; }
+.contact button { display: block; width: 100%; padding: 0.9rem; margin-top: 0.75rem; background: #c0a878; color: #0e0e0e; border: none; font-weight: bold; letter-spacing: 0.06em; border-radius: 3px; font-size: 0.95rem; cursor: pointer; font-family: Georgia, serif; }
+.contact button:hover { background: #d4bf96; }
+footer { text-align: center; padding: 2rem 1.5rem 3rem; color: #777; font-size: 0.82rem; border-top: 1px solid #222; }
 footer a { color: #c0a878; text-decoration: none; }
 footer a:hover { text-decoration: underline; }
-@media print { .hero { min-height: auto; } .btn { display: none; } }
 </style>
 </head>
 <body>
-<div class="artifexo-page">
+<div class="page">
 
 <div class="hero">
-<div class="eyebrow">Artifexo Fabrika, Columbus, Ohio</div>
+<div class="eyebrow">Artifexo Fabrika &middot; Columbus, Ohio</div>
 <h1>AI appliances you own.</h1>
-<p>No subscription. No cloud. No data leaving your building.</p>
-<div class="hero-promise">
-<span>You own the hardware</span>
-<span>&middot;</span>
-<span>No monthly fee</span>
-<span>&middot;</span>
-<span>On-site, always</span>
-<span>&middot;</span>
-<span>Source-available</span>
-</div>
-<a href="#products" class="btn">See the appliances</a>
-<a href="#contact" class="btn secondary" style="margin-left:0.75rem;">Request a conversation</a>
-</div>
-<div class="section">
-<h2>Why we build this way.</h2>
-<p>The general-purpose AI tools solve document and data problems by sending everything to someone else's server. For a law firm whose privilege obligations follow every page, or a plant whose process knowledge is the competitive advantage, that is not a solution.</p>
-<p>We build the other kind. A small appliance, on your network, that answers from your documents and measures your floor. It does not connect to the internet. It does not have a subscription. It is yours.</p>
+<p class="promise">No subscription. No cloud. No data leaving your building.</p>
+<p class="meta">
+<span class="pt">You own the hardware</span><span class="dot">&middot;</span>
+<span class="pt">No monthly fee</span><span class="dot">&middot;</span>
+<span class="pt">On-site, always</span><span class="dot">&middot;</span>
+<span class="pt">Source-available</span>
+</p>
 </div>
 
-<div id="products" class="section">
-<h2>Two appliances.</h2>
-<p>Same posture. Different subject. Both run on the NVIDIA Jetson, both are source-available, both stay in your building.</p>
+<div class="doors">
 
-<div class="product-grid">
+<a href="arkiv.html" class="door arkiv">
+<div class="tag">Legal &middot; Medical &middot; Professional</div>
+<h2>Arkiv</h2>
+<p class="pitch">RAG for less than a laptop.</p>
+<p>Your firm's documents, reachable in plain English. Organised by matter. Answered with the source cited. Refuses when the answer is not in the documents.</p>
+<span class="enter">See Arkiv &rarr;</span>
+</a>
 
-<div class="product-card arkiv">
-<div class="product-tag">Legal &middot; Medical &middot; Professional</div>
-<h3>Arkiv</h3>
-<p class="product-pitch">RAG for less than a laptop.</p>
-<p>Your firm's documents, reachable in plain English. Contracts, pleadings, discovery, correspondence, prior work product. Organised by matter. Answered with the source cited. Refuses when the answer is not in the documents.</p>
-<ul class="product-list">
-<li>Matter-scoped retrieval. A firm with a hundred cases gets the right answer.</li>
-<li>Text, Markdown, PDF, Word, OpenDocument files.</li>
-<li>Encrypted at rest. Encrypted backup to a USB in your safe.</li>
-<li>No internet. No subscription. No cloud.</li>
-</ul>
-<div class="product-price">From $2,500</div>
-<a href="#arkiv" class="card-link">How Arkiv works &rarr;</a>
-</div>
-
-<div class="product-card plant">
-<div class="product-tag">Manufacturing &middot; Operations</div>
-<h3>Koorsus &amp; Myarra</h3>
-<p class="product-pitch">Continuous improvement, closed.</p>
-<p>Production-to-standard tracking and a document platform on the same appliance. Hourly capture from the floor. OEE and operator performance in two measures. Changeover variance. PDCA. The Check step of the loop, without a data janitor.</p>
-<ul class="product-list">
-<li>Hourly runs from a phone. Free-text. Never a dropdown.</li>
-<li>Two measures, never collapsed. OEE counts every loss; operator performance excludes what the operator did not cause.</li>
-<li>Changeover timing per station. Aggregate wall clock.</li>
-<li>Document estate reachable by question, with citation.</li>
-</ul>
-<div class="product-price">From $3,500</div>
-<a href="#manufacturing" class="card-link">How the plant system works &rarr;</a>
-</div>
+<a href="manufacturing.html" class="door plant">
+<div class="tag">Manufacturing &middot; Operations</div>
+<h2>Koorsus &amp; Myarra</h2>
+<p class="pitch">Continuous improvement, closed.</p>
+<p>Hourly production from the floor. Two measures, never collapsed. Changeover variance. PDCA. The Check step of the loop, without a data janitor.</p>
+<span class="enter">See Koorsus &amp; Myarra &rarr;</span>
+</a>
 
 </div>
-</div>
-<div id="arkiv" class="section">
-<h2>Arkiv, for the office.</h2>
-<p class="pull">Your documents are the substance of your practice. They should not live on someone else's server.</p>
-<p>The appliance sits in your office, connects to your network, and answers questions from your own documents. You ingest by matter. You ask in plain English. Arkiv cites the exact source passage of every claim, and refuses when the answer is not in the documents.</p>
-<p>The refusal is the feature. A confident wrong answer about a filing deadline or a contract term is a liability. An honest "I do not find that" is not.</p>
-<p>Every answer carries the source passage, so checking the work takes ten seconds. The disk is encrypted, the backup is encrypted with a passphrase your firm holds, and Artifexo does not hold your data.</p>
-<p><a href="https://github.com/artifexofabrika/Arkiv" class="card-link">Arkiv is source-available on GitHub &rarr;</a></p>
+
+<div class="why">
+<p>The general-purpose AI tools solve these problems by sending everything to someone else's server. For a law firm whose privilege obligations follow every page, or a plant whose process knowledge is the competitive advantage, that is not a solution.</p>
+<p>We build the other kind: a small appliance, on your network, that answers from your documents and measures your floor. It does not connect to the internet. It does not have a subscription. It is yours.</p>
 </div>
 
-<div id="manufacturing" class="section">
-<h2>Koorsus &amp; Myarra, for the floor.</h2>
-<p class="pull">Most plants work hard. Few close the loop.</p>
-<p>Myarra is the measure: hourly production against standard, OEE, operator performance, changeover variance, downtime, PDCA. Koorsus is the course: the document estate the plant already has, made reachable by question.</p>
-<p>Both run on the same appliance. Both stay in the building. The line lead captures by phone in ten seconds. The plant manager reads the numbers the next morning.</p>
-<p>The two measures matter. OEE counts every loss; operator performance excludes what the operator did not cause. Do not collapse them into one number. That is the design, and it is why the numbers mean what they mean.</p>
-<p><a href="https://github.com/artifexofabrika/Koorsus" class="card-link">Koorsus and Myarra are on GitHub &rarr;</a></p>
-</div>
-
-<div class="section">
-<h2>How we work.</h2>
-<div class="steps">
-<div class="step"><div class="num">1</div><div class="body"><strong>Assessment</strong><span>We learn your documents or your floor, and the questions you cannot currently answer. Fifteen minutes on the phone is usually enough to know whether we are a fit.</span></div></div>
-<div class="step"><div class="num">2</div><div class="body"><strong>Deployment</strong><span>We install the appliance, configure it for your firm or plant, and walk the person who will use it through the first document and the first question.</span></div></div>
-<div class="step"><div class="num">3</div><div class="body"><strong>Stewardship</strong><span>An optional monthly retainer keeps the system healthy: software updates, backup verification, a quarterly review. Or you maintain it yourself; the source is available.</span></div></div>
-</div>
-</div>
-
-<div class="section">
-<h2>Pricing.</h2>
-<p>One appliance, installed. No subscription. The software is source-available; if you or your IT staff want to run it yourself, you can.</p>
-
-<div class="feature-card" style="border-color: #c0a878; margin-top: 1.5rem;">
-<div class="icon">&#128220;</div>
-<strong>Arkiv &mdash; legal, medical, professional</strong>
-<span style="display:block;color:#c0a878;font-weight:bold;margin:0.5rem 0;">$2,500 base appliance</span>
-<span>The appliance, installed and configured on your office network. Includes a one-hour walk-through for the office manager, a printed Quick Start card, and one year of hardware warranty. Source-available software, yours to keep.</span>
-<span style="display:block;margin-top:0.75rem;"><strong style="color:#c0a878;">$3,500 to $4,000.</strong> Larger appliance for firms with five or more concurrent users or a larger document estate.</span>
-</div>
-
-<div class="feature-card" style="margin-top: 1.25rem;">
-<div class="icon">&#127981;</div>
-<strong>Koorsus &amp; Myarra &mdash; manufacturing</strong>
-<span style="display:block;margin-top:0.75rem;"><strong style="color:#c0a878;">$1,200. Hardware only.</strong> The Jetson Orin Nano kit with SSD and case. Flash it yourself.</span>
-<span style="display:block;margin-top:0.6rem;"><strong style="color:#c0a878;">$3,500. Turnkey on Orin Nano.</strong> Remote configuration, master data load, live training, 30 days of email support.</span>
-<span style="display:block;margin-top:0.6rem;"><strong style="color:#c0a878;">$5,500. Turnkey on Orin NX.</strong> The heavier module, for larger plants and future vision work.</span>
-<span style="display:block;margin-top:0.6rem;"><strong style="color:#c0a878;">$99. Odoo Connector.</strong> Read-only bridge between Odoo Manufacturing and Myarra. Published on the Odoo Apps Store.</span>
-</div>
-
-<p class="footnote">On-site installation is available, quoted separately with travel at cost. Extended support plans are available.</p>
-</div>
-
-<div class="section">
-<h2>Advisory engagements.</h2>
-<p>Beyond the appliance, these are the advisory engagements. Every operation is different. These are the starting points.</p>
-<div class="features">
-
-<div class="feature-card">
-<div class="icon">&#128202;</div>
-<strong>Operational Diagnostic</strong>
-<span style="display:block;color:#c0a878;font-weight:bold;margin:0.5rem 0;">$2,500</span>
-<span>One day on-site. Current-state assessment, 60-day improvement plan, future-state roadmap. No obligation beyond the diagnostic.</span>
-</div>
-
-<div class="feature-card">
-<div class="icon">&#127979;</div>
-<strong>On-Site Lean Training</strong>
-<span style="display:block;color:#c0a878;font-weight:bold;margin:0.5rem 0;">$3,500</span>
-<span>Eight-hour session on your floor for up to twenty people. PDCA, A3, root-cause analysis, the lean simulation. Your team leaves with the methods, not a binder about them.</span>
-</div>
-
-<div class="feature-card">
-<div class="icon">&#128188;</div>
-<strong>Fractional Operations Leadership</strong>
-<span style="display:block;color:#c0a878;font-weight:bold;margin:0.5rem 0;">Starting at $8,000/month</span>
-<span>Ongoing oversight for companies that need senior leadership without the full-time cost. Two to three days per week on-site.</span>
-</div>
-
-</div>
-<p class="footnote">All engagements begin with a brief conversation. If we are not a fit, I will tell you.</p>
-</div>
-
-<div id="contact" class="waitlist">
+<div id="contact" class="contact">
 <h2>Request a conversation.</h2>
 <p>Tell us where to reach you. We will arrange a brief conversation.</p>
 <form action="https://formspree.io/f/xdarnqnj" method="POST">

@@ -1,0 +1,157 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arkiv &mdash; Artifexo Fabrika</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<style>
+html, body { margin: 0; padding: 0; background: #0e0e0e; }
+.page { background: #0e0e0e; color: #d4d4d4; font-family: Georgia, serif; min-height: 100vh; font-size: 16px; line-height: 1.6; }
+.page * { box-sizing: border-box; }
+a { color: #c0a878; }
+.nav { max-width: 980px; margin: 0 auto; padding: 1.5rem 1.5rem 0; display: flex; justify-content: space-between; align-items: center; }
+.nav .brand { color: #c0a878; font-size: 1.1rem; letter-spacing: 0.08em; text-decoration: none; font-weight: bold; }
+.nav .back { color: #888; text-decoration: none; font-size: 0.88rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.nav .back:hover { color: #c0a878; }
+.hero { max-width: 820px; margin: 0 auto; padding: 4rem 1.5rem 3rem; text-align: center; background: radial-gradient(circle at 50% 30%, #1e1810 0%, #0e0e0e 70%); border-radius: 0 0 12px 12px; }
+.hero .tag { color: #888; font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 1rem; }
+.hero h1 { color: #c0a878; font-size: clamp(2.2rem, 5vw, 3.6rem); margin: 0 0 0.6rem; font-weight: bold; letter-spacing: -0.01em; line-height: 1.1; }
+.hero .pitch { color: #e0d6c2; font-size: clamp(1.1rem, 2vw, 1.4rem); font-style: italic; margin: 0 0 1.5rem; }
+.hero p { color: #c0c0c0; max-width: 620px; margin: 0 auto 1.2rem; }
+.section { max-width: 820px; margin: 0 auto; padding: 3.5rem 1.5rem; }
+.section h2 { color: #c0a878; font-size: clamp(1.35rem, 2.4vw, 1.7rem); margin: 0 0 1rem; font-weight: normal; letter-spacing: 0.01em; }
+.section p { color: #c0c0c0; margin-bottom: 1rem; }
+.pull { color: #e0d6c2; font-size: 1.15rem; font-style: italic; border-left: 3px solid #c0a878; padding-left: 1rem; margin: 1.5rem 0; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1.5rem; }
+@media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+.col h3 { color: #e0d6c2; font-size: 1.1rem; margin: 0 0 0.75rem; letter-spacing: 0.02em; }
+.col ul { list-style: none; padding: 0; margin: 0; }
+.col li { color: #b8b8b8; font-size: 0.95rem; padding: 0.4rem 0 0.4rem 1.4rem; position: relative; }
+.col li:before { content: '\2713'; color: #c0a878; position: absolute; left: 0; font-weight: bold; }
+.col li.x:before { content: '\2717'; color: #a05555; }
+.price-box { border: 1px solid #333; border-top: 3px solid #c0a878; border-radius: 6px; padding: 2rem; margin: 2rem 0; background: #161616; text-align: center; }
+.price-box .label { color: #888; font-size: 0.78rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.75rem; }
+.price-box .amount { color: #c0a878; font-size: 2rem; font-weight: bold; letter-spacing: 0.01em; margin: 0 0 0.5rem; }
+.price-box .note { color: #a8a8a8; font-size: 0.95rem; margin: 0; }
+.contact { max-width: 640px; margin: 0 auto; padding: 3rem 1.5rem 4rem; text-align: center; }
+.contact h2 { color: #c0a878; font-size: 1.5rem; margin: 0 0 0.6rem; font-weight: normal; }
+.contact p { color: #a8a8a8; margin: 0 0 1.5rem; }
+.contact input { display: block; width: 100%; padding: 0.8rem 1rem; margin: 0.6rem 0; background: #1c1c1c; color: #e0e0e0; border: 1px solid #333; border-radius: 3px; font-size: 0.95rem; font-family: Georgia, serif; }
+.contact input:focus { outline: 2px solid #c0a878; outline-offset: -1px; }
+.contact button { display: block; width: 100%; padding: 0.9rem; margin-top: 0.75rem; background: #c0a878; color: #0e0e0e; border: none; font-weight: bold; letter-spacing: 0.06em; border-radius: 3px; font-size: 0.95rem; cursor: pointer; font-family: Georgia, serif; }
+.contact button:hover { background: #d4bf96; }
+footer { text-align: center; padding: 2rem 1.5rem 3rem; color: #777; font-size: 0.82rem; border-top: 1px solid #222; }
+footer a { color: #c0a878; text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="nav">
+<a href="index.html" class="brand">Artifexo Fabrika</a>
+<a href="index.html" class="back">&larr; All appliances</a>
+</div>
+
+<div class="hero">
+<div class="tag">Legal &middot; Medical &middot; Professional</div>
+<h1>Arkiv</h1>
+<p class="pitch">RAG for less than a laptop.</p>
+<p>Your firm's documents, reachable in plain English. On an appliance in your office. Never on anyone else's server.</p>
+</div>
+
+<div class="section">
+<h2>The problem.</h2>
+<p>Your documents are the substance of your practice. Contracts, pleadings, discovery, correspondence, prior work product. Almost none of it is reachable by search. The lawyer remembers the case, not the paragraph. The paralegal knows which file has the clause, until they leave.</p>
+<p>The general-purpose AI tools solve this by sending your documents to someone else's server. For a firm whose privilege obligations follow every page, that is not a solution.</p>
+</div>
+
+<div class="section">
+<h2>What Arkiv does.</h2>
+<p class="pull">Your documents, answered with the source cited. Refused when the answer is not there.</p>
+<div class="two-col">
+<div class="col">
+<h3>What it does</h3>
+<ul>
+<li>Answers questions from your own documents in plain English.</li>
+<li>Organises documents by matter. A firm with a hundred active cases gets the right answer, not the closest one.</li>
+<li>Cites the exact source passage behind every claim.</li>
+<li>Refuses when the answer is not in the documents. The refusal is the feature.</li>
+<li>Runs entirely on the appliance. No internet, no telemetry.</li>
+<li>Backs itself up nightly, encrypted, to a USB you keep in your safe.</li>
+</ul>
+</div>
+<div class="col">
+<h3>What it does not do</h3>
+<ul>
+<li class="x">It does not give legal advice. It answers from documents and cites them. You draw the conclusions.</li>
+<li class="x">It does not replace your case management system, billing system, or legal research databases.</li>
+<li class="x">It does not connect to the internet. Ever. By design.</li>
+<li class="x">It does not read scanned PDFs with no text layer. Most documents generated from Word or a court filing system have a text layer; scanned paper does not.</li>
+<li class="x">It does not answer every question. When the documents do not contain the answer, it says so.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="section">
+<h2>Why it can be trusted.</h2>
+<p>Every answer carries the source passage, not just the file name. You read the source and the answer side by side. Checking the work takes ten seconds.</p>
+<p>When the documents do not contain the answer, Arkiv refuses. Retrieval happens before the model runs; if there is nothing relevant, the system refuses without calling the language model at all. If there is something, the prompt instructs it to say plainly when the answer is not there. The refusal is a code path, not a hope. A system that guesses is worse than no system at all.</p>
+<p>Every refusal is logged alongside every answer. A firm can audit what the system declined to answer and whether the refusal was correct.</p>
+</div>
+
+<div class="section">
+<h2>Your documents stay in your office.</h2>
+<p>The appliance has an Ethernet cable to your office network and nothing else. No outbound connection, no telemetry, no update check, no remote support tunnel. Your documents never leave your building.</p>
+<p>The disk is encrypted. The backups are encrypted with a passphrase your firm chooses and stores in its password manager. Artifexo does not hold your data and cannot read it. If the appliance is stolen, your documents cannot be read.</p>
+<p>If the appliance fails, call us before noon Eastern. We ship a replacement the same day, or the next business day. Your backup USB and passphrase restore everything on the new appliance. No cloud, no download, no waiting for us to restore your data.</p>
+</div>
+
+<div class="section">
+<h2>Pricing.</h2>
+<div class="price-box">
+<div class="label">Arkiv base appliance</div>
+<div class="amount">$2,500</div>
+<p class="note">Installed and configured on your office network. Includes the appliance, a one-hour walk-through for your office manager, a printed Quick Start card, and one year of hardware warranty.</p>
+</div>
+<div class="price-box">
+<div class="label">Arkiv NX &mdash; larger firms</div>
+<div class="amount">$3,500 to $4,000</div>
+<p class="note">For firms with five or more concurrent users or a larger document estate.</p>
+</div>
+<p style="text-align: center; color: #c0a878; font-style: italic; margin-top: 2rem;">The cheapest on-premise legal AI appliance on the market is $7,500. Ours is $2,500. It does not connect to the internet. Your documents never leave the office.</p>
+</div>
+
+<div class="section">
+<h2>What is included, and what is not.</h2>
+<p><strong style="color: #e0d6c2;">Included:</strong> the appliance, configured and tested on your network; installation and a one-hour walk-through with your office manager; the Quick Start card and a laminated reference; one year of hardware warranty; source-available software you receive and can modify for your own use.</p>
+<p><strong style="color: #e0d6c2;">Not included:</strong> extended support plans (available separately); remote access from outside the office (available as an upgrade); a phone and tablet PWA (in development).</p>
+</div>
+
+<div id="contact" class="contact">
+<h2>Request a conversation.</h2>
+<p>Call or write. We schedule a fifteen-minute conversation to understand your firm's document volume and workflows, and we tell you honestly whether Arkiv is a fit. If it is, installation takes an afternoon.</p>
+<form action="https://formspree.io/f/xdarnqnj" method="POST">
+<input type="hidden" name="product" value="Arkiv">
+<input type="text" name="name" placeholder="Name" required>
+<input type="email" name="email" placeholder="Email" required>
+<input type="text" name="company" placeholder="Firm or practice (optional)">
+<button type="submit">Request a conversation</button>
+</form>
+</div>
+
+<footer>
+Artifexo Fabrika, Columbus, Ohio &nbsp;|&nbsp;
+<a href="mailto:contact@artifexofabrika.com">contact@artifexofabrika.com</a>
+<br><br>
+<a href="index.html">All appliances</a> &nbsp;|&nbsp; <a href="manufacturing.html">Koorsus &amp; Myarra</a>
+<br><br>
+&copy; 2026 Artifexo Fabrika. All rights reserved.
+</footer>
+
+</div>
+</body>
+</html>
