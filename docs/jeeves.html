@@ -14,24 +14,24 @@ a { color: #d4c4a8; }
 .nav .brand { color: #d4c4a8; font-size: 1.1rem; letter-spacing: 0.08em; text-decoration: none; font-weight: bold; }
 .nav .back { color: #888; text-decoration: none; font-size: 0.88rem; letter-spacing: 0.06em; text-transform: uppercase; }
 .nav .back:hover { color: #d4c4a8; }
-.hero { max-width: 900px; margin: 0 auto; padding: 6rem 1.5rem 4rem; text-align: center; background: linear-gradient(rgba(14,14,14,0.6), rgba(14,14,14,0.9)), url('jeeves_assets/architectural_modernist.jpeg') center/cover no-repeat; border-radius: 0 0 12px 12px; }
-.hero .tag { color: #a8a8a8; font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 1rem; }
-.hero h1 { color: #f0e6d2; font-size: clamp(2.2rem, 5vw, 3.6rem); margin: 0 0 0.6rem; font-weight: bold; letter-spacing: -0.01em; line-height: 1.1; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
-.hero .pitch { color: #d4c4a8; font-size: clamp(1.1rem, 2vw, 1.4rem); font-style: italic; margin: 0 0 1.5rem; text-shadow: 0 1px 5px rgba(0,0,0,0.8); }
-.hero p { color: #e0e0e0; max-width: 620px; margin: 0 auto 1.2rem; text-shadow: 0 1px 5px rgba(0,0,0,0.8); }
+.hero { max-width: 900px; margin: 0 auto; padding: 6rem 1.5rem 4rem; text-align: center; background: linear-gradient(rgba(14,14,14,0.55), rgba(14,14,14,0.92)), url('jeeves_hero.jpeg') center/cover no-repeat; border-radius: 0 0 12px 12px; }
+.hero .tag { color: #d4c4a8; font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 1rem; }
+.hero h1 { color: #f0e6d2; font-size: clamp(2.2rem, 5vw, 3.6rem); margin: 0 0 0.6rem; font-weight: bold; letter-spacing: -0.01em; line-height: 1.1; text-shadow: 0 2px 10px rgba(0,0,0,0.85); }
+.hero .pitch { color: #e8dcc4; font-size: clamp(1.1rem, 2vw, 1.4rem); font-style: italic; margin: 0 0 1.5rem; text-shadow: 0 1px 6px rgba(0,0,0,0.9); }
+.hero p { color: #e0e0e0; max-width: 620px; margin: 0 auto 1.2rem; text-shadow: 0 1px 6px rgba(0,0,0,0.9); }
 .section { max-width: 820px; margin: 0 auto; padding: 3.5rem 1.5rem; }
 .section h2 { color: #d4c4a8; font-size: clamp(1.35rem, 2.4vw, 1.7rem); margin: 0 0 1rem; font-weight: normal; letter-spacing: 0.01em; }
 .section p { color: #c0c0c0; margin-bottom: 1rem; }
 .pull { color: #f0e6d2; font-size: 1.15rem; font-style: italic; border-left: 3px solid #d4c4a8; padding-left: 1rem; margin: 1.5rem 0; }
-.image-row { display: flex; gap: 1.5rem; margin-top: 2rem; justify-content: center; flex-wrap: wrap; }
-.image-row img { max-width: 100%; width: 350px; border-radius: 8px; border: 1px solid #333; }
+.object-shot { display: block; width: 100%; max-width: 720px; margin: 2rem auto 0.75rem; border-radius: 8px; border: 1px solid #333; }
+.object-cap { text-align: center; color: #888; font-size: 0.85rem; font-style: italic; margin: 0; }
 .features { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-top: 1.5rem; }
 .feature-card { flex: 1 1 300px; border: 1px solid #333; border-radius: 6px; padding: 1.5rem; background: #141414; }
 .feature-card strong { color: #f0e6d2; display: block; font-size: 1.05rem; margin-bottom: 0.5rem; }
 .feature-card span { color: #a8a8a8; font-size: 0.92rem; }
 .price-box { border: 1px solid #333; border-top: 3px solid #d4c4a8; border-radius: 6px; padding: 2rem; margin: 2rem 0; background: #141414; text-align: center; }
 .price-box .label { color: #888; font-size: 0.78rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.75rem; }
-.price-box .amount { color: #d4c4a8; font-size: 2rem; font-weight: bold; letter-spacing: 0.01em; margin: 0 0 0.5rem; }
+.price-box .amount { color: #d4c4a8; font-size: 1.9rem; font-weight: bold; letter-spacing: 0.01em; margin: 0 0 0.5rem; }
 .price-box .note { color: #a8a8a8; font-size: 0.95rem; margin: 0; }
 .contact { max-width: 640px; margin: 0 auto; padding: 3rem 1.5rem 4rem; text-align: center; }
 .contact h2 { color: #d4c4a8; font-size: 1.5rem; margin: 0 0 0.6rem; font-weight: normal; }
@@ -54,76 +54,74 @@ footer a:hover { text-decoration: underline; }
 </div>
 
 <div class="hero">
-<div class="tag">Personal &middot; Luxury</div>
+<div class="tag">Personal &middot; Coming Soon</div>
 <h1>Your own AI, running on your own desk.</h1>
-<p class="pitch">An always-on AI valet for health, money, mail, and memory.</p>
+<p class="pitch">An always-on AI valet for your health, your money, and your memory.</p>
 <p>The assistant that knows you, without anyone else knowing it does.</p>
 </div>
 
 <div class="section">
 <h2>The object.</h2>
-<p>We believe your private AI should be as elegant as the rest of your home. No plastic servers in the closet. No blinking lights in the hallway.</p>
-<p>Jeeves is an appliance. It sits on your desk or your bookshelf. It is milled aluminum, wrapped in leather, accented with brass. It draws less power than a reading lamp. It is designed to be seen.</p>
-<div class="image-row">
-<img src="jeeves_assets/jeeves_box_leather.png" alt="Jeeves leather box">
-<img src="jeeves_assets/jeeves_box_brass.png" alt="Jeeves brass valet">
-</div>
+<p>Your private AI should be as considered as the rest of your home. No plastic server in a closet. No blinking lights in the hall.</p>
+<p>Jeeves is an appliance. It sits on a desk or a bookshelf. Leather, brass, and milled aluminum, designed to be seen and to draw less power than a desktop computer.</p>
+<img class="object-shot" src="jeeves_object.jpeg" alt="Jeeves leather and brass appliance on a desk beside a brass lamp, passport, and fountain pen">
+<p class="object-cap">The Gentleman's Valet. Leather, brass plate, no visible hardware.</p>
 </div>
 
 <div class="section">
 <h2>What it will do.</h2>
-<p class="pull">A private assistant for the things you do not want in the cloud.</p>
+<p class="pull">A private assistant for the parts of your life you do not want in the cloud.</p>
 <div class="features">
 <div class="feature-card">
 <strong>The Confidant</strong>
-<span>A conversational AI that runs locally. No token limits, no monthly fees, no cloud provider reading your chats. It learns your preferences and rewrites its own personality to match how you want to be spoken to.</span>
+<span>A conversational AI that runs locally. No token limits, no monthly fee, no provider reading your conversations. It will learn your preferences and match the way you want to be spoken to.</span>
 </div>
 <div class="feature-card">
 <strong>The Knowledge Lake</strong>
-<span>Save snippets, notes, and documents. Retrieve them semantically. Search your own archive instead of the web.</span>
+<span>Save notes, snippets, and documents. Retrieve them by meaning rather than by filename. Search your own archive instead of the web.</span>
 </div>
 <div class="feature-card">
 <strong>The Trading Desk</strong>
-<span>Paper trading and crypto simulation with strict risk limits. An exchange-agnostic broker interface for simulated strategies. No cloud, no API keys leaking to third parties.</span>
+<span>Paper trading and portfolio simulation with strict risk caps. Strategies are tested against simulated positions. No brokerage credentials required, and nothing can be executed for real.</span>
 </div>
 <div class="feature-card">
-<strong>The Wellness Tracker</strong>
-<span>Structured logging of meals, medication, mood, and health metrics. Natural-language queries over your own health history.</span>
+<strong>The Wellness Ledger</strong>
+<span>Structured logging of meals, sleep, medication, and mood. Ask questions in plain English of your own health history.</span>
 </div>
 </div>
 </div>
 
 <div class="section">
 <h2>Privacy, by design.</h2>
-<p>The general-purpose AI tools solve problems by sending your data to someone else's server. For your health, your finances, and your private correspondence, that is not a solution.</p>
-<p>Jeeves runs entirely on your local network. No API calls, no telemetry, no account. It works air-gapped. The model, the data, and the code are yours.</p>
+<p>General-purpose AI tools work by sending your data to someone else's server. For your health, your finances, and your private correspondence, that is not a solution.</p>
+<p>Jeeves runs entirely on your own network. No accounts, no telemetry, no outbound calls to a model provider. The model, the data, and the software are yours.</p>
 </div>
 
 <div class="section">
 <h2>Under the hood.</h2>
-<p>Jeeves runs entirely on an NVIDIA Jetson. The base unit uses the Orin NX; the performance tier uses the AGX Thor. It runs a quantized LLM locally via llama.cpp.</p>
-<p style="font-size:0.9rem; color:#888; margin-top:1rem;">For developers: the open-source core is available on <a href="https://github.com/artifexofabrika/jeeves" target="_blank">GitHub</a> under the MIT license.</p>
+<p>Base units run on an NVIDIA Jetson Orin NX with a quantized language model served locally. The performance tier steps up to the AGX Thor for larger models and a bigger knowledge lake.</p>
+<p style="font-size:0.9rem; color:#888; margin-top:1rem;">The software core is developed in the open at <a href="https://github.com/artifexofabrika/Jeeves---public" target="_blank" rel="noopener">github.com/artifexofabrika/Jeeves---public</a>.</p>
 </div>
 
 <div class="section">
 <h2>Availability.</h2>
 <div class="price-box">
 <div class="label">The Gentleman's Valet</div>
-<div class="amount">Coming Soon &mdash; Starting at $4,500</div>
-<p class="note">The first production run is limited. Join the waitlist to be notified when units are available.</p>
-<p class="note" style="margin-top:0.5rem; font-style:italic; color:#888;">Includes the custom leather-and-brass enclosure, the NVIDIA Jetson Orin NX or AGX Thor, pre-loaded software, and a private knowledge lake.</p>
+<div class="amount">Coming Soon &mdash; from $4,500</div>
+<p class="note">The first production run is limited. Join the waitlist and we will contact you when units are ready to ship.</p>
+<p class="note" style="margin-top:0.5rem; font-style:italic; color:#888;">Includes the leather-and-brass enclosure, the Jetson Orin NX, configured software, and your own knowledge lake. Delivered ready to use.</p>
 </div>
 </div>
 
 <div id="contact" class="contact">
-<h2>Join the Early Access Waitlist.</h2>
-<p>Enter your details and we will contact you as soon as the first units are ready to ship.</p>
+<h2>Join the early access list.</h2>
+<p>Enter your details and we will be in touch as soon as the first units are ready.</p>
 <form action="https://formspree.io/f/xdarnqnj" method="POST">
 <input type="hidden" name="product" value="Jeeves Waitlist">
 <input type="text" name="name" placeholder="Name" required>
 <input type="email" name="email" placeholder="Email" required>
 <input type="text" name="location" placeholder="Delivery location (optional)">
-<button type="submit">Join the Waitlist</button>
+<button type="submit">Join the waitlist</button>
 </form>
 </div>
 
