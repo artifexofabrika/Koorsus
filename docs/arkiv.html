@@ -120,6 +120,17 @@ footer a:hover { text-decoration: underline; }
 </div>
 
 <div class="section">
+<h2>Point-and-shoot ingestion.</h2>
+<p class="pull">No data engineers. No manual chunking. No ETL scripts.</p>
+<p>Most AI projects die in data preparation. They need custom scripts, formatting rules, and someone technical to get the documents in. Arkiv does not.</p>
+<p>The paralegal drags the matter's files into the browser, types the matter name once, and clicks upload. The appliance extracts the text, splits it into searchable sections, tags every piece with the uploader and the matter, and indexes it. A thirty-matter library went in during a single afternoon.</p>
+<div style="margin-top:1.5rem; text-align:center;">
+<img src="arkiv_ingest.png" alt="Arkiv ingestion interface" style="max-width:100%; border-radius:6px; border:1px solid #333;">
+<p style="font-size:0.85rem; color:#888; font-style:italic; margin-top:0.5rem;">Pick the files, name the matter, upload. That is the whole procedure.</p>
+</div>
+</div>
+
+<div class="section">
 <h2>Why it can be trusted.</h2>
 <p>Every answer carries the source passage, not just the file name. You read the source and the answer side by side. Checking the work takes ten seconds.</p>
 <p>When the documents do not contain the answer, Arkiv refuses. Retrieval happens before the model runs; if there is nothing relevant, the system refuses without calling the language model at all. If there is something, the prompt instructs it to say plainly when the answer is not there. The refusal is a code path, not a hope. A system that guesses is worse than no system at all.</p>
