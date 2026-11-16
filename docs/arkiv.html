@@ -97,16 +97,39 @@ footer a:hover { text-decoration: underline; }
 </div>
 
 <div class="section">
+<h2>See it working.</h2>
+<p>Every answer cites the exact document and passage. If the answer is not in the documents, Arkiv says so.</p>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:2rem;">
+<div>
+<img src="arkiv_plaintiff.png" alt="Copper Kettle named as plaintiff" style="width:100%; border-radius:6px; border:1px solid #333;">
+<p style="font-size:0.85rem; color:#888; font-style:italic; margin-top:0.5rem; text-align:center;">"Is Copper Kettle a plaintiff?" Scoped to the lease dispute.</p>
+</div>
+<div>
+<img src="arkiv_defendant.png" alt="Copper Kettle named as defendant" style="width:100%; border-radius:6px; border:1px solid #333;">
+<p style="font-size:0.85rem; color:#888; font-style:italic; margin-top:0.5rem; text-align:center;">Same question, scoped to the slip-and-fall. Opposite answer.</p>
+</div>
+<div>
+<img src="arkiv_refusal.png" alt="Arkiv refusing to answer" style="width:100%; border-radius:6px; border:1px solid #333;">
+<p style="font-size:0.85rem; color:#888; font-style:italic; margin-top:0.5rem; text-align:center;">Asked for a ruling that is not in the documents. It refuses.</p>
+</div>
+<div>
+<img src="arkiv_multi.png" alt="Cross-matter answer" style="width:100%; border-radius:6px; border:1px solid #333;">
+<p style="font-size:0.85rem; color:#888; font-style:italic; margin-top:0.5rem; text-align:center;">Cross-matter search, with the matters named.</p>
+</div>
+</div>
+</div>
+
+<div class="section">
 <h2>Why it can be trusted.</h2>
 <p>Every answer carries the source passage, not just the file name. You read the source and the answer side by side. Checking the work takes ten seconds.</p>
 <p>When the documents do not contain the answer, Arkiv refuses. Retrieval happens before the model runs; if there is nothing relevant, the system refuses without calling the language model at all. If there is something, the prompt instructs it to say plainly when the answer is not there. The refusal is a code path, not a hope. A system that guesses is worse than no system at all.</p>
-<p>Every refusal is logged alongside every answer. A firm can audit what the system declined to answer and whether the refusal was correct.</p>
+<p>Every question is answered from retrieved passages and nothing else. If retrieval finds nothing relevant, the system refuses before the language model is called at all. When it does answer, it names the document the answer came from, so checking the work takes seconds.</p>
 </div>
 
 <div class="section">
 <h2>Your documents stay in your office.</h2>
 <p>The appliance has an Ethernet cable to your office network and nothing else. No outbound connection, no telemetry, no update check, no remote support tunnel. Your documents never leave your building.</p>
-<p>The disk is encrypted. The backups are encrypted with a passphrase your firm chooses and stores in its password manager. Artifexo does not hold your data and cannot read it. If the appliance is stolen, your documents cannot be read.</p>
+<p>Backups are encrypted with a passphrase your firm chooses and stores in its password manager. Artifexo does not hold your data and cannot read it.</p>
 <p>If the appliance fails, call us before noon Eastern. We ship a replacement the same day, or the next business day. Your backup USB and passphrase restore everything on the new appliance. No cloud, no download, no waiting for us to restore your data.</p>
 </div>
 
