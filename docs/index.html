@@ -5,33 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Artifexo Fabrika</title>
 <link rel="icon" type="image/png" href="favicon.png">
-<link rel="apple-touch-icon" href="favicon.png">
 <style>
 html, body { margin: 0; padding: 0; background: #0e0e0e; }
 .page { background: #0e0e0e; color: #d4d4d4; font-family: Georgia, serif; min-height: 100vh; font-size: 16px; line-height: 1.6; }
 .page * { box-sizing: border-box; }
 a { color: #c0a878; }
-.hero { min-height: 85vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 4rem 1.25rem 2rem; background: linear-gradient(to bottom, rgba(14,14,14,0.6) 0%, rgba(14,14,14,0.85) 60%, #0e0e0e 100%), url("landing_bg.png") center/cover no-repeat; }
+.hero { min-height: 65vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 4rem 1.25rem 2rem; background: linear-gradient(to bottom, rgba(14,14,14,0.6) 0%, rgba(14,14,14,0.85) 60%, #0e0e0e 100%), url("landing_bg.png") center/cover no-repeat; }
 .hero .eyebrow { color: #c0a878; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 1.5rem; }
 .hero h1 { font-size: clamp(2rem, 5.5vw, 3.8rem); color: #c0a878; margin: 0 0 1rem; font-weight: bold; letter-spacing: -0.015em; line-height: 1.1; }
 .hero .promise { font-size: clamp(1rem, 1.8vw, 1.2rem); color: #cfc6b4; max-width: 620px; margin: 0 0 1rem; }
 .hero .meta { color: #888; font-size: 0.88rem; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 0.5rem; }
-.hero .meta span.pt { margin: 0 0.55rem; }
-.hero .meta span.dot { color: #444; margin: 0; }
-.doors { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 1000px; margin: 2rem auto 0; padding: 0 1.25rem; }
-@media (max-width: 760px) { .doors { grid-template-columns: 1fr; gap: 1.25rem; } }
-.door { display: block; text-decoration: none; color: inherit; border: 1px solid #333; border-radius: 8px; padding: 2.5rem 2rem; background: #161616; transition: transform 0.2s ease, border-color 0.2s ease; text-align: left; min-height: 280px; }
+.doors { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; max-width: 1200px; margin: 2rem auto 0; padding: 0 1.5rem; }
+.door { display: flex; flex-direction: column; text-decoration: none; color: inherit; border: 1px solid #333; border-radius: 8px; padding: 2.5rem 2rem; background: #161616; transition: transform 0.2s ease, border-color 0.2s ease; text-align: left; min-height: 320px; }
 .door:hover { transform: translateY(-3px); border-color: #c0a878; background: #1a1a1a; }
 .door .tag { color: #888; font-size: 0.75rem; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 0.9rem; }
 .door h2 { color: #e0d6c2; font-size: 1.9rem; margin: 0 0 0.5rem; font-weight: bold; letter-spacing: 0.01em; }
 .door .pitch { color: #c0a878; font-style: italic; margin: 0 0 1.2rem; font-size: 1.05rem; }
-.door p { color: #b8b8b8; margin: 0 0 1.2rem; font-size: 0.95rem; }
+.door p { color: #b8b8b8; margin: 0 0 1.5rem; font-size: 0.95rem; flex-grow: 1; }
 .door .enter { color: #c0a878; font-weight: bold; text-decoration: underline; }
 .door.arkiv { border-top: 3px solid #c0a878; }
 .door.plant { border-top: 3px solid #7a8a6a; }
-.why { max-width: 760px; margin: 4rem auto 0; padding: 0 1.5rem; text-align: center; }
-.why p { color: #a8a8a8; font-size: 1rem; margin-bottom: 1rem; }
-.contact { max-width: 620px; margin: 3rem auto 0; padding: 3rem 1.5rem 4rem; text-align: center; }
+.door.jeeves { border-top: 3px solid #d4c4a8; background: #1c1917; }
+.door.jeeves h2 { color: #f0e6d2; }
+.door.jeeves .pitch { color: #d4c4a8; }
+.contact { max-width: 620px; margin: 4rem auto 0; padding: 3rem 1.5rem 4rem; text-align: center; }
 .contact h2 { color: #c0a878; font-size: 1.6rem; margin: 0 0 0.6rem; font-weight: normal; }
 .contact p { color: #a8a8a8; margin: 0 0 1.5rem; }
 .contact input { display: block; width: 100%; padding: 0.8rem 1rem; margin: 0.6rem 0; background: #1c1c1c; color: #e0e0e0; border: 1px solid #333; border-radius: 3px; font-size: 0.95rem; font-family: Georgia, serif; }
@@ -50,12 +47,7 @@ footer a:hover { text-decoration: underline; }
 <div class="eyebrow">Artifexo Fabrika &middot; Columbus, Ohio</div>
 <h1>AI appliances you own.</h1>
 <p class="promise">No subscription. No cloud. No data leaving your building.</p>
-<p class="meta">
-<span class="pt">You own the hardware</span><span class="dot">&middot;</span>
-<span class="pt">No monthly fee</span><span class="dot">&middot;</span>
-<span class="pt">On-site, always</span><span class="dot">&middot;</span>
-<span class="pt">Source-available</span>
-</p>
+<p class="meta">You own the hardware &middot; No monthly fee &middot; On-site, always &middot; Source-available</p>
 </div>
 
 <div class="doors">
@@ -76,11 +68,14 @@ footer a:hover { text-decoration: underline; }
 <span class="enter">See Koorsus &amp; Myarra &rarr;</span>
 </a>
 
-</div>
+<a href="jeeves.html" class="door jeeves">
+<div class="tag">Personal &middot; Coming Soon</div>
+<h2>Jeeves</h2>
+<p class="pitch">Your own AI, running on your own desk.</p>
+<p>A private valet for health, wealth, and memory. Leather and brass, no subscription, no token limits. Waitlist open for the first production run.</p>
+<span class="enter">See Jeeves &rarr;</span>
+</a>
 
-<div class="why">
-<p>General-purpose AI tools solve these problems by sending everything to someone else's server. For a law firm whose privilege obligations follow every page, or a plant whose process knowledge is the competitive advantage, that is not a solution.</p>
-<p>We build the other kind: a small appliance, on your network, that answers from your documents and measures your floor. It does not connect to the internet. It does not have a subscription. It is yours.</p>
 </div>
 
 <div id="contact" class="contact">
@@ -89,7 +84,7 @@ footer a:hover { text-decoration: underline; }
 <form action="https://formspree.io/f/xdarnqnj" method="POST">
 <input type="text" name="name" placeholder="Name" required>
 <input type="email" name="email" placeholder="Email" required>
-<input type="text" name="company" placeholder="Company (optional)">
+<input type="text" name="company" placeholder="Company or use case (optional)">
 <button type="submit">Request a conversation</button>
 </form>
 </div>
