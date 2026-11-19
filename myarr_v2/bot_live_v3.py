@@ -3,11 +3,11 @@ import time, sys, os, requests
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import config
+from myarra_settings import TELEGRAM_BOT_TOKEN, check_llm
 from bot.db import get_conn, ensure_schema, get_user_by_tg, Session
 from bot.dispatch import dispatch
 
-TOKEN = config.TELEGRAM_BOT_TOKEN
+TOKEN = TELEGRAM_BOT_TOKEN
 API = f"https://api.telegram.org/bot{TOKEN}"
 
 def send(chat_id, text):
@@ -21,6 +21,8 @@ def send(chat_id, text):
             print(f"send error: {e}", file=sys.stderr)
 
 def main():
+    ok, detail = check_llm()
+    print("LLM check: " + ("OK - " if ok else "FAIL - ") + detail, flush=True)
     conn = get_conn(); ensure_schema(conn)
     me = requests.get(f"{API}/getMe", timeout=10).json()
     print(f"bot_live_v3: polling as @{me['result']['username']}", flush=True)
