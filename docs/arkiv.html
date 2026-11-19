@@ -45,6 +45,10 @@ a { color: #c0a878; }
 footer { text-align: center; padding: 2rem 1.5rem 3rem; color: #777; font-size: 0.82rem; border-top: 1px solid #222; }
 footer a { color: #c0a878; text-decoration: none; }
 footer a:hover { text-decoration: underline; }
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); cursor: zoom-out; }
+.modal-content { margin: auto; display: block; max-width: 95%; max-height: 95vh; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+.gallery-img { cursor: zoom-in; transition: opacity 0.2s; }
+.gallery-img:hover { opacity: 0.7; }
 </style>
 </head>
 <body>
@@ -60,6 +64,7 @@ footer a:hover { text-decoration: underline; }
 <h1>Arkiv</h1>
 <p class="pitch">RAG for less than a laptop.</p>
 <p>Your firm's documents, reachable in plain English. On an appliance in your office. Never on anyone else's server.</p>
+<p style="color:#c0a878; font-weight:bold;">One price and it is yours. No subscription, no per-user fees, no cloud account, nothing to renew.</p>
 </div>
 
 <div class="section">
@@ -79,7 +84,7 @@ footer a:hover { text-decoration: underline; }
 <li>Organises documents by matter. A firm with a hundred active cases gets the right answer, not the closest one.</li>
 <li>Cites the exact source passage behind every claim.</li>
 <li>Refuses when the answer is not in the documents. The refusal is the feature.</li>
-<li>Runs entirely on the appliance. No internet, no telemetry.</li>
+<li>Runs on the appliance in your office. It does not need an internet connection to work, and it makes no outbound connections of its own.</li>
 <li>Backs itself up nightly, encrypted, to a USB you can keep in your safe or in your cloud.</li>
 </ul>
 <p style="font-size: 0.85rem; color: #888; margin-top: 1rem;">*PDF support requires a text layer. Scanned paper that has not been processed by Optical Character Recognition (OCR) cannot be read.</p>
@@ -89,7 +94,6 @@ footer a:hover { text-decoration: underline; }
 <ul>
 <li class="x">It does not give legal advice. It answers from documents and cites them. You draw the conclusions.</li>
 <li class="x">It does not replace your case management system, billing system, or legal research databases.</li>
-<li class="x">It does not connect to the internet. Ever. By design.</li>
 <li class="x">It does not answer every question. When the documents do not contain the answer, it says so.</li>
 </ul>
 </div>
@@ -101,19 +105,19 @@ footer a:hover { text-decoration: underline; }
 <p>Every answer cites the exact document and passage. If the answer is not in the documents, Arkiv says so.</p>
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:2rem;">
 <div>
-<img src="arkiv_plaintiff.png" alt="Copper Kettle named as plaintiff" style="width:100%; border-radius:6px; border:1px solid #333;">
+<img class="gallery-img" src="arkiv_plaintiff.png" alt="Copper Kettle named as plaintiff" style="width:100%; border-radius:6px; border:1px solid #333;">
 <p style="font-size:0.85rem; color:#888; font-style:italic; margin-top:0.5rem; text-align:center;">"Is Copper Kettle a plaintiff?" Scoped to the lease dispute.</p>
 </div>
 <div>
-<img src="arkiv_defendant.png" alt="Copper Kettle named as defendant" style="width:100%; border-radius:6px; border:1px solid #333;">
+<img class="gallery-img" src="arkiv_defendant.png" alt="Copper Kettle named as defendant" style="width:100%; border-radius:6px; border:1px solid #333;">
 <p style="font-size:0.85rem; color:#888; font-style:italic; margin-top:0.5rem; text-align:center;">Same question, scoped to the slip-and-fall. Opposite answer.</p>
 </div>
 <div>
-<img src="arkiv_refusal.png" alt="Arkiv refusing to answer" style="width:100%; border-radius:6px; border:1px solid #333;">
+<img class="gallery-img" src="arkiv_refusal.png" alt="Arkiv refusing to answer" style="width:100%; border-radius:6px; border:1px solid #333;">
 <p style="font-size:0.85rem; color:#888; font-style:italic; margin-top:0.5rem; text-align:center;">Asked for a ruling that is not in the documents. It refuses.</p>
 </div>
 <div>
-<img src="arkiv_multi.png" alt="Cross-matter answer" style="width:100%; border-radius:6px; border:1px solid #333;">
+<img class="gallery-img" src="arkiv_multi.png" alt="Cross-matter answer" style="width:100%; border-radius:6px; border:1px solid #333;">
 <p style="font-size:0.85rem; color:#888; font-style:italic; margin-top:0.5rem; text-align:center;">Cross-matter search, with the matters named.</p>
 </div>
 </div>
@@ -123,10 +127,11 @@ footer a:hover { text-decoration: underline; }
 <h2>Point-and-shoot ingestion.</h2>
 <p class="pull">No data engineers. No manual chunking. No ETL scripts.</p>
 <p>Most AI projects die in data preparation. They need custom scripts, formatting rules, and someone technical to get the documents in. Arkiv does not.</p>
-<p>The paralegal drags the matter's files into the browser, types the matter name once, and clicks upload. The appliance extracts the text, splits it into searchable sections, tags every piece with the uploader and the matter, and indexes it. A thirty-matter library went in during a single afternoon.</p>
+<p>The paralegal selects the files, and the appliance reads the matter from the filename. Nothing is typed in per file and there is no spreadsheet to maintain. Documents named like <em>matter_12_petition.txt</em> are filed under Matter 12 automatically; anything without a matter number is filed wherever you say once, for the whole batch.</p>
+<p>Then the appliance does the work: it extracts the text, splits it into searchable sections, tags every piece with the uploader and the matter, and indexes it. A hundred documents across thirty matters takes minutes rather than an afternoon, and afterwards you can see every document listed under its matter, with a delete beside it if something went in by mistake.</p>
 <div style="margin-top:1.5rem; text-align:center;">
-<img src="arkiv_ingest.png" alt="Arkiv ingestion interface" style="max-width:100%; border-radius:6px; border:1px solid #333;">
-<p style="font-size:0.85rem; color:#888; font-style:italic; margin-top:0.5rem;">Pick the files, name the matter, upload. That is the whole procedure.</p>
+<img class="gallery-img" src="arkiv_ingest.png" alt="Arkiv ingestion interface" style="max-width:100%; border-radius:6px; border:1px solid #333;">
+<p style="font-size:0.85rem; color:#888; font-style:italic; margin-top:0.5rem;">Pick the files. The matter comes from the filename. That is the whole procedure.</p>
 </div>
 </div>
 
@@ -134,12 +139,12 @@ footer a:hover { text-decoration: underline; }
 <h2>Why it can be trusted.</h2>
 <p>Every answer carries the source passage, not just the file name. You read the source and the answer side by side. Checking the work takes ten seconds.</p>
 <p>When the documents do not contain the answer, Arkiv refuses. Retrieval happens before the model runs; if there is nothing relevant, the system refuses without calling the language model at all. If there is something, the prompt instructs it to say plainly when the answer is not there. The refusal is a code path, not a hope. A system that guesses is worse than no system at all.</p>
-<p>Every question is answered from retrieved passages and nothing else. If retrieval finds nothing relevant, the system refuses before the language model is called at all. When it does answer, it names the document the answer came from, so checking the work takes seconds.</p>
 </div>
 
 <div class="section">
 <h2>Your documents stay in your office.</h2>
 <p>The appliance has an Ethernet cable to your office network and nothing else. No outbound connection, no telemetry, no update check, no remote support tunnel. Your documents never leave your building.</p>
+<p>Reaching it from outside the office is a separate decision, and one worth saying plainly. It means opening a path into your firm's network through a VPN, which is a choice for whoever runs that network rather than something we should switch on quietly. We install it as an upgrade at $500, and we will tell you if we think you do not need it.</p>
 <p>Backups are encrypted with a passphrase your firm chooses and stores in its password manager. Artifexo does not hold your data and cannot read it.</p>
 <p>If the appliance fails, call us before noon Eastern. We ship a replacement the same day, or the next business day. Your backup USB and passphrase restore everything on the new appliance. No cloud, no download, no waiting for us to restore your data.</p>
 </div>
@@ -153,18 +158,24 @@ footer a:hover { text-decoration: underline; }
 </div>
 <div class="price-box">
 <div class="label">Arkiv NX &mdash; larger firms</div>
-<div class="amount">$3,500 to $4,000</div>
-<p class="note">For firms with five or more concurrent users or a larger document estate.</p>
+<div class="amount">$4,500</div>
+<p class="note">For firms with five or more concurrent users or a larger document estate. Built to order.</p>
+</div>
+<div class="price-box">
+<div class="label">Arkiv AGX &mdash; the largest estates</div>
+<div class="amount">$7,500</div>
+<p class="note">The heaviest module, for a firm with a very large document estate or several offices. Built to order.</p>
 </div>
 <p style="text-align: center; color: #b8b8b8; margin-top: 2rem;">A note on timing: an appliance bought and placed in service before 31 December may be deductible in full this year rather than depreciated over several. Ask your accountant whether Section 179 applies to your firm. For equipment at this size, it usually does.</p>
 
-<p style="text-align: center; color: #c0a878; font-style: italic; margin-top: 2rem;">The cheapest on-premise legal AI appliance on the market is $7,500. Ours is $2,500. It does not connect to the internet. Your documents never leave the office.</p>
+<p style="text-align: center; color: #c0a878; font-style: italic; margin-top: 2rem;">Priced for a small firm, not an IT department. It makes no outbound connections, so your documents never leave the office.</p>
 </div>
 
 <div class="section">
 <h2>What is included, and what is not.</h2>
-<p><strong style="color: #e0d6c2;">Included:</strong> the appliance, configured and tested on your network; installation and a one-hour walk-through with your office manager; the Quick Start card and a laminated reference; one year of hardware warranty; source-available software you receive and can modify for your own use.</p>
-<p><strong style="color: #e0d6c2;">Not included:</strong> extended support plans (available separately at $100 per hour); remote access from outside the office (available as an upgrade); a phone and tablet PWA (available as an upgrade).</p>
+<p><strong style="color: #e0d6c2;">Included:</strong> the appliance, configured and tested on your network; the one-hour walk-through for your office manager; the Quick Start card and a laminated reference; one year of hardware warranty; source-available software you receive and can modify for your own use; and phone and tablet access for anyone on your office network, which needs nothing extra.</p>
+<p><strong style="color: #e0d6c2;">Not included:</strong> extended support plans (available separately at $100 per hour); access from outside the office, which needs a VPN into your network and is an upgrade at $500.</p>
+<p><strong style="color: #e0d6c2;">Who installs it:</strong> whoever you prefer. Your office manager can do it from the Quick Start card, because it is one cable and one browser. We install it ourselves here in Columbus. Your IT firm can do it too, and it will take them half an hour, because there is nothing to integrate and nothing to open to the outside. Installation is the easy part.</p>
 </div>
 
 <div id="contact" class="contact">
@@ -189,5 +200,25 @@ Artifexo Fabrika, Columbus, Ohio &nbsp;|&nbsp;
 </footer>
 
 </div>
+<div id="imageModal" class="modal">
+    <img class="modal-content" id="modalImg" alt="">
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var modal = document.getElementById("imageModal");
+    var modalImg = document.getElementById("modalImg");
+    document.querySelectorAll(".gallery-img").forEach(function(img) {
+        img.addEventListener("click", function() {
+            modal.style.display = "block";
+            modalImg.src = this.src;
+            modalImg.alt = this.alt || "";
+        });
+    });
+    modal.addEventListener("click", function() { modal.style.display = "none"; });
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape") { modal.style.display = "none"; }
+    });
+});
+</script>
 </body>
 </html>
