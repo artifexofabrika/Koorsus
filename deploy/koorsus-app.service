@@ -1,0 +1,41 @@
+# Template. Copy to /etc/systemd/system/koorsus-app.service.
+# Koorsus is the Arkiv codebase deployed a second time under a different
+# configuration. It is not a second codebase, and it never carries Arkiv
+# branding.
+# This flat unit supersedes the koorsus-app.service.d/env.conf drop-in.
+# When installing, remove that drop-in so the status paths come from one
+# file rather than two.
+# Customer values live in /etc/myarra/appliance.env.
+[Unit]
+Description=Koorsus document assistant
+After=network.target koorsus-llm.service
+Wants=koorsus-llm.service
+
+[Service]
+User=jeeves
+Group=jeeves
+Environment="PYTHONUNBUFFERED=1"
+Environment="ARKIV_BRAND=Koorsus"
+Environment="ARKIV_TAGLINE=Your plant's private document assistant"
+Environment="ARKIV_PORT=5003"
+Environment="ARKIV_USERS_DB=/mnt/lake/koorsus_users.db"
+Environment="ARKIV_SCRIPT_DIR=/usr/local/sbin/koorsus"
+Environment="ARKIV_INDEX_PATH=/mnt/lake/koorsus_index"
+Environment="ARKIV_VERIFY_STATUS=/var/log/koorsus-verify.status"
+Environment="ARKIV_SMOKE_STATUS=/var/log/koorsus-smoke.status"
+EnvironmentFile=/etc/myarra/appliance.env
+WorkingDirectory=/home/jeeves/koorsus
+ExecStart=/home/jeeves/jeeves-env/bin/gunicorn \
+    --bind 0.0.0.0:5003 \
+    --workers 1 \
+    --timeout 180 \
+    --access-logfile - \
+    --error-logfile - \
+    --certfile ${KOORSUS_TLS_CERT} \
+    --keyfile ${KOORSUS_TLS_KEY} \
+    app:app
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
