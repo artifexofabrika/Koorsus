@@ -1,7 +1,7 @@
 """LLM-based intent extraction. Uses local Qwen on port 8080."""
 import json, re, requests
 
-LLM_URL = "http://127.0.0.1:8080/v1/chat/completions"
+from myarra_settings import LLM_URL
 LLM_TIMEOUT = 30
 
 SYSTEM_PROMPT = """You extract structured data from line-operator messages about factory production.
