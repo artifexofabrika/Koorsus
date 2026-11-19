@@ -84,7 +84,7 @@ def _compute_trend(conn, exp):
             JOIN co_events ev ON ev.id = es.event_id
             WHERE s.step_name = ? ORDER BY ev.started_at ASC
         """, (exp['target_step_name'],)).fetchall()
-        events = [{'date': e['ev_date'], 'value': e['actual_min']} for e in evs]
+        events = [{'date': e['ev_date'], 'value': e['actual_min']} for e in evs if e['actual_min'] is not None]
     else:
         baseline = conn.execute("""
             SELECT AVG(aggregate_actual_min) FROM co_events
@@ -98,7 +98,7 @@ def _compute_trend(conn, exp):
             SELECT started_at, aggregate_actual_min as actual_min, date(started_at) as ev_date
             FROM co_events WHERE line_id = ? ORDER BY started_at ASC
         """, (exp['line_id'],)).fetchall()
-        events = [{'date': e['ev_date'], 'value': e['actual_min']} for e in evs]
+        events = [{'date': e['ev_date'], 'value': e['actual_min']} for e in evs if e['actual_min'] is not None]
         
     return {'manual': False, 'baseline': baseline, 'current': current, 'target': exp.get('target_goal_min'), 'events': events}
 
