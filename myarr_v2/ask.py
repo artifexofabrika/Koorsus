@@ -1,9 +1,9 @@
 """Stage D: Text-to-SQL for plain-English questions about the plant."""
 import json, requests, sqlite3
 
-LLM_URL = "http://127.0.0.1:8080/v1/chat/completions"
+from myarra_settings import LLM_URL
 LLM_TIMEOUT = 60
-DB_PATH = "/mnt/lake/myarra.db"
+from db import DB_PATH
 
 # Agreed 2026-11-13: v_unaccounted_minutes_by_run is the canonical view.
 # It is the one Herbie uses; it nets recorded downtime and floors at zero.
