@@ -17,8 +17,8 @@ import json
 import requests
 import sqlite3
 
-DB_PATH = "/mnt/lake/myarra.db"
-LLM_URL = "http://127.0.0.1:8080/v1/chat/completions"
+from db import DB_PATH
+from myarra_settings import LLM_URL
 LLM_TIMEOUT = 60
 
 
