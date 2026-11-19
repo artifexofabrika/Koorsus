@@ -224,7 +224,7 @@ else
   log "DONE  installation finished with a service down, see the WARN lines"
 fi
 log "      config     : $ENV_FILE"
-log "      verify data: https://HOST:5002/setup/verify"
+log "      myarra pages, appliance mode only: https://HOST:5002/setup/verify"
 log "      first run  : $REPO/deploy/backup/backup.sh"
 log "      passphrase : recorded nowhere except paper or your vault"
 exit "$FAILED"
