@@ -1,0 +1,10 @@
+# Koorsus-only state manifest, for a unit sold without Myarra. TYPE:OWNER:PATH.
+SQLITE:koorsus:/mnt/lake/koorsus_users.db
+DIR:koorsus:/mnt/lake/koorsus_index
+FILE:tls:/home/jeeves/myarra-certs/koorsus-cert.pem
+FILE:tls:/home/jeeves/myarra-certs/koorsus-key.pem
+FILE:config:/etc/myarra/appliance.env
+FILE:config:/home/jeeves/koorsus/config.py
+DIR:scripts:/usr/local/sbin/koorsus
+FILE:unit:/etc/systemd/system/koorsus-app.service
+FILE:unit:/etc/systemd/system/koorsus-llm.service

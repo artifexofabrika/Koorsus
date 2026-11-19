@@ -12,5 +12,4 @@ DIR:scripts:/usr/local/sbin/koorsus
 FILE:unit:/etc/systemd/system/myarr.service
 FILE:unit:/etc/systemd/system/myarra-bot.service
 FILE:unit:/etc/systemd/system/koorsus-app.service
-FILE:unit:/etc/systemd/system/koorsus-app.service.d/env.conf
 FILE:unit:/etc/systemd/system/koorsus-llm.service

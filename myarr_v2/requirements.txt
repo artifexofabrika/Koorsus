@@ -1,0 +1,9 @@
+# Myarra runtime dependencies, derived from the imports in myarr_v2 rather
+# than frozen from the shared venv, so Koorsus packages cannot leak in.
+# waitress is only used by the development entry point at the bottom of
+# app.py; gunicorn is the production server invoked by the unit.
+# Pinned to the reference appliance as of 2026-11-19.
+Flask==3.1.3
+gunicorn==27.0.0
+requests==2.34.2
+waitress==3.0.2
