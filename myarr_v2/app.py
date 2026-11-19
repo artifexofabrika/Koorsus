@@ -3,6 +3,7 @@ Myarra Web Application
 """
 from flask import Flask, render_template, request, redirect, url_for, Response, jsonify
 from db import get_db_connection
+from myarra_settings import check_llm
 from onboarding import TEMPLATES, generate_csv, ingest_template, INGEST_ORDER
 from recon import summary_for_window
 from ask import ask as ask_question
@@ -21,6 +22,8 @@ from admin_ops import admin_ops_bp
 app.register_blueprint(admin_ops_bp)
 from views import ensure_views
 _c = get_db_connection(); ensure_views(_c); _c.close()
+_llm_ok, _llm_detail = check_llm()
+print("Herbie LLM check: " + ("OK - " if _llm_ok else "FAIL - ") + _llm_detail, flush=True)
 
 FISHBONE_CATEGORIES = ['Man', 'Machine', 'Method', 'Material', 'Measurement', 'Environment']
 FISHBONE_MAX_PER_CATEGORY = 3
