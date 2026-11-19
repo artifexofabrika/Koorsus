@@ -1,0 +1,18 @@
+# Template. Copy to /etc/systemd/system/appliance-backup.service.
+# Runs the appliance backup as root, then verifies the archive it just
+# wrote. Scheduled by appliance-backup.timer at 03:30, deliberately half
+# an hour after Arkiv's 03:00 so the two do not contend for the same disk.
+[Unit]
+Description=Myarra and Koorsus nightly appliance backup
+After=koorsus-app.service myarr.service
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+Environment="APPLIANCE_BACKUP_DIR=/mnt/appliance-backup"
+Environment="APPLIANCE_BACKUP_KEY=/etc/koorsus-backup.key"
+Environment="APPLIANCE_BACKUP_LOG=/var/log/appliance-backup.log"
+Environment="APPLIANCE_MANIFEST=/home/jeeves/Client-Demo/deploy/backup/artifacts.txt"
+ExecStart=/home/jeeves/Client-Demo/deploy/backup/backup.sh
+ExecStartPost=/home/jeeves/Client-Demo/deploy/backup/verify.sh

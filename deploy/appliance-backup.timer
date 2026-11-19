@@ -1,0 +1,11 @@
+# Template. Copy to /etc/systemd/system/appliance-backup.timer.
+[Unit]
+Description=Run the appliance backup daily at 03:30
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
