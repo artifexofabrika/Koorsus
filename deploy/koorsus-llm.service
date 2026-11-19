@@ -1,0 +1,21 @@
+# Template. Copy to /etc/systemd/system/koorsus-llm.service.
+# The binary is llama.cpp's llama-server; the unit name reflects the role.
+# Renamed from llama-server.service on 2026-11-06. That old file has been
+# deleted from the repo; do not reinstate it.
+# KOORSUS_MODEL is the tier choice: the Nano runs the 3B, the NX the
+# larger model. The port here must match LLM_URL in appliance.env.
+[Unit]
+Description=llama.cpp server for Koorsus
+After=network.target
+
+[Service]
+User=jeeves
+Group=jeeves
+EnvironmentFile=/etc/myarra/appliance.env
+ExecStart=/home/jeeves/llama.cpp/build/bin/llama-server -m ${KOORSUS_MODEL} --host 0.0.0.0 --port 8080 -c 2048 -ngl 99 -ub 2048
+Restart=always
+RestartSec=10
+Environment="PATH=/usr/local/cuda-12.6/bin:/usr/bin:/bin"
+
+[Install]
+WantedBy=multi-user.target

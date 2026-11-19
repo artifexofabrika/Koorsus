@@ -1,0 +1,23 @@
+# Template. Copy to /etc/systemd/system/myarra-bot.service.
+# Shares /etc/myarra/appliance.env with myarr.service, so the bot and the
+# web app cannot disagree about the database or the LLM endpoint.
+# bot_live_v3.py is the live entry point despite its name. The modular
+# package it drives is bot/. Renaming this file is a pending cleanup.
+[Unit]
+Description=Myarra Telegram bot
+After=network.target koorsus-llm.service
+Wants=koorsus-llm.service
+
+[Service]
+Type=simple
+User=jeeves
+Group=jeeves
+Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=/etc/myarra/appliance.env
+WorkingDirectory=/home/jeeves/Client-Demo/myarr_v2
+ExecStart=/home/jeeves/jeeves-env/bin/python /home/jeeves/Client-Demo/myarr_v2/bot_live_v3.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

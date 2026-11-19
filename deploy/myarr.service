@@ -1,0 +1,28 @@
+# Template. Copy to /etc/systemd/system/myarr.service.
+# The values a customer sets live in /etc/myarra/appliance.env, which must
+# exist before this unit is started, or the unit fails loudly.
+# The paths below assume the standard appliance layout.
+[Unit]
+Description=Myarra metrics dashboard
+After=network.target
+
+[Service]
+User=jeeves
+Group=jeeves
+Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=/etc/myarra/appliance.env
+ExecStart=/home/jeeves/jeeves-env/bin/gunicorn \
+    --bind 0.0.0.0:5002 \
+    --workers 2 \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile - \
+    --certfile ${MYARRA_TLS_CERT} \
+    --keyfile ${MYARRA_TLS_KEY} \
+    app:app
+WorkingDirectory=/home/jeeves/Client-Demo/myarr_v2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
