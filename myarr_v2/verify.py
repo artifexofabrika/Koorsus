@@ -2,6 +2,7 @@
 import sqlite3
 from flask import Blueprint, render_template
 from db import get_db_connection
+from myarra_settings import check_llm
 
 verify_bp = Blueprint('verify', __name__)
 
@@ -38,6 +39,9 @@ def _preview(conn, table, limit=3):
 
 def _warnings(conn):
     out = []
+    ok, detail = check_llm()
+    if not ok:
+        out.append(detail)
 
     for r in conn.execute("""
         SELECT s.part_number FROM skus s
