@@ -1,3 +1,7 @@
+> **SUPERSEDED 2026-11-19.** This file describes a project
+> that no longer exists: bot_v2.py, Waitress, five lines.
+> Read HANDOVER.md in this directory. Kept as history.
+
 # MYARRA — PROJECT HANDOFF
 
 **Architecture and history.** Read after the newest delta.
