@@ -67,6 +67,11 @@ def h_status_line(conn, s, text, user):
         lid = s.get('line_id') or (user.get('line_id') if user else None)
     if lid is None:
         return "Say: 'status line N'."
+    # Agreed 2026-11-14: remember the line the operator queried, so the next
+    # record command targets the same line.
+    if parse_line_number(text) is not None:
+        s.set('line_id', lid)
+        s.save()
 
     line = conn.execute("SELECT * FROM lines WHERE id=?", (lid,)).fetchone()
     if not line:
