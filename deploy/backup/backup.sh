@@ -49,6 +49,7 @@ while IFS=: read -r type owner path; do
   case "$type" in
     SQLITE)
       sqlite3 "$path" ".backup '${dest}/${name}'"
+      chown jeeves:jeeves "${dest}/${name}"
       log "OK    sqlite ${owner}/${name}"
       ;;
     FILE)

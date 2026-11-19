@@ -68,7 +68,6 @@ while IFS=: read -r type owner path; do
     mv "$dst" "${SAFETY}${path}"
   fi
   mv "$src" "$dst"
-  chown -R jeeves:jeeves "$dst" 2>/dev/null || true
   log "OK    restored ${path}"
 done < "$MANIFEST"
 
@@ -86,4 +85,4 @@ while IFS=: read -r type owner path; do
   log "OK    integrity ${path}: ok"
 done < "$MANIFEST"
 
-log "DONE  restored to root=${ROOT:-/}; previous state kept in ${SAFETY}"
+log "DONE  restored to root=${ROOT:-/}; pre-restore copies, if any, in ${SAFETY}"
