@@ -1,0 +1,15 @@
+# Appliance state manifest. TYPE:OWNER:PATH. Excluded on purpose: all arkiv_* paths, legacy /mnt/lake/index, chroma.sqlite3, *.bak, metrics.db, demo_beverage.db.
+SQLITE:myarra:/mnt/lake/myarra.db
+DIR:koorsus:/mnt/lake/koorsus_index
+SQLITE:koorsus:/mnt/lake/koorsus_users.db
+FILE:tls:/home/jeeves/myarra-certs/myarra-cert.pem
+FILE:tls:/home/jeeves/myarra-certs/myarra-key.pem
+FILE:tls:/home/jeeves/myarra-certs/koorsus-cert.pem
+FILE:tls:/home/jeeves/myarra-certs/koorsus-key.pem
+FILE:config:/etc/myarra/appliance.env
+FILE:config:/home/jeeves/Client-Demo/config.py
+DIR:scripts:/usr/local/sbin/koorsus
+FILE:unit:/etc/systemd/system/myarr.service
+FILE:unit:/etc/systemd/system/myarra-bot.service
+FILE:unit:/etc/systemd/system/koorsus-app.service
+FILE:unit:/etc/systemd/system/koorsus-llm.service
