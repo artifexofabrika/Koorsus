@@ -1039,7 +1039,7 @@ def floor_view():
 @app.route("/favicon.ico")
 def favicon():
     from flask import send_from_directory
-    return send_from_directory(app.root_path, "favicon.png", mimetype="image/png")
+    return send_from_directory(app.static_folder, "favicon.png", mimetype="image/png")
 
 if __name__ == "__main__":
     from waitress import serve

@@ -177,3 +177,39 @@ system. That breaks "one place, no data janitor" outright.
 Watch item. Do not mention in marketing. The counter is the two measures and
 capture that cannot be blocked: their form makes the operator choose a
 category, ours records what he said.
+
+## Findings from the systematic pass, 2026-11-20
+
+First output of the audit rebuild, in the order found. Each was found by
+running something rather than by reading.
+
+FIXED  /pdca returned 500. A changeover step with a NULL actual_min reached
+       the trend chart and the template divided it. Points with no
+       measurement are now dropped in _compute_trend.
+
+FIXED  /favicon.ico returned 404 on every page. The route served from
+       app.root_path and the file lives in myarr_v2/static. One wrong
+       directory.
+
+FIXED  Onboarding decoded uploads with errors='replace', so a Latin-1 CSV
+       from Excel imported as mojibake with no error and no warning. Now
+       UTF-8, then Windows-1252, then a refusal that names the problem.
+
+FIXED  Onboarding resolved part numbers and component types case
+       sensitively, so a CSV spelling a part number differently from the
+       stored one failed with "unknown SKU". Exact match first, then
+       case-insensitive fallback.
+
+OPEN   maintenance_events holds zero rows. The maintenance list page renders
+       an empty table, and neither the maintenance detail page nor the bot
+       maintenance handler has ever produced a surviving row. HANDOVER calls
+       maintenance a first-class event with an operator-stated duration.
+       Either the demo never exercised it or the data was cleared. Untested
+       rather than broken, which is worse.
+
+OPEN   The case-insensitive fallback for component types is implemented but
+       not exercised, because the round-trip test uses an exact-case
+       component name. Reasoned, not proven.
+
+COVERAGE  tools/test_csv_roundtrip.py   8 checks, all passing
+COVERAGE  tools/test_pages.py           26 routes, all 200
