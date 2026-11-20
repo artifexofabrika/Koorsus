@@ -248,3 +248,31 @@ NEXT      Both are prompt and payload problems, not code problems. The
           description first.
 
 COVERAGE  tools/test_herbie_cards.py   5 cards, all reachable
+
+## Config exists, code ignores it
+
+grep across myarr_v2, 2026-11-20. Settings keys nothing reads:
+
+  shift_1_start, shift_1_end, shift_2_start, shift_2_end,
+  shift_3_start, shift_3_end, lunch_minutes, rate_label
+
+Read and working: unit_label, case_label, job_variance_tolerance.
+
+Four live consequences:
+
+  app.py computes shift_start = 7 + (shift_h - 1) * 8 in three routes. Three
+  shifts are configured in settings and ignored. A plant that edits its shift
+  times sees no change and gets hours attributed to the wrong shift with no
+  error raised.
+
+  lunch_minutes is 30 in settings and read nowhere, so lunch duration is
+  fixed in code.
+
+  rate_label is unused, so the rate is described in hardcoded words rather
+  than in the plant's own unit.
+
+  bot/db.py UNACC_THRESHOLD = 5.0 is hardcoded, has no settings key, and is a
+  different quantity from job_variance_tolerance, which is configured.
+
+Characterisation: the configuration is in the database and specific paths read
+the wrong source. Not a redesign.
