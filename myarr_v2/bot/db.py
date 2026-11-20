@@ -128,6 +128,18 @@ def setting(conn, key, default):
     return r['value'] if r else default
 
 
+def unacc_threshold(conn):
+    """Minutes of unexplained loss before an hour is flagged.
+
+    Agreed 2026-11-20: UNACC_THRESHOLD was a bare constant with no way for a
+    plant to change it. Settings first, 5.0 as the default.
+    """
+    try:
+        return float(setting(conn, 'unacc_threshold', UNACC_THRESHOLD))
+    except (TypeError, ValueError):
+        return UNACC_THRESHOLD
+
+
 def unit_label(conn): return setting(conn, 'unit_label', 'units')
 def case_label(conn): return setting(conn, 'case_label', 'cases')
 
@@ -229,7 +241,7 @@ def write_hour(conn, job, shift, period, units, duration, user_id, raw_text,
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (job['id'], job['line_id'], shift, period, datetime.now().isoformat(),
           units, raw_text, duration, 'run', jh_start, jh_end,
-          user_id, 1 if unacc > UNACC_THRESHOLD else 0, 'telegram',
+          user_id, 1 if unacc > unacc_threshold(conn) else 0, 'telegram',
           override_reason, superseded, scrap_units))
     for d in dts:
         conn.execute(

@@ -47,6 +47,23 @@ def _setting(conn, key, default):
 def _unit_label(conn): return _setting(conn, 'unit_label', 'units')
 def _case_label(conn): return _setting(conn, 'case_label', 'cases')
 
+def _shift_start_hour(conn, shift_h):
+    """First hour of a shift, taken from settings.
+
+    Agreed 2026-11-20: shift_1_start through shift_3_start have been in the
+    settings table all along and three routes hardcoded 07:00 with eight hour
+    steps instead. Falls back to the old arithmetic so a plant that has set
+    nothing sees no change.
+    """
+    try:
+        r = conn.execute("SELECT value FROM settings WHERE key=?",
+                         ("shift_%s_start" % shift_h,)).fetchone()
+        if r and r[0]:
+            return int(str(r[0]).split(":")[0])
+    except Exception:
+        pass
+    return 7 + (shift_h - 1) * 8
+
 def _load_fishbone(conn, exp_id):
     data = {cat: [] for cat in FISHBONE_CATEGORIES}
     for row in conn.execute(
@@ -245,7 +262,7 @@ def line_report(line_id):
     existing = {r['period']: dict(r) for r in runs}
     shift = runs[0]['shift'] or '1'
     shift_h = int(shift) if str(shift).isdigit() else 1
-    shift_start = 7 + (shift_h - 1) * 8
+    shift_start = _shift_start_hour(conn, shift_h)
 
     sample_sku = runs[0]['sku_id']
     rate_row = conn.execute("SELECT ideal_rate FROM line_sku_rates WHERE line_id=? AND sku_id=?", (line_id, sample_sku)).fetchone()
@@ -339,7 +356,7 @@ def job_detail(job_number):
     if runs:
         shift = runs[0]['shift'] or '1'
         shift_h = int(shift) if str(shift).isdigit() else 1
-        shift_start = 7 + (shift_h - 1) * 8
+        shift_start = _shift_start_hour(conn, shift_h)
         sample_sku = runs[0]['sku_id']
     else:
         shift_start = 7
@@ -828,7 +845,7 @@ def board(line_id):
     existing = {r['period']: dict(r) for r in runs}
     shift = runs[0]['shift'] or '1'
     shift_h = int(shift) if str(shift).isdigit() else 1
-    shift_start = 7 + (shift_h - 1) * 8
+    shift_start = _shift_start_hour(conn, shift_h)
 
     sample_sku = runs[0]['sku_id']
     rate_row = conn.execute("SELECT ideal_rate FROM line_sku_rates WHERE line_id=? AND sku_id=?", (line_id, sample_sku)).fetchone()

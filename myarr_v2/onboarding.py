@@ -97,6 +97,7 @@ TEMPLATES = {
         'examples': [
             ['unit_label', 'containers', 'What a single output unit is called'],
             ['case_label', 'cases', 'Display label for cases'],
+            ['unacc_threshold', '5', 'Minutes unexplained before an hour is flagged'],
         ],
     },
 }
