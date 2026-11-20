@@ -239,3 +239,40 @@ A13, A27. 37 open.
 
 Tools that produced them, all in the repository and all re-runnable:
 tools/test_csv_roundtrip.py, tools/test_pages.py, tools/test_herbie_cards.py.
+
+## A06 build plan, 2026-11-20
+
+Done. Zero hours accepted, `source='floor'`, `user_id` from a picker,
+`shift` derived from the clock via `_current_shift`, `duration_min` from the
+form, hour ceiling from `_shift_hours`. Verified: a POST of zero units wrote
+`1660|H8|0|1|60|floor|1` and the test row was deleted.
+
+Still open. No `line_events` row, so the tablet cannot start or end anything.
+
+Shape of the remainder. Rewrite floor_view's POST as an action dispatcher on a
+hidden `action` field: record, start, end, toggle.
+
+  start   Dropdown of that day's jobs for the line, plus a typed job number
+          for the moved case. Apply the bot's three checks: not completed, not
+          paused, and the line is not already running a different job. Set
+          jobs.status='running' and actual_end=NULL, then transition_line with
+          state production, the job id, the operator and source='floor'.
+
+  end     Require the current line event to be production. Apply the variance
+          gate exactly as bot/jobs.py does: if no completion_variance_reason
+          and |actual-target|/target exceeds job_variance_tolerance, demand a
+          reason before closing. Then status='completed' with actual_end, and
+          transition_line to idle.
+
+  toggle  Lunch, maintenance and CIP as three on/off switches. Throwing a
+          switch closes the production event and opens one of those states,
+          carrying the job id on the event. Throwing it back reads the job id
+          off the event and returns to production. No new storage.
+
+Two things to fix on the way. bot/jobs.py writes the job status and the line
+event in two separate commits, in cont_start_minutes, cont_end_minutes,
+h_pause_job, h_resume_job and changeover.py:286, so a crash between them leaves
+one written and not the other. The new floor path should write both inside one
+transaction. And the variance gate must not be skippable from the tablet, or a
+lead can close a badly missed job with no reason, which is the record the PDCA
+needs.
