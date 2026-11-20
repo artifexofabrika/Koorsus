@@ -38,7 +38,7 @@
   .floor-detail .job { color: var(--text); font-size: 0.95rem; margin-bottom: 0.5rem; }
   .floor-detail .period { font-size: 1rem; color: var(--accent); font-weight: bold; margin: 1rem 0 0.5rem; }
   .floor-detail label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 0.9rem 0 0.3rem; }
-  .floor-detail input[type=number], .floor-detail input[type=text] {
+  .floor-detail input[type=number], .floor-detail input[type=text], .floor-detail select {
     width: 100%; padding: 1rem; font-size: 1.15rem;
     background: var(--bg); color: var(--text);
     border: 1px solid var(--border); border-radius: 6px;
@@ -93,10 +93,20 @@
     <input type="hidden" name="job_number" value="{{ c.job_number }}">
     <input type="hidden" name="period" value="{{ c.next_period }}">
     <div class="period">Logging {{ c.next_period }}</div>
+    <label>Who is logging</label>
+    <select name="operator_id" class="op-select">
+      <option value="">Not stated</option>
+      {% for o in operators.get(c.line_id, []) %}
+      <option value="{{ o.id }}">{{ o.name }}</option>
+      {% endfor %}
+    </select>
     <label>Units filled</label>
-    <input type="number" name="units_filled" min="1" required inputmode="numeric" autofocus>
+    <input type="number" name="units_filled" min="0" required inputmode="numeric" autofocus
+           placeholder="0 if the line was down">
     <label>Scrap / rework</label>
     <input type="number" name="scrap_units" min="0" value="0" inputmode="numeric">
+    <label>Minutes</label>
+    <input type="number" name="duration_min" min="1" max="720" value="60" inputmode="numeric">
     <label>Notes</label>
     <input type="text" name="notes" placeholder="Optional - what happened this hour?">
     <button type="submit" class="submit">Log {{ c.next_period }}</button>
@@ -122,6 +132,16 @@ function closeAll() {
   document.getElementById('floor-tiles').style.display = '';
   history.replaceState(null, '', window.location.pathname);
 }
+document.querySelectorAll('.op-select').forEach(function(sel) {
+  var remembered = localStorage.getItem('myarra_operator');
+  if (remembered) {
+    sel.value = remembered;
+    if (sel.value !== remembered) { sel.value = ''; }
+  }
+  sel.addEventListener('change', function() {
+    if (sel.value) { localStorage.setItem('myarra_operator', sel.value); }
+  });
+});
 (function() {
   var hash = window.location.hash;
   if (hash && hash.indexOf('#line-') === 0) {

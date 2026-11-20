@@ -64,6 +64,56 @@ def _shift_start_hour(conn, shift_h):
         pass
     return 7 + (shift_h - 1) * 8
 
+
+def _shift_windows(conn):
+    """Configured shifts as (number, start_hhmm, end_hhmm)."""
+    out = []
+    for i in range(1, 7):
+        st = _setting(conn, "shift_%s_start" % i, None)
+        en = _setting(conn, "shift_%s_end" % i, None)
+        if st and en:
+            out.append((i, st, en))
+    return out
+
+
+def _current_shift(conn, when=None):
+    """Which configured shift covers this local time. Falls back to 1.
+
+    Agreed 2026-11-20: /floor wrote shift='1' as a literal, so every tablet
+    entry was attributed to shift one whatever time it was logged.
+    """
+    when = when or datetime.now()
+    hhmm = when.strftime("%H:%M")
+    for i, st, en in _shift_windows(conn):
+        if st <= en:
+            if st <= hhmm < en:
+                return str(i)
+        else:
+            if hhmm >= st or hhmm < en:
+                return str(i)
+    return "1"
+
+
+def _shift_hours(conn, shift_h):
+    """Hours in a configured shift, from its start and end. Default 8.
+
+    The report and board pages looped range(1, 9), so a ten or twelve hour
+    shift produced periods that were never displayed.
+    """
+    st = _setting(conn, "shift_%s_start" % shift_h, None)
+    en = _setting(conn, "shift_%s_end" % shift_h, None)
+    if not st or not en:
+        return 8
+    try:
+        sm = int(str(st).split(":")[0]) * 60 + int(str(st).split(":")[1])
+        em = int(str(en).split(":")[0]) * 60 + int(str(en).split(":")[1])
+    except (ValueError, IndexError):
+        return 8
+    span = (em - sm) % (24 * 60)
+    if span <= 0:
+        span = 24 * 60
+    return max(1, span // 60)
+
 def _load_fishbone(conn, exp_id):
     data = {cat: [] for cat in FISHBONE_CATEGORIES}
     for row in conn.execute(
@@ -283,7 +333,7 @@ def line_report(line_id):
     target_acc = 0
     actual_acc = 0
 
-    for pn in range(1, 9):
+    for pn in range(1, _shift_hours(conn, shift_h) + 1):
         period = f"H{pn}"
         duration = 60
         if period in existing and existing[period]['duration_min']:
@@ -359,6 +409,7 @@ def job_detail(job_number):
         shift_start = _shift_start_hour(conn, shift_h)
         sample_sku = runs[0]['sku_id']
     else:
+        shift_h = 1
         shift_start = 7
         sample_sku = job['sku_id']
 
@@ -375,7 +426,7 @@ def job_detail(job_number):
     target_acc = 0
     actual_acc = 0
 
-    for pn in range(1, 9):
+    for pn in range(1, _shift_hours(conn, shift_h) + 1):
         period = f"H{pn}"
         duration = 60
         if period in existing and existing[period]['duration_min']:
@@ -859,7 +910,7 @@ def board(line_id):
     target_acc = 0
     actual_acc = 0
 
-    for pn in range(1, 9):
+    for pn in range(1, _shift_hours(conn, shift_h) + 1):
         period = f"H{pn}"
         duration = 60
         if period in existing and existing[period]['duration_min']:
@@ -990,27 +1041,51 @@ def floor_view():
             line_id = int(request.form.get("line_id") or 0)
             job_number = (request.form.get("job_number") or "").strip()
             period = (request.form.get("period") or "").strip()
-            units = int(request.form.get("units_filled") or 0)
-            scrap = int(request.form.get("scrap_units") or 0)
+            units_raw = (request.form.get("units_filled") or "").strip()
+            scrap_raw = (request.form.get("scrap_units") or "").strip()
+            minutes_raw = (request.form.get("duration_min") or "").strip()
+            operator_raw = (request.form.get("operator_id") or "").strip()
             notes = (request.form.get("notes") or "").strip()
-            if line_id and job_number and period and units > 0:
+
+            if not units_raw:
+                msg = "Units filled is required. Enter 0 if the line was down."
+            elif not (line_id and job_number and period):
+                msg = "Missing required fields."
+            else:
+                units = int(units_raw)
+                scrap = int(scrap_raw) if scrap_raw else 0
+                minutes = int(minutes_raw) if minutes_raw else 60
+                try:
+                    operator_id = int(operator_raw) if operator_raw else None
+                except ValueError:
+                    operator_id = None
                 job = conn.execute(
                     "SELECT id, sku_id, line_id FROM jobs WHERE job_number = ? COLLATE NOCASE",
                     (job_number,)
                 ).fetchone()
-                if job:
-                    now = datetime.now().isoformat()
-                    conn.execute("""
-                        INSERT INTO hourly_runs (job_id, line_id, sku_id, shift, period, recorded_at, units_filled, scrap_units, duration_min, notes)
-                        VALUES (?, ?, ?, '1', ?, ?, ?, ?, 60, ?)
-                    """, (job["id"], line_id, job["sku_id"], period, now, units, scrap, notes))
-                    conn.commit()
-                    msg = f"Logged {period} for {job_number}: {units:,} units, {scrap} scrap."
-                    selected_line = line_id
-                else:
+                if not job:
                     msg = f"Job {job_number} not found."
-            else:
-                msg = "Missing required fields."
+                else:
+                    now = datetime.now()
+                    conn.execute("""
+                        INSERT INTO hourly_runs
+                        (job_id, line_id, sku_id, shift, period, recorded_at,
+                         units_filled, scrap_units, duration_min, notes,
+                         source, user_id)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'floor', ?)
+                    """, (job["id"], line_id, job["sku_id"],
+                          _current_shift(conn, now), period, now.isoformat(),
+                          units, scrap, minutes, notes, operator_id))
+                    conn.commit()
+                    who = ""
+                    if operator_id:
+                        u = conn.execute("SELECT name FROM users WHERE id=?",
+                                         (operator_id,)).fetchone()
+                        if u:
+                            who = " by " + u[0]
+                    msg = (f"Logged {period} for {job_number}: {units:,} units, "
+                           f"{scrap} scrap, {minutes} min{who}.")
+                    selected_line = line_id
         except Exception as e:
             msg = f"Error: {e}"
 
@@ -1049,8 +1124,14 @@ def floor_view():
                     except ValueError:
                         pass
         cards.append(card)
+    operators = {}
+    for u in conn.execute("SELECT id, name, line_id FROM users WHERE active=1 "
+                          "ORDER BY name").fetchall():
+        operators.setdefault(u["line_id"], []).append({"id": u["id"], "name": u["name"]})
     conn.close()
-    return render_template("floor.html", cards=cards, msg=msg, today=datetime.now().strftime("%Y-%m-%d"), selected_line=selected_line)
+    return render_template("floor.html", cards=cards, msg=msg, operators=operators,
+                           today=datetime.now().strftime("%Y-%m-%d"),
+                           selected_line=selected_line)
 
 
 @app.route("/favicon.ico")
