@@ -145,3 +145,35 @@ myarr_v2/requirements.txt created and pinned from actual imports: Flask
   Koorsus.
 - HANDOVER says backup and restore does not exist. It does now, and the
   record is a day stale.
+
+## Competitor watch
+
+### JUUSTE, assessed 2026-11-20
+
+Flemish, small, early. Their footer places them in Voka Bryo and Start it X
+2026 Fall programmes, with VLAIO logos. Pre-Series A, not an incumbent.
+
+Positioning: "JUUSTE works on the input side, the checks, the settings, the
+handovers." They frame scrap, downtime and OEE as "every other tool watches
+here, these only move after the shift is over." Sharper sentence than ours
+and aimed at the same buyer.
+
+Stronger than Myarra today: twelve modules (centerlines, CIL, one-point
+lessons, near misses, 5 Why, skills matrix, tasks, safety observations), and
+a live scrollable demo on a chocolate line with a named operator and per
+machine uptime. Our demo is seeded beverage data.
+
+Where they are not: capture is form driven in their own demo, "Type: no
+selection", "Classification: minor defects", "Priority: choose one". Their
+data quality depends on the taxonomy being right, which is the 101st
+category wall. Their OEE is textbook Availability, Performance, Quality per
+machine, which is one instrument charging every loss to one number. And
+there is no refusal anywhere.
+
+The real risk is not losing a bake-off on the Check step. It is that they get
+installed first, become the operator's screen, and Myarra becomes a second
+system. That breaks "one place, no data janitor" outright.
+
+Watch item. Do not mention in marketing. The counter is the two measures and
+capture that cannot be blocked: their form makes the operator choose a
+category, ours records what he said.

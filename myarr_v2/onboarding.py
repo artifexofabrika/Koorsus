@@ -483,10 +483,26 @@ def ingest_template(conn, template_name, file_stream, full_replace=False):
 
     try:
         raw = file_stream.stream.read()
-        text = raw.decode('utf-8-sig', errors='replace')
     except Exception as e:
         return {'uploaded': 0, 'succeeded': 0, 'failed': 0,
                 'errors': [{'line': 0, 'message': f'could not read file: {e}'}]}
+
+    # Agreed 2026-11-20: never decode with errors='replace'. A Latin-1 CSV
+    # exported from Excel would import as mojibake with no error, and the
+    # operator's own words are the data of record. Try UTF-8, then Windows
+    # 1252 because that is what Excel writes, then refuse and say so.
+    encoding = 'utf-8'
+    try:
+        text = raw.decode('utf-8-sig')
+    except UnicodeDecodeError:
+        try:
+            text = raw.decode('cp1252')
+            encoding = 'cp1252'
+        except UnicodeDecodeError:
+            return {'uploaded': 0, 'succeeded': 0, 'failed': 0,
+                    'errors': [{'line': 0, 'message':
+                        'file is neither UTF-8 nor Windows-1252. '
+                        'Re-export it as UTF-8 CSV.'}]}
 
     reader = csv.DictReader(io.StringIO(text))
     if reader.fieldnames is None:
@@ -536,4 +552,5 @@ def ingest_template(conn, template_name, file_stream, full_replace=False):
         'succeeded': succeeded,
         'failed': uploaded - succeeded,
         'errors': errors,
+        'encoding': encoding,
     }
