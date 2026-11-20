@@ -596,9 +596,20 @@ def _fallback_narrative(intent, stats):
 
 def narrate(intent, stats, context=None, question=""):
     """Generic narrator for the /herbie web route. LLM-driven with template fallback."""
-    if isinstance(stats, dict) and stats.get("actual_units") == 0 and stats.get("run_minutes") == 0 and stats.get("line_id"):
-        return {"narrative": f"Line {stats.get('line_id')} on {stats.get('date')}: no production recorded.",
-                "source": "no-data"}
+    if isinstance(stats, dict) and stats.get("actual_units") == 0 and stats.get("run_minutes") == 0:
+        # Agreed 2026-11-20: this guard belongs to the line card only. Applied
+        # to a job it interpolated a date the job summary does not carry and
+        # produced "Line 7 on None". A scheduled job with no runs is a normal
+        # state and deserves a true sentence rather than a broken one.
+        if intent == "line_day" and stats.get("line_id"):
+            return {"narrative": "Line %s on %s: no production recorded."
+                                 % (stats.get("line_id"), stats.get("date")),
+                    "source": "no-data"}
+        if intent == "job" and stats.get("job_number"):
+            return {"narrative": "Job %s has no recorded production. Status: %s."
+                                 % (stats.get("job_number"),
+                                    stats.get("status") or "unknown"),
+                    "source": "no-data"}
 
     if isinstance(stats, dict) and "error" in stats:
         return {"narrative": stats["error"], "source": "error"}

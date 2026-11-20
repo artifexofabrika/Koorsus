@@ -213,3 +213,38 @@ OPEN   The case-insensitive fallback for component types is implemented but
 
 COVERAGE  tools/test_csv_roundtrip.py   8 checks, all passing
 COVERAGE  tools/test_pages.py           26 routes, all 200
+
+## Herbie Light: the guarantee does not hold
+
+Ran tools/test_herbie_cards.py against live data, 2026-11-20. Five cards, all
+reachable, all narrating. Two defects observed that matter far more than
+reachability.
+
+OBSERVED  The changeover card computed a number. Asked about WO-2611-398 it
+          wrote "32.0 minutes faster than the standard of 60.0 minutes,
+          resulting in a 46.7% improvement". A 32 minute saving on a 60
+          minute standard is 53.3%, not 46.7. The model divided instead of
+          quoting variance_pct, which the HARD NUMBERS rule forbids and the
+          intent notes already prohibit. A later run of the same card did not
+          repeat it. The violation is intermittent, so one green run proves
+          nothing.
+
+OBSERVED  The line_day card misstates losses_accounted. It wrote "the losses
+          accounted for are 12 scrap units plus 0 lost capacity, totaling 12
+          units", while the same paragraph reported 12 units of lost capacity
+          and 2248 unexplained. The accounted loss is 24. Reproduced on
+          consecutive runs.
+
+NOTE      Numeric tracing catches a computed figure. It does not catch a
+          field reported with the wrong value, which is the line_day defect.
+          Reading is still required. A passing test is not a clean bill.
+
+NEXT      Both are prompt and payload problems, not code problems. The
+          changeover summary is already pre-computed and the intent notes
+          already call it authoritative, and the model overrode it anyway.
+          Options: strengthen the prompt, or route changeover and line_day to
+          the template fallback on the Nano and let the model narrate only
+          where it is reliable. Not started. Needs the operator workflow
+          description first.
+
+COVERAGE  tools/test_herbie_cards.py   5 cards, all reachable
