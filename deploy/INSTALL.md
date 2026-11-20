@@ -5,7 +5,7 @@ flashed with JetPack, then provisioned by hand with one script.
 
 Proven state, 2026-11-19: the installer has been run twice in Koorsus-only
 mode on the reference board, EXIT=0 both times. Appliance mode has been
-reviewed but never executed.
+run on 2026-11-20 in appliance mode, three services active and both ports answering.
 
 Two ways to provision a unit:
 

@@ -66,7 +66,7 @@ CRLF out of the Koorsus scripts, generates the backup passphrase once,
 installs units, and starts certificate-dependent services last.
 
 Run twice in Koorsus mode, EXIT=0 both times, koorsus-app active, 5003
-answering 302. Appliance mode has never been run.
+answering 302. Appliance mode run once on 2026-11-20, EXIT=0.
 
 ### Deploy templates
 
@@ -87,7 +87,6 @@ myarr_v2/requirements.txt created and pinned from actual imports: Flask
 ## Not done, planned
 
 - The printable installation procedure. Last piece of queue item 3.
-- Appliance-mode rehearsal of install.sh. Never run.
 - No offsite copy of the appliance archive. export-usb.sh and import-usb.sh
   are hardcoded to /mnt/koorsus-backup.
 - Key escrow is not a documented step. The passphrase exists only on the
