@@ -73,7 +73,7 @@ DATA = {
     "sku_bom": [
         ["sku_part_number", "component_name", "component_value"],
         ["COS-CMP-RS", "case", "rose-blk"],
-        ["cos-lower-01", "case", "lower-case-value"],
+        ["COS-LOWER-01", "case", "lower-case-value"],
     ],
     "line_sku_rates": [
         ["line_id", "sku_part_number", "ideal_rate"],
@@ -132,7 +132,7 @@ def main():
 
     row = conn.execute("SELECT COUNT(*) FROM sku_bom b JOIN skus s ON s.id=b.sku_id "
                        "WHERE s.part_number='cos-lower-01'").fetchone()
-    check("sku_bom resolves a lower case part number", row[0], 1)
+    check("sku_bom resolves a differently cased part number", row[0], 1)
 
     row = conn.execute("SELECT name FROM users WHERE telegram_id='111'").fetchone()
     check("users name: non-ASCII survives", row[0], "Zo\u00eb \u00c5ngstr\u00f6m")

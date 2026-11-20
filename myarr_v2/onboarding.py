@@ -142,16 +142,31 @@ def generate_csv(name):
 # ---------- Resolution helpers ----------
 
 def resolve_sku(conn, part_number):
+    """Exact match first, then case-insensitive.
+
+    Agreed 2026-11-20: a plant will not type part numbers consistently, and
+    the bot already treats job numbers case insensitively. Exact matching is
+    still preferred so two genuinely different part numbers that differ only
+    in case are never conflated."""
     if not part_number:
         return None
     r = conn.execute("SELECT id FROM skus WHERE part_number=?", (part_number,)).fetchone()
+    if r:
+        return r[0]
+    r = conn.execute("SELECT id FROM skus WHERE part_number=? COLLATE NOCASE",
+                     (part_number,)).fetchone()
     return r[0] if r else None
 
 
 def resolve_component_type(conn, name):
+    """Exact match first, then case-insensitive. See resolve_sku."""
     if not name:
         return None
     r = conn.execute("SELECT id FROM component_types WHERE name=?", (name,)).fetchone()
+    if r:
+        return r[0]
+    r = conn.execute("SELECT id FROM component_types WHERE name=? COLLATE NOCASE",
+                     (name,)).fetchone()
     return r[0] if r else None
 
 
