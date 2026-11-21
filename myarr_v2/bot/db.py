@@ -185,33 +185,47 @@ def current_line_event(conn, line_id):
         (line_id,)).fetchone()
 
 
+def _close_line_event_nc(conn, event_id, end_iso=None):
+    """Close an event without committing. Caller owns the transaction."""
+    conn.execute("UPDATE line_events SET ended_at=? WHERE id=?",
+                 (end_iso or datetime.now().isoformat(), event_id))
+
+
 def close_line_event(conn, event_id, end_iso=None):
-    conn.execute(
-        "UPDATE line_events SET ended_at=? WHERE id=?",
-        (end_iso or datetime.now().isoformat(), event_id))
+    _close_line_event_nc(conn, event_id, end_iso)
     conn.commit()
 
 
-def transition_line(conn, line_id, new_state, job_id=None, co_event_id=None,
-                    reason=None, user_id=None, source='telegram', end_at=None):
+def transition_line_nc(conn, line_id, new_state, job_id=None, co_event_id=None,
+                       reason=None, user_id=None, source='telegram', end_at=None):
+    """Transition without committing. Returns (event_id, wrote_rows)."""
     cur = current_line_event(conn, line_id)
     if cur and cur['state'] == new_state:
         if new_state == 'production' and cur['job_id'] == job_id:
-            return cur['id']
+            return cur['id'], False
         if new_state == 'changeover' and cur['co_event_id'] == co_event_id:
-            return cur['id']
+            return cur['id'], False
         if new_state in ('lunch', 'cip', 'maintenance', 'idle', 'unscheduled'):
-            return cur['id']
+            return cur['id'], False
     if cur:
-        close_line_event(conn, cur['id'], end_iso=end_at)
+        _close_line_event_nc(conn, cur['id'], end_iso=end_at)
     start = end_at or datetime.now().isoformat()
     ins = conn.execute("""
         INSERT INTO line_events
         (line_id, state, started_at, ended_at, job_id, co_event_id, reason, user_id, source)
         VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?)
     """, (line_id, new_state, start, job_id, co_event_id, reason, user_id, source))
-    conn.commit()
-    return ins.lastrowid
+    return ins.lastrowid, True
+
+
+def transition_line(conn, line_id, new_state, job_id=None, co_event_id=None,
+                    reason=None, user_id=None, source='telegram', end_at=None):
+    event_id, wrote = transition_line_nc(
+        conn, line_id, new_state, job_id=job_id, co_event_id=co_event_id,
+        reason=reason, user_id=user_id, source=source, end_at=end_at)
+    if wrote:
+        conn.commit()
+    return event_id
 
 
 def derive_line(conn, job, sess, user):

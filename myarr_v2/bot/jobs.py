@@ -18,30 +18,17 @@ from parsers import parse_job_number, parse_all_job_numbers, parse_int
 from .resolve import resolve_job, _explain_no_job, _fuzzy_note, next_job_hour
 
 
-def h_start_job(conn, s, text, user):
-    job_no = parse_job_number(text)
-    job, conf, alts = resolve_job(conn, job_no)
-    if not job:
-        return _explain_no_job(conn, job_no or text, conf, alts)
+def check_start(conn, job):
+    """The three start checks, shared by the bot and the /floor page.
 
-    _status = (job.get('status') or '').lower()
-    if _status == 'completed':
+    Returns a refusal sentence, or None when the job may start.
+    """
+    status = (job.get('status') or '').lower()
+    if status == 'completed':
         return job['job_number'] + ' is completed. It cannot be started again.'
-    if _status == 'paused':
+    if status == 'paused':
         return (job['job_number'] + ' is paused. Say resume '
                 + job['job_number'] + ' to resume it.')
-
-    db.reconcile_session(conn, s)
-
-    if s.get('active_job_id') and s['active_job_id'] != job['id']:
-        active = conn.execute(
-            "SELECT job_number, line_id FROM jobs WHERE id=?", (s['active_job_id'],)).fetchone()
-        if active:
-            return ('You have ' + active['job_number'] + ' active on Line '
-                    + str(active['line_id']) + '. End or pause it first, '
-                    'or say status line ' + str(active['line_id']) + '.')
-
-    # Strict line enforcement: refuse if the line is running something else.
     active_line = conn.execute("""
         SELECT j.job_number, le.state FROM jobs j
         JOIN line_events le ON le.job_id = j.id
@@ -53,6 +40,51 @@ def h_start_job(conn, s, text, user):
             f"{active_line['job_number']} ({active_line['state']}). "
             f"You must complete a changeover before starting {job['job_number']}."
         )
+    return None
+
+
+def start_job(conn, job, line_id, user_id=None, source='telegram', reason=None):
+    """Start a job on a line. Status and line event in one transaction.
+
+    A crash cannot leave the job running with no event (A06), nor the line
+    closed and unopened (A47).
+    """
+    refusal = check_start(conn, job)
+    if refusal:
+        return refusal
+    now = datetime.now().isoformat()
+    try:
+        conn.execute(
+            "UPDATE jobs SET status='running', actual_end=NULL, "
+            "actual_start=COALESCE(actual_start, ?) WHERE id=?", (now, job['id']))
+        db.transition_line_nc(conn, line_id, 'production', job_id=job['id'],
+                              user_id=user_id, source=source, reason=reason)
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    return None
+
+
+def h_start_job(conn, s, text, user):
+    job_no = parse_job_number(text)
+    job, conf, alts = resolve_job(conn, job_no)
+    if not job:
+        return _explain_no_job(conn, job_no or text, conf, alts)
+
+    refusal = check_start(conn, job)
+    if refusal:
+        return refusal
+
+    db.reconcile_session(conn, s)
+
+    if s.get('active_job_id') and s['active_job_id'] != job['id']:
+        active = conn.execute(
+            "SELECT job_number, line_id FROM jobs WHERE id=?", (s['active_job_id'],)).fetchone()
+        if active:
+            return ('You have ' + active['job_number'] + ' active on Line '
+                    + str(active['line_id']) + '. End or pause it first, '
+                    'or say status line ' + str(active['line_id']) + '.')
 
     conn.execute("UPDATE jobs SET status='running', actual_end=NULL WHERE id=?",
                  (job['id'],))
