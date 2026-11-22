@@ -48,6 +48,13 @@ A03 OPEN  Herbie misstates losses_accounted on the line_day card. It wrote
           totaling 12 units" in a paragraph that also reported 12 units of lost
           capacity and 2248 unexplained. Accounted loss is 24. Reproduced on
           consecutive runs.
+          Observed correct once, 2026-11-22: the same card read "12 scrap units
+          and 12 units of lost capacity, totaling 24 losses accounted". One run
+          of an intermittent behaviour is not a fix and is not recorded as one.
+          The same run's tracer flagged 24.0 as an untraced number, because 24
+          is a derived sum rather than a quoted field. That is the limit
+          STATE.md already states: tracing catches a computed figure, not a
+          field reported with the wrong value.
 
 A04 OPEN  Two competing schema strategies in one appliance. db.py applies
           tools/schema.sql and refuses a stale database loudly. bot/db.py
@@ -60,16 +67,22 @@ A05 FIXED Onboarding decoded uploads with errors='replace', so a Windows-1252
           warning. The operator's own words are the data of record. Now UTF-8,
           then cp1252, then a refusal that names the problem.
 
-A45 OPEN  The variance gate compares units produced against target_quantity
-          with no allowance for time the line was not scheduled to run, so
-          off-time trips it by itself. Thirty minutes of lunch on a ten hour
-          shift is five percent, which is the entire default tolerance: the
-          gate refuses to close a job that was never behind, and the reason it
-          then demands is the reason the PDCA reads. bot/jobs.py:156 computes
-          (actual - target) / target and nothing subtracts lunch, maintenance
-          or CIP. Build the allowance once, in one shared function, before the
-          end action exists, or it will be built twice and the two will
-          disagree.
+A45 FIXED Built 2026-11-22, verified 9 of 9 in tools/test_floor_start.py. The
+          gate compared units produced against target_quantity with no
+          allowance for time the line was not scheduled to run, so thirty
+          minutes of lunch on a ten hour shift, five percent, tripped the
+          default tolerance by itself and demanded a reason for a job that was
+          never behind. scheduled_window reads the weekly schedule feed, which
+          both Odoo and the jobs.csv upload write, and variance_allowance
+          subtracts measured lunch, maintenance and CIP minutes clipped to that
+          window: a 600 minute window at 1000 target, minus 30 off-time
+          minutes, allows 950. The eighteen line copy in h_ending_job is gone,
+          so the floor end action will call the same gate rather than a second
+          one.
+          A job with no window still gates against the raw target and says so
+          in the sentence; a job with no target does not gate, because that is
+          a master-data defect. Capacity is measured on parts produced, not
+          good parts: a scrap-heavy hour at full rate has lost no capacity.
 
 A48 OPEN  The bot conversational path commits the job status and the line
           event as two transactions. cont_start_minutes commits the status at
@@ -280,9 +293,9 @@ the only finding there whose shape is known. Expect more.
 
 ## Counts
 
-47 findings. 7 fixed and verified on 2026-11-20: A05, A07, A08, A09, A12,
-A13, A27. 40 open. A45, A47 and A48 were written down on 2026-11-22; A46 is
-still unaccounted for.
+47 findings. 8 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
+2026-11-20, and A45 on 2026-11-22. 39 open. A45, A47 and A48 were written
+down on 2026-11-22; A46 is still unaccounted for.
 
 Tools that produced them, all in the repository and all re-runnable:
 tools/test_csv_roundtrip.py, tools/test_pages.py, tools/test_herbie_cards.py.

@@ -14,6 +14,35 @@ expectation falls with it.
 Ten hours at 100 per hour is 1000 parts. Thirty minutes of lunch makes it 9.5
 hours and 950 parts. Nothing else changes the expectation.
 
+## Two measures, and neither of them is money
+
+As described by the owner, 2026-11-22.
+
+Capacity and first time quality answer different questions and must never be
+netted into one number.
+
+Run 1000 parts in an hour that owed 1000, and 25 of them are scrap. No
+capacity was lost: the hour produced what it was due to produce. First time
+quality suffers, 97.5 percent, and that is the other measure working as it
+should.
+
+Run 900 parts in an hour that owed 1000, none of them scrap. First time
+quality is 100 percent and 100 parts of capacity are gone. Both of these are
+true at once, and a single number that blends them hides whichever one the
+manager needed.
+
+So capacity compares what came off the line against what the hour was due to
+produce, and scrap does not enter it. Quality compares good parts against
+parts produced, and the target does not enter it. This is the same commitment
+as the two measures in PHILOSOPHY, said in units rather than in OEE.
+
+It has one consequence for the code. The capacity comparison sums
+hourly_runs.units_filled, which includes scrap by the 2026-11-07 convention:
+600 produced with 20 scrap is 600 total and 580 good. It does not sum
+units_filled minus scrap_units. An editor who "corrects" that turns a
+scrap-heavy hour at full rate into a capacity failure, and the reason demanded
+of the operator would be about quality recorded as capacity.
+
 ## A shift
 
 Monday, one shift. The line is set up. Six stations on a bottling line: glass,
