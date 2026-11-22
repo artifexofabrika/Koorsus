@@ -1,8 +1,14 @@
-# Myarra appliance state, 2026-11-19
+# Myarra appliance state, 2026-11-22
 
-Written at the end of the session that completed config extraction, backup
-and restore, and the installer. Everything below was verified on the
-reference Jetson, not assumed. Git HEAD at time of writing: 9d6ceab.
+Started 2026-11-19 at the end of the session that completed config
+extraction, backup and restore, and the installer. Everything below was
+verified on the reference Jetson, not assumed. Git HEAD when this section was
+written: 36ed2db.
+
+Where a statement below was true on 19 November and is not true now, it is
+corrected in place with the date of the correction rather than left standing.
+A state document that keeps a comfortable old sentence is worse than none,
+because the next reader has no way to tell which half is current.
 
 ## Services running
 
@@ -15,6 +21,29 @@ Seven units on 192.168.100.2. The product is the first four.
     arkiv.service            5001  separate product
     koorsus.service          5000  legacy Koorsus, kept for a Telegram bot
     email-agent.service            Koorsus extra, not part of a plant unit
+
+## 2026-11-22, the floor start action
+
+The tablet can start a job. It cannot end one.
+
+    floor_view dispatches on a hidden action field. With no action field it
+    falls through to the record path untouched, which is what the record form
+    posts today.
+    The start action calls bot.jobs.start_job, which writes jobs.status and
+    the line_events row in one transaction with rollback, so a crash cannot
+    leave one written and not the other.
+    check_start now tests the line the job is being started on rather than the
+    line the job carries, so a moved work order cannot silently close the
+    event of whatever is already running there.
+
+Proven. tools/test_floor_start.py, six cases, 6 of 6, on its own temporary
+database. The induced failure is a real BEFORE INSERT trigger on line_events,
+so it tests the transaction rather than the except block. Regression after the
+change: test_csv_roundtrip 8 of 8, test_pages 26 routes 0 failed, /floor
+returns 200 after a restart. Commits df1c99c and 36ed2db.
+
+Not proven. A human on the tablet. Everything above is Flask's test client on
+the Jetson, which cannot tell anyone whether a lead in gloves can hit the tile.
 
 ## Done and proven
 
@@ -101,8 +130,20 @@ myarr_v2/requirements.txt created and pinned from actual imports: Flask
 - install.sh HTTP check should accept 200 and 302 and flag 000 or a 5xx.
 - CSV round-trip with real data, then the systematic pass over every page,
   every Herbie card and every bot path. Queue item 4.
-- Regenerate the 115-finding audit from the code. Queue item 5.
-- /floor write path C27, then Whisper. Queue item 6.
+  PART DONE 2026-11-20: the CSV round trip, the 26 pages and the 5 Herbie
+  cards all run and are re-runnable. The bot write paths are still unwalked,
+  and the audit calls them the largest unexamined surface.
+- Regenerate the audit from the code. Queue item 5.
+  DONE 2026-11-20: deploy/AUDIT.md holds 44 numbered findings, each naming a
+  file. The 115 in this line was the count from an earlier audit that was
+  never saved, and the two figures should not be reconciled; the saved one
+  wins. Regenerated again 2026-11-22 to 47 when A45, A47 and A48 were finally
+  written down.
+- /floor write path, C27, then Whisper. Queue item 6.
+  HALF DONE. The hour was fixed 2026-11-20 and the start action 2026-11-22.
+  Still missing: end, and the lunch, maintenance and CIP toggles. A45, the
+  variance gate's off-time allowance, gets built before end, in one shared
+  function, or it will be built twice and the two will disagree.
 - Odoo master-data import and the line-mapping screen. HANDOVER calls this
   install-blocking; the owner's revised list drops it. Unresolved.
 - The architecture map. Agreed as worth doing, not yet written.
@@ -110,8 +151,11 @@ myarr_v2/requirements.txt created and pinned from actual imports: Flask
 - Dangling citations when a document is deleted. Parking lot.
 - Backup and data share one filesystem. A second disk is needed for the
   archive to survive a disk failure.
-- Rebase onto a fresh branch with fresh eyes, now that restore makes it
-  recoverable.
+- Dropped 2026-11-22 by the owner. No rebase, no force-push, no amending a
+  pushed commit: history only grows, and a wrong commit is fixed forward with
+  a commit that says what it is fixing. This line proposed rebasing now that
+  restore made the tree recoverable, which is the habit it was the seed of.
+  It is closed, and closing it here is the point of writing it down.
 
 ## Parking lot, hygiene and cleanup
 
@@ -213,6 +257,7 @@ OPEN   The case-insensitive fallback for component types is implemented but
 
 COVERAGE  tools/test_csv_roundtrip.py   8 checks, all passing
 COVERAGE  tools/test_pages.py           26 routes, all 200
+COVERAGE  tools/test_floor_start.py     6 cases, all passing, added 2026-11-22
 
 ## Herbie Light: the guarantee does not hold
 
@@ -251,28 +296,42 @@ COVERAGE  tools/test_herbie_cards.py   5 cards, all reachable
 
 ## Config exists, code ignores it
 
-grep across myarr_v2, 2026-11-20. Settings keys nothing reads:
+grep across myarr_v2, 2026-11-20. On that date these settings keys were read
+by nothing:
 
   shift_1_start, shift_1_end, shift_2_start, shift_2_end,
   shift_3_start, shift_3_end, lunch_minutes, rate_label
 
-Read and working: unit_label, case_label, job_variance_tolerance.
+By 2026-11-22 the six shift keys are read and working, through
+_shift_start_hour and _shift_hours. Still unread: lunch_minutes, which should
+be deleted rather than wired, and rate_label, which should be wired.
 
-Four live consequences:
+Read and working: unit_label, case_label, job_variance_tolerance,
+unacc_threshold, shift_N_start, shift_N_end.
 
-  app.py computes shift_start = 7 + (shift_h - 1) * 8 in three routes. Three
-  shifts are configured in settings and ignored. A plant that edits its shift
-  times sees no change and gets hours attributed to the wrong shift with no
-  error raised.
+Four live consequences as at 2026-11-20, each marked with its status on
+2026-11-22:
+
+  app.py computed shift_start = 7 + (shift_h - 1) * 8 in three routes. Three
+  shifts were configured in settings and ignored. A plant that edited its
+  shift times saw no change and got hours attributed to the wrong shift with
+  no error raised.
+  FIXED 2026-11-20 as A07. _shift_start_hour reads shift_N_start and the hour
+  ceiling comes from _shift_hours, so ten and twelve hour shifts work.
 
   lunch_minutes is 30 in settings and read nowhere, so lunch duration is
   fixed in code.
+  STILL TRUE, and the answer is deletion, not wiring (A24). bot/shift.py
+  measures actual lunch from line_events, which is more truthful than any
+  configured duration.
 
   rate_label is unused, so the rate is described in hardcoded words rather
   than in the plant's own unit.
+  STILL TRUE as A23.
 
   bot/db.py UNACC_THRESHOLD = 5.0 is hardcoded, has no settings key, and is a
   different quantity from job_variance_tolerance, which is configured.
+  FIXED 2026-11-20 as A08. unacc_threshold(conn), settings first.
 
 Characterisation: the configuration is in the database and specific paths read
 the wrong source. Not a redesign.
