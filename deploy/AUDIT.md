@@ -20,13 +20,21 @@ Severity.
   S3  Misleads a reader, hides a failure, or loses recoverability.
   S4  Cosmetic, naming, dead weight.
 
+Numbering. Findings run A01 to A44 without a gap. A45 and A47 appear here for
+the first time: both numbers were already cited, A45 in the owner's session
+notes and A47 in bot/jobs.py's start_job docstring, before any entry existed,
+so they are filled rather than renumbered. A46 was never written down and is
+cited by nothing on either machine; the slot is left empty rather than filled
+with a guess. Numbering resumes at A48.
+
 ## S1
 
 A01 OPEN  bot/db.py ideal_rate() returns 600.0 when no rate row exists, and
-          app.py repeats "or 600.0" in four routes. A plant with an unloaded
-          rate gets confident arithmetic: expected units, gap minutes, FTY
-          and unaccounted minutes are all wrong and nothing says so. This is
-          the most dangerous constant in the product.
+          app.py repeats "or 600.0" in five routes, not four: 197 dashboard,
+          319 line_report, 417 job_detail, 810 shift_detail, 903 board. A
+          plant with an unloaded rate gets confident arithmetic: expected
+          units, gap minutes, FTY and unaccounted minutes are all wrong and
+          nothing says so. This is the most dangerous constant in the product.
 
 A02 OPEN  Herbie computed a figure instead of quoting one. The changeover card
           for WO-2611-398 read "32.0 minutes faster than the standard of 60.0
@@ -52,12 +60,39 @@ A05 FIXED Onboarding decoded uploads with errors='replace', so a Windows-1252
           warning. The operator's own words are the data of record. Now UTF-8,
           then cp1252, then a refusal that names the problem.
 
+A45 OPEN  The variance gate compares units produced against target_quantity
+          with no allowance for time the line was not scheduled to run, so
+          off-time trips it by itself. Thirty minutes of lunch on a ten hour
+          shift is five percent, which is the entire default tolerance: the
+          gate refuses to close a job that was never behind, and the reason it
+          then demands is the reason the PDCA reads. bot/jobs.py:156 computes
+          (actual - target) / target and nothing subtracts lunch, maintenance
+          or CIP. Build the allowance once, in one shared function, before the
+          end action exists, or it will be built twice and the two will
+          disagree.
+
+A48 OPEN  The bot conversational path commits the job status and the line
+          event as two transactions. cont_start_minutes commits the status at
+          jobs.py:120 and then calls the committing transition_line at :123;
+          cont_end_minutes, h_pause_job, h_resume_job and changeover.py:286 do
+          the same. A crash between the two commits leaves one written and not
+          the other. This is A47 seen from the other end. The floor path does
+          not use it: /floor calls start_job, which writes both in one
+          transaction. Recorded as a numbered finding rather than left as the
+          paragraph in the A06 build plan, because a paragraph does not
+          survive a grep and reads as commentary.
+
 ## S2
 
-A06 OPEN  /floor writes hourly_runs with shift='1' and duration_min=60
-          hardcoded, and writes no source, no user_id and no line_events row.
-          The spine therefore has no idea the floor page logged an hour. Known
-          as C27. Must precede Whisper, which lands in the same POST.
+A06 OPEN  /floor can now start a job and still cannot end one. Two halves
+          closed: on 2026-11-20 the hour itself, with shift derived from the
+          clock via _current_shift, duration_min from the form, source='floor',
+          user_id from a picker and zero accepted as a valid hour; on
+          2026-11-22 the start action, which writes jobs.status and the
+          line_events row in one transaction through bot.jobs.start_job. Still
+          open: end, and the lunch, maintenance and CIP toggles, so the tablet
+          cannot close a job. Known as C27. Must precede Whisper, which lands
+          in the same POST.
 
 A07 FIXED app.py computed shift_start = 7 + (shift_h - 1) * 8 in three routes
           while three shifts sat configured in settings. A plant that edited
@@ -93,6 +128,17 @@ A12 FIXED herbie.narrate's no-data guard fired for any intent with zero units
 A13 FIXED /pdca returned 500. A changeover step with a NULL actual_min reached
           the trend chart and the template divided it. Points with no
           measurement are now dropped in _compute_trend.
+
+A47 OPEN  A line transition closes the current event and inserts the next one
+          as two statements. A crash between them leaves the line with no open
+          event at all, and every reader treats that as idle: shift
+          reconciliation attributes the rest of the shift to nothing and the
+          hour by hour chart shows a line that stopped existing. Both
+          statements share a transaction in start_job, so the floor start path
+          cannot do this. Still open in db.transition_line and in every caller
+          that follows it with a separate status commit (A48). Cited by the
+          start_job docstring since commit 2178509, which is why this entry
+          now exists rather than the citation being removed.
 
 ## S3
 
@@ -234,8 +280,9 @@ the only finding there whose shape is known. Expect more.
 
 ## Counts
 
-44 findings. 7 fixed and verified on 2026-11-20: A05, A07, A08, A09, A12,
-A13, A27. 37 open.
+47 findings. 7 fixed and verified on 2026-11-20: A05, A07, A08, A09, A12,
+A13, A27. 40 open. A45, A47 and A48 were written down on 2026-11-22; A46 is
+still unaccounted for.
 
 Tools that produced them, all in the repository and all re-runnable:
 tools/test_csv_roundtrip.py, tools/test_pages.py, tools/test_herbie_cards.py.
@@ -247,16 +294,29 @@ Done. Zero hours accepted, `source='floor'`, `user_id` from a picker,
 form, hour ceiling from `_shift_hours`. Verified: a POST of zero units wrote
 `1660|H8|0|1|60|floor|1` and the test row was deleted.
 
-Still open. No `line_events` row, so the tablet cannot start or end anything.
+Start. Done 2026-11-22. floor_view dispatches on the hidden action field, and
+a post with no action field falls through to the record path untouched. The
+start action calls bot.jobs.start_job, which writes jobs.status and the line
+event in one transaction, and check_start now tests the line the job is being
+started on rather than the line the job carries, so a moved work order can no
+longer close the running job's event without a refusal. Six cases in
+tools/test_floor_start.py, 6 of 6, including an induced BEFORE INSERT trigger
+on line_events that proves jobs.status is unchanged when the event insert
+aborts.
+
+Still open. No end action, so the tablet cannot close a job, and no lunch,
+maintenance or CIP toggles.
 
 Shape of the remainder. Rewrite floor_view's POST as an action dispatcher on a
 hidden `action` field: record, start, end, toggle.
 
-  start   Dropdown of that day's jobs for the line, plus a typed job number
-          for the moved case. Apply the bot's three checks: not completed, not
-          paused, and the line is not already running a different job. Set
-          jobs.status='running' and actual_end=NULL, then transition_line with
-          state production, the job id, the operator and source='floor'.
+  start   Built. Dropdown of the line's open jobs, plus a typed job number for
+          the moved case, an optional reason for the move and an optional
+          operator picker. The three checks are check_start's own: not
+          completed, not paused, and the line is not already running a
+          different job. Status and event are written by start_job inside one
+          transaction, not by a separate transition_line call as this bullet
+          first said; that shape is now A48.
 
   end     Require the current line event to be production. Apply the variance
           gate exactly as bot/jobs.py does: if no completion_variance_reason
@@ -272,7 +332,16 @@ hidden `action` field: record, start, end, toggle.
 Two things to fix on the way. bot/jobs.py writes the job status and the line
 event in two separate commits, in cont_start_minutes, cont_end_minutes,
 h_pause_job, h_resume_job and changeover.py:286, so a crash between them leaves
-one written and not the other. The new floor path should write both inside one
-transaction. And the variance gate must not be skippable from the tablet, or a
-lead can close a badly missed job with no reason, which is the record the PDCA
-needs.
+one written and not the other. That is now A48. The new floor path does write
+both inside one transaction. And the variance gate must not be skippable from
+the tablet, or a lead can close a badly missed job with no reason, which is the
+record the PDCA needs.
+
+Note, not a finding, 2026-11-22. h_start_job commits status='running' at
+jobs.py:91 and writes no line event until cont_start_minutes at :123. If the
+operator never answers the minutes prompt, the job is running and the line
+shows idle indefinitely. It is recorded because it is what the record cannot
+see, not because a fix is owed. Noticing that a line is not running is the
+floor's job, and capture stays flexible so that whatever can be recorded is
+recorded. The floor path has no such window, because start_job writes both at
+once.
