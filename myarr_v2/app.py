@@ -1052,6 +1052,8 @@ def _floor_action(form):
     try:
         if action == "start":
             msg = _floor_start(conn, form, line_id, bot_jobs)
+        elif action == "end":
+            msg = _floor_end(conn, form, line_id, bot_jobs)
         else:
             msg = "Unknown action: " + action
     except Exception as e:
@@ -1104,6 +1106,40 @@ def _floor_start(conn, form, line_id, bot_jobs):
             + (" (moved from Line " + str(job.get("line_id")) + ")" if moved else "")
             + ".")
 
+def _floor_end(conn, form, line_id, bot_jobs):
+    """End the job running on a line, through bot.jobs.end_job.
+
+    The reason is optional and always available, so a lead who already knows
+    the job missed can say why before pressing rather than being sent back for
+    it. end_job decides whether the reason was needed, and only a reason that
+    was needed flags the job.
+    """
+    job_number = (form.get("job_number") or "").strip()
+    operator_raw = (form.get("operator_id") or "").strip()
+    reason = (form.get("reason") or "").strip() or None
+
+    if not line_id:
+        return "No line selected."
+    if not job_number:
+        return "No job on that line."
+
+    row = conn.execute(
+        "SELECT * FROM jobs WHERE job_number = ? COLLATE NOCASE",
+        (job_number,)).fetchone()
+    if not row:
+        return "Job " + job_number + " not found."
+    job = dict(row)
+
+    try:
+        user_id = int(operator_raw) if operator_raw else None
+    except (TypeError, ValueError):
+        user_id = None
+
+    refusal = bot_jobs.end_job(conn, job, line_id, user_id=user_id,
+                               source="floor", reason=reason)
+    if refusal:
+        return refusal
+    return "Ended " + job["job_number"] + " on Line " + str(line_id) + "."
 
 def _floor_today_jobs(conn, line_id):
     """Jobs worth offering in the start dropdown for one line.

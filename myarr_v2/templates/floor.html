@@ -50,6 +50,9 @@
     border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer;
   }
   .floor-detail button.submit:active { opacity: 0.8; }
+  .floor-detail form.floor-end { margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 0.5rem; }
+  .floor-detail button.submit.end { background: transparent; color: var(--muted); border: 1px solid var(--border); font-size: 1rem; }
+  .floor-detail button.submit.end:active { opacity: 0.6; }
 
   .floor-msg { background: rgba(46, 125, 50, 0.2); color: var(--success); padding: 0.9rem 1rem; border-radius: 6px; margin: 0 auto 1rem; text-align: center; max-width: 520px; }
 </style>
@@ -112,9 +115,22 @@
     <input type="number" name="duration_min" min="1" max="720" value="60" inputmode="numeric">
     <label>Notes</label>
     <input type="text" name="notes" placeholder="Optional - what happened this hour?">
-    <button type="submit" class="submit">Log {{ c.next_period }}</button>
-  </form>
-</div>
+    <button type="submit" class="submit">Log {{ c.next_period }}</button>  </form>
+  <form method="post" class="floor-end">
+    <input type="hidden" name="action" value="end">
+    <input type="hidden" name="line_id" value="{{ c.line_id }}">
+    <input type="hidden" name="job_number" value="{{ c.job_number }}">
+    <label>Why, if the job comes up short</label>
+    <input type="text" name="reason" placeholder="Optional - the words you would say out loud">
+    <label>Who is ending it</label>
+    <select name="operator_id" class="op-select">
+      <option value="">Not stated</option>
+      {% for o in operators.get(c.line_id, []) %}
+      <option value="{{ o.id }}">{{ o.name }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="submit end">End job</button>
+  </form></div>
 {% endif %}
 {% endfor %}
 

@@ -254,6 +254,55 @@ def start_job(conn, job, line_id, user_id=None, source='telegram', reason=None):
         raise
     return None
 
+def end_job(conn, job, line_id, user_id=None, source='floor', reason=None,
+            now=None):
+    """End one job and return its line to idle, in one transaction.
+
+    The gate runs first and it is variance_refusal, the same function the
+    Telegram close uses, so a job cannot be closed from the tablet without a
+    reason when it is out of tolerance (A45, and the 2026-11-20 decision that
+    the gate must not be skippable).
+
+    A reason typed on a job that turns out to be within tolerance is kept and
+    does not flag the job. Flagging it would make completion_flagged mean
+    "somebody typed in the box" rather than "this job missed and here is why",
+    and the flag is what the PDCA reads.
+
+    The line must already be running this job. A line in lunch, maintenance or
+    CIP is refused rather than silently closed, because the switch has to be
+    thrown back first and the events are the record of that.
+    """
+    now = now or datetime.now()
+    cur = db.current_line_event(conn, line_id)
+    state = cur['state'] if cur else 'idle'
+    if not cur or cur['state'] != 'production' or cur['job_id'] != job['id']:
+        return (job['job_number'] + ' is not the job running on Line '
+                + str(line_id) + '. The line is in ' + state
+                + '. End or switch that first.')
+
+    refusal = variance_refusal(conn, job, now=now)
+    if refusal and not reason:
+        return refusal
+
+    existing_reason = job.get('completion_variance_reason')
+    existing_flag = job.get('completion_flagged') or 0
+    try:
+        conn.execute(
+            "UPDATE jobs SET status='completed', actual_end=?, "
+            "completion_variance_reason=?, completion_flagged=? WHERE id=?",
+            (now.isoformat(),
+             reason if reason else existing_reason,
+             1 if refusal else existing_flag,
+             job['id']))
+        db.transition_line_nc(conn, line_id, 'idle', user_id=user_id,
+                              source=source,
+                              reason='ended ' + job['job_number'])
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    return None
+
 
 def h_start_job(conn, s, text, user):
     job_no = parse_job_number(text)

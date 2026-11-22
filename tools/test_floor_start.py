@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Floor start action and the variance gate: nine cases, throwaway database.
+"""Floor start and end, and the variance gate: twelve cases, throwaway database.
 
 Nothing in here touches the live database. MYARRA_DB is pointed at a temp file
 before anything from myarr_v2 is imported, the schema is applied from
@@ -11,7 +11,7 @@ line_events. A monkeypatched exception would only prove that the except block
 runs; a trigger proves the transaction rolls back.
 
 Run: /home/jeeves/jeeves-env/bin/python tools/test_floor_start.py
-Exit 0 when all nine pass, 1 when any fail, 2 when the test cannot start.
+Exit 0 when all twelve pass, 1 when any fail, 2 when the test cannot start.
 """
 import os
 import shutil
@@ -364,6 +364,103 @@ check(
     and after_events == before_events
     and after_runs == before_runs,
     "before=%r after=%r refusal=%r" % (before, after, refusal),
+)
+
+# --------------------------------------------------------------- case 10 ----
+# Capacity against quality, the owner's distinction. 1000 parts in an hour
+# that owed 1000, 25 of them scrap: no capacity lost, so the gate must not
+# fire, and the capacity figure must be 1000 rather than 975. If someone later
+# changes the gate to sum units_filled minus scrap_units, this case fails.
+
+c = conn()
+c.execute(
+    "INSERT INTO jobs (id, job_number, sku_id, line_id, target_quantity, status)"
+    " VALUES (12, 'WO-3001', 1, 4, 1000, 'scheduled')")
+c.execute(
+    "INSERT INTO hourly_runs (job_id, line_id, sku_id, shift, period, recorded_at,"
+    " units_filled, scrap_units, duration_min, source)"
+    " VALUES (12, 4, 1, '1', 'H1', '2026-11-19T08:00:00', 1000, 25, 60, 'floor')")
+c.commit()
+run = dict(c.execute(
+    "SELECT * FROM hourly_runs WHERE job_id=12").fetchone())
+c.close()
+
+c = conn()
+job = dict(c.execute("SELECT * FROM jobs WHERE id=12").fetchone())
+allowance = bot_jobs.variance_allowance(c, job, now=when)
+refusal = bot_jobs.variance_refusal(c, job, now=when)
+c.close()
+
+check(
+    "capacity at 1000 of 1000 with 25 scrap: no capacity lost, no refusal",
+    run["units_filled"] == 1000
+    and run["scrap_units"] == 25
+    and allowance["actual"] == 1000
+    and allowance["allowed"] == 1000
+    and allowance["variance"] == 0.0
+    and refusal is None,
+    "run=%r allowance=%r refusal=%r" % (run, allowance, refusal),
+)
+
+# --------------------------------------------------------------- case 11 ----
+# End refuses without a reason and leaves everything where it was.
+
+c = conn()
+c.execute(
+    "INSERT INTO jobs (id, job_number, sku_id, line_id, target_quantity, status)"
+    " VALUES (13, 'WO-3002', 1, 4, 1000, 'running')")
+c.execute(
+    "INSERT INTO hourly_runs (job_id, line_id, sku_id, shift, period, recorded_at,"
+    " units_filled, scrap_units, duration_min, source)"
+    " VALUES (13, 4, 1, '1', 'H1', '2026-11-20T08:00:00', 900, 0, 60, 'floor')")
+c.execute(
+    "INSERT INTO line_events (line_id, state, started_at, job_id, source)"
+    " VALUES (4, 'production', '2026-11-20T07:00:00', 13, 'seed')")
+c.commit()
+c.close()
+
+c = conn()
+job = dict(c.execute("SELECT * FROM jobs WHERE id=13").fetchone())
+refusal = bot_jobs.end_job(c, job, 4, user_id=2, source="floor")
+c.close()
+
+still = job_row("WO-3002")
+open4 = open_events(4)
+check(
+    "end: refused without a reason, job still running, line still in production",
+    refusal is not None
+    and "off target" in refusal
+    and still["status"] == "running"
+    and still["actual_end"] is None
+    and len(open4) == 1
+    and open4[0]["state"] == "production"
+    and open4[0]["job_id"] == 13,
+    "refusal=%r job=%r open=%r" % (refusal, still, open4),
+)
+
+# --------------------------------------------------------------- case 12 ----
+# The same end, with the reason supplied, closes and flags, and the line goes
+# idle in the same transaction.
+
+c = conn()
+job = dict(c.execute("SELECT * FROM jobs WHERE id=13").fetchone())
+outcome = bot_jobs.end_job(c, job, 4, user_id=2, source="floor",
+                           reason="filler jammed on station four")
+c.close()
+
+done = job_row("WO-3002")
+open4 = open_events(4)
+check(
+    "end: with a reason it closes, flags, and leaves the line idle",
+    outcome is None
+    and done["status"] == "completed"
+    and done["actual_end"]
+    and done["completion_flagged"] == 1
+    and "filler jammed" in (done["completion_variance_reason"] or "")
+    and len(open4) == 1
+    and open4[0]["state"] == "idle"
+    and open4[0]["source"] == "floor",
+    "outcome=%r job=%r open=%r" % (outcome, done, open4),
 )
 
 # ------------------------------------------------------------------ end -----
