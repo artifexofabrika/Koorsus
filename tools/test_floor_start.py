@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Floor start action: six cases against a throwaway database.
+"""Floor start action and the variance gate: nine cases, throwaway database.
 
 Nothing in here touches the live database. MYARRA_DB is pointed at a temp file
 before anything from myarr_v2 is imported, the schema is applied from
@@ -11,13 +11,14 @@ line_events. A monkeypatched exception would only prove that the except block
 runs; a trigger proves the transaction rolls back.
 
 Run: /home/jeeves/jeeves-env/bin/python tools/test_floor_start.py
-Exit 0 when all six pass, 1 when any fail, 2 when the test cannot start.
+Exit 0 when all nine pass, 1 when any fail, 2 when the test cannot start.
 """
 import os
 import shutil
 import sqlite3
 import sys
 import tempfile
+from datetime import datetime
 from urllib.parse import parse_qs, urlparse
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,6 +38,8 @@ myarra_settings.check_llm = lambda *a, **k: (True, "stubbed by test_floor_start"
 import db as myarra_db
 
 myarra_db.init_db()
+
+from bot import jobs as bot_jobs
 
 try:
     import app as webapp
@@ -257,6 +260,110 @@ check(
     and run.get("period") == "H3"
     and run.get("shift") not in (None, ""),
     "status=%s row=%r" % (resp.status_code, run),
+)
+
+# ---------------------------------------------------------------- case 7 ----
+# A45. The same production passes or fails depending on whether lunch is
+# deducted: 918 against 1000 is -8.2 percent and the old gate refuses it,
+# 918 against 950 is -3.4 percent and sits inside the default five percent.
+
+c = conn()
+c.execute(
+    "INSERT INTO jobs (id, job_number, sku_id, line_id, target_quantity, status,"
+    " scheduled_start, scheduled_end) VALUES (?,?,?,?,?,?,?,?)",
+    (10, 'WO-2001', 1, 1, 1000, 'running',
+     '2026-11-18T07:00:00', '2026-11-18T17:00:00'))
+c.execute(
+    "INSERT INTO line_events (line_id, state, started_at, ended_at, source)"
+    " VALUES (1, 'lunch', '2026-11-18T12:00:00', '2026-11-18T12:30:00', 'floor')")
+c.execute(
+    "INSERT INTO hourly_runs (job_id, line_id, sku_id, shift, period, recorded_at,"
+    " units_filled, scrap_units, duration_min, source)"
+    " VALUES (10, 1, 1, '1', 'H5', '2026-11-18T12:00:00', 918, 0, 60, 'floor')")
+c.commit()
+c.close()
+
+when = datetime(2026, 11, 18, 18, 0)
+c = conn()
+job = dict(c.execute("SELECT * FROM jobs WHERE id=10").fetchone())
+allowance = bot_jobs.variance_allowance(c, job, now=when)
+refusal = bot_jobs.variance_refusal(c, job, now=when)
+c.close()
+
+raw_variance = (918 - 1000) / 1000.0
+check(
+    "A45: lunch deducted, 918 of 1000 passes where the raw gate refuses",
+    allowance["window"] == 600
+    and allowance["off_minutes"] == 30
+    and allowance["allowed"] == 950
+    and allowance["variance"] is not None
+    and abs(allowance["variance"]) < 0.05
+    and abs(raw_variance) > 0.05
+    and refusal is None,
+    "allowance=%r refusal=%r" % (allowance, refusal),
+)
+
+# ---------------------------------------------------------------- case 8 ----
+# A job whose weekly schedule was never loaded still gates, against the raw
+# target, and the sentence says the allowance was not applied.
+
+c = conn()
+c.execute(
+    "INSERT INTO jobs (id, job_number, sku_id, line_id, target_quantity, status)"
+    " VALUES (11, 'WO-2002', 1, 2, 1000, 'running')")
+c.execute(
+    "INSERT INTO hourly_runs (job_id, line_id, sku_id, shift, period, recorded_at,"
+    " units_filled, scrap_units, duration_min, source)"
+    " VALUES (11, 2, 1, '1', 'H2', '2026-11-18T09:00:00', 900, 0, 60, 'floor')")
+c.commit()
+c.close()
+
+c = conn()
+job = dict(c.execute("SELECT * FROM jobs WHERE id=11").fetchone())
+allowance = bot_jobs.variance_allowance(c, job, now=when)
+refusal = bot_jobs.variance_refusal(c, job, now=when)
+c.close()
+
+check(
+    "A45: no scheduled window still gates against the raw target, and says so",
+    allowance["window"] is None
+    and allowance["allowed"] == 1000
+    and allowance["variance"] is not None
+    and abs(allowance["variance"] + 0.10) < 0.0001
+    and refusal is not None
+    and "no scheduled window" in refusal,
+    "allowance=%r refusal=%r" % (allowance, refusal),
+)
+
+# ---------------------------------------------------------------- case 9 ----
+# A refused close changes nothing. The gate returns a sentence and writes no
+# row, so the job is still running and nothing has been recorded against it.
+
+before = job_row("WO-2002")
+before_events = events_for(11)
+before_runs = sqlite3.connect(DB).execute(
+    "SELECT COUNT(*) FROM hourly_runs WHERE job_id=11").fetchone()[0]
+
+c = conn()
+job = dict(c.execute("SELECT * FROM jobs WHERE id=11").fetchone())
+refusal = bot_jobs.variance_refusal(c, job, now=when)
+c.close()
+
+after = job_row("WO-2002")
+after_events = events_for(11)
+after_runs = sqlite3.connect(DB).execute(
+    "SELECT COUNT(*) FROM hourly_runs WHERE job_id=11").fetchone()[0]
+
+check(
+    "A45: a refused close leaves the job running and writes nothing",
+    refusal is not None
+    and before["status"] == "running"
+    and after["status"] == "running"
+    and after["actual_end"] is None
+    and after["completion_variance_reason"] is None
+    and after_events == before_events
+    and after_runs == before_runs,
+    "before=%r after=%r refusal=%r" % (before, after, refusal),
 )
 
 # ------------------------------------------------------------------ end -----

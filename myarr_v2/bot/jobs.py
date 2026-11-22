@@ -48,7 +48,190 @@ def check_start(conn, job, line_id=None):
         )
     return None
 
+# ---------------------------------------------------------------------------
+# The variance gate. One implementation, called by the bot and the floor.
+# ---------------------------------------------------------------------------
 
+
+def _variance_tolerance(conn, default=0.05):
+    """job_variance_tolerance as a float, never raising.
+
+    Stored as a fraction, 0.05, not 5. The inline read this replaces called
+    float() on whatever the settings table held, so a value typed as 5% or
+    with a decimal comma raised ValueError and took the whole close path down.
+    A setting that cannot be read falls back to the default rather than
+    stopping an operator from closing a job.
+
+    A value stored as 5 instead of 0.05 means 500 percent and the gate will
+    never fire. That is a data question, not a code one, and it is deliberately
+    not guessed at here.
+    """
+    try:
+        row = conn.execute(
+            "SELECT value FROM settings WHERE key='job_variance_tolerance'").fetchone()
+        raw = str(row['value']).strip() if row and row['value'] is not None else ''
+        if raw.endswith('%'):
+            return float(raw[:-1].strip().replace(',', '.')) / 100.0
+        if raw:
+            return float(raw.replace(',', '.'))
+    except Exception:
+        pass
+    return default
+
+
+def scheduled_window(job):
+    """A job's scheduled run time: (minutes, start, end, reason).
+
+    minutes is None when there is no usable window, and reason says which of
+    the three ways that happened.
+
+    The window is the weekly schedule feed, by Odoo or by the jobs.csv upload
+    in the import section. Both write scheduled_start and scheduled_end, and a
+    re-upload updates them on an existing job number (onboarding._ingest_jobs).
+
+    A customer Excel that hands over date-only cells puts the same date in
+    both columns. That is a zero span, not a zero-length shift, so it is
+    reported as no window rather than used as a denominator (A45).
+    """
+    raw_start = job.get('scheduled_start')
+    raw_end = job.get('scheduled_end')
+    if not raw_start or not raw_end:
+        return None, None, None, 'no scheduled window on the job'
+    try:
+        start = datetime.fromisoformat(str(raw_start).strip())
+        end = datetime.fromisoformat(str(raw_end).strip())
+    except (TypeError, ValueError):
+        return None, None, None, ('scheduled window is not a date: '
+                                  + str(raw_start) + ' to ' + str(raw_end))
+    if (start.tzinfo is None) != (end.tzinfo is None):
+        start = start.replace(tzinfo=None)
+        end = end.replace(tzinfo=None)
+    minutes = int(round((end - start).total_seconds() / 60.0))
+    if minutes <= 0:
+        return None, None, None, ('scheduled window is ' + str(minutes)
+                                  + ' minutes, so it cannot be a denominator')
+    return minutes, start, end, ''
+
+
+def off_time_minutes(conn, line_id, start, end):
+    """Minutes the line spent in lunch, maintenance or CIP inside a window.
+
+    Measured from the events already written, not from a configured lunch
+    duration: FLOOR-MODEL, The switches, says off-time comes from the moment
+    the switch was thrown because a toggle pair cannot lie about when it
+    happened. Overlap is clipped to the window, so an event that began before
+    the job did is not counted twice.
+    """
+    if not line_id or end <= start:
+        return 0
+    rows = conn.execute(
+        "SELECT started_at, ended_at FROM line_events "
+        "WHERE line_id = ? AND state IN ('lunch', 'maintenance', 'cip') "
+        "AND started_at < ? AND (ended_at IS NULL OR ended_at > ?)",
+        (line_id, end.isoformat(), start.isoformat())).fetchall()
+    total = 0.0
+    for r in rows:
+        try:
+            ev_start = datetime.fromisoformat(str(r['started_at']))
+            ev_end = (datetime.fromisoformat(str(r['ended_at']))
+                      if r['ended_at'] else end)
+        except (TypeError, ValueError):
+            continue
+        if ev_start.tzinfo is not None:
+            ev_start = ev_start.replace(tzinfo=None)
+        if ev_end.tzinfo is not None:
+            ev_end = ev_end.replace(tzinfo=None)
+        lo = ev_start if ev_start > start else start
+        hi = ev_end if ev_end < end else end
+        if hi > lo:
+            total += (hi - lo).total_seconds() / 60.0
+    return int(round(total))
+
+
+def variance_allowance(conn, job, now=None):
+    """The gate's arithmetic, adjusted for time the line was not due to run.
+
+    FLOOR-MODEL, The arithmetic: ten hours at 100 an hour is 1,000 parts, and
+    thirty minutes of lunch makes it 9.5 hours and 950 parts. The expectation
+    falls with the off-time, so the gate compares against the smaller figure.
+    A flat five percent against the unadjusted target lets lunch alone trip
+    it, and then demands the reason the PDCA reads (A45).
+
+    Returns target, allowed, actual, off_minutes, window, note and variance.
+    variance is None when there is nothing to compare against.
+    """
+    now = now or datetime.now()
+    actual = conn.execute(
+        "SELECT SUM(units_filled) FROM hourly_runs WHERE job_id=? "
+        "AND (superseded IS NULL OR superseded=0)",
+        (job['id'],)).fetchone()[0] or 0
+    target = job.get('target_quantity') or 0
+    window, start, end, note = scheduled_window(job)
+    off = 0
+    if window:
+        if now < start:
+            end = start
+        elif now < end:
+            end = now
+        if job.get('actual_end'):
+            try:
+                closed = datetime.fromisoformat(str(job['actual_end']).strip())
+                if closed.tzinfo is not None:
+                    closed = closed.replace(tzinfo=None)
+                if closed < end:
+                    end = closed
+            except (TypeError, ValueError):
+                pass
+        off = off_time_minutes(conn, job.get('line_id'), start, end)
+    if not window:
+        allowed = target
+    elif off >= window:
+        allowed = 0
+    else:
+        allowed = int(round(target * (window - off) / float(window)))
+    variance = None if allowed <= 0 else (actual - allowed) / float(allowed)
+    return {'target': target, 'allowed': allowed, 'actual': actual,
+            'off_minutes': off, 'window': window, 'note': note,
+            'variance': variance}
+
+
+def variance_refusal(conn, job, tolerance=None, now=None):
+    """The sentence an operator has to answer, or None when within tolerance.
+
+    One gate and two callers: the Telegram close in h_ending_job, and the floor
+    end action when it exists. Keeping it here is what stops the gate being
+    built twice (A45) and stops it being skippable from the tablet, which the
+    2026-11-20 decisions require.
+
+    A job with no schedule still gates. It compares against the raw target and
+    says so in the sentence, because skipping the gate whenever the weekly
+    schedule was never loaded would make the gate skippable by omission.
+
+    A job with no target does not gate. That is a master-data defect, and
+    forcing a reason for it would spend the operator's patience on the plant's
+    mistake rather than on the record.
+    """
+    if job.get('completion_variance_reason'):
+        return None
+    v = variance_allowance(conn, job, now=now)
+    if v['target'] <= 0:
+        return None
+    tol = _variance_tolerance(conn) if tolerance is None else tolerance
+    if v['allowed'] <= 0:
+        return (job['job_number'] + ' has ' + str(v['off_minutes'])
+                + ' off-time minutes against a ' + str(v['window'] or 0)
+                + ' minute window, so nothing can be compared. '
+                'Please provide a reason to close.')
+    if abs(v['variance']) <= tol:
+        return None
+    if v['window']:
+        detail = (' after ' + str(v['off_minutes']) + ' off-time minutes: '
+                  + str(v['allowed']) + ' allowed of ' + str(v['target']))
+    else:
+        detail = ' (' + v['note'] + ', so no allowance for off-time was applied)'
+    return (job['job_number'] + ' is off target by '
+            + format(v['variance'] * 100.0, '+.1f') + '%'
+            + detail + '. Please provide a reason to close.')
 def start_job(conn, job, line_id, user_id=None, source='telegram', reason=None):
     """Start a job on a line. Status and line event in one transaction.
 
@@ -159,24 +342,13 @@ def h_ending_job(conn, s, text, user):
         return "Job not found."
 
     # Variance gate: refuse to close without a reason outside tolerance.
-    if not job.get('completion_variance_reason'):
-        actual = conn.execute(
-            "SELECT SUM(units_filled) FROM hourly_runs WHERE job_id=? "
-            "AND (superseded IS NULL OR superseded=0)",
-            (job['id'],)).fetchone()[0] or 0
-        target = job['target_quantity'] or 0
-        if target > 0:
-            var_pct = (actual - target) / target
-            tol_row = conn.execute(
-                "SELECT value FROM settings WHERE key='job_variance_tolerance'").fetchone()
-            tol = float(tol_row['value']) if tol_row else 0.05
-            if abs(var_pct) > tol:
-                s.set('state', 'awaiting_variance_reason')
-                s.set('pending_job_id', job['id'])
-                s.set('pending_target_job_id', None)
-                s.save()
-                return (f"Job {job['job_number']} is off target by "
-                        f"{var_pct*100:+.1f}%. Please provide a reason to close.")
+    refusal = variance_refusal(conn, job)
+    if refusal:
+        s.set('state', 'awaiting_variance_reason')
+        s.set('pending_job_id', job['id'])
+        s.set('pending_target_job_id', None)
+        s.save()
+        return refusal
 
     line_id = db.derive_line(conn, job, s, user)
     cur = db.current_line_event(conn, line_id)
