@@ -1030,8 +1030,106 @@ def herbie_view():
                            recent_jobs=recent, co_jobs=co_jobs)
 
 
+def _floor_action(form):
+    """Dispatcher for the floor tablet's buttons. Returns a redirect to /floor.
+
+    The record form posts no action field, so it never arrives here and the
+    hourly record path below is untouched. Start is the only action wired so
+    far; end, lunch, maintenance and CIP join it in the same shape.
+
+    bot is imported inside the function on purpose. A failure in the bot
+    package must never stop the web app from booting on a running appliance.
+    """
+    from bot import jobs as bot_jobs
+
+    action = (form.get("action") or "").strip()
+    try:
+        line_id = int(form.get("line_id") or 0)
+    except (TypeError, ValueError):
+        line_id = 0
+
+    conn = get_db_connection()
+    try:
+        if action == "start":
+            msg = _floor_start(conn, form, line_id, bot_jobs)
+        else:
+            msg = "Unknown action: " + action
+    except Exception as e:
+        msg = "Floor " + action + " failed: " + str(e)
+    finally:
+        conn.close()
+
+    return redirect(url_for("floor_view", msg=msg, line=line_id or None))
+
+
+def _floor_start(conn, form, line_id, bot_jobs):
+    """Start one job on one line, through bot.jobs.start_job.
+
+    start_job writes the job status and the line event in one transaction, so a
+    crash cannot leave the job running with no event (A06) or the line closed
+    and unopened (A47). The three refusals come from check_start, which this
+    route and the bot both use; nothing is re-implemented here.
+    """
+    job_number = (form.get("job_number") or "").strip()
+    operator_raw = (form.get("operator_id") or "").strip()
+    reason = (form.get("reason") or "").strip() or None
+
+    if not line_id:
+        return "No line selected."
+    if not job_number:
+        return "Type or choose a job number."
+
+    row = conn.execute(
+        "SELECT * FROM jobs WHERE job_number = ? COLLATE NOCASE",
+        (job_number,)).fetchone()
+    if not row:
+        return "Job " + job_number + " not found."
+    # check_start calls job.get(), and a sqlite3.Row has no .get(): the failure
+    # would arrive as "Error: 'sqlite3.Row' object has no attribute 'get'" in
+    # the message bar with nothing in the log. Convert before it is called.
+    job = dict(row)
+
+    try:
+        user_id = int(operator_raw) if operator_raw else None
+    except (TypeError, ValueError):
+        user_id = None
+
+    refusal = bot_jobs.start_job(conn, job, line_id, user_id=user_id,
+                                 source="floor", reason=reason)
+    if refusal:
+        return refusal
+
+    moved = job.get("line_id") != line_id
+    return ("Started " + job["job_number"] + " on Line " + str(line_id)
+            + (" (moved from Line " + str(job.get("line_id")) + ")" if moved else "")
+            + ".")
+
+
+def _floor_today_jobs(conn, line_id):
+    """Jobs worth offering in the start dropdown for one line.
+
+    The day's work orders first, then anything else still open, because a
+    second job in the queue not being ready and the third being run is normal
+    and needs no permission (FLOOR-MODEL, Choosing the job). Completed jobs are
+    left out: check_start refuses them, so offering one is a tap that cannot
+    work.
+    """
+    return conn.execute("""
+        SELECT j.job_number, j.status, j.scheduled_start,
+               s.part_number, s.description
+        FROM jobs j LEFT JOIN skus s ON s.id = j.sku_id
+        WHERE j.line_id = ?
+          AND (j.status IS NULL OR lower(j.status) != 'completed')
+        ORDER BY CASE WHEN date(j.scheduled_start) = date('now') THEN 0
+                      WHEN j.scheduled_start IS NULL THEN 2 ELSE 1 END,
+                 j.scheduled_start, j.id
+        LIMIT 25
+    """, (line_id,)).fetchall()
+
 @app.route("/floor", methods=["GET", "POST"])
 def floor_view():
+    if request.method == "POST" and (request.form.get("action") or "").strip():
+        return _floor_action(request.form)
     conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     msg = None
@@ -1128,10 +1226,12 @@ def floor_view():
     for u in conn.execute("SELECT id, name, line_id FROM users WHERE active=1 "
                           "ORDER BY name").fetchall():
         operators.setdefault(u["line_id"], []).append({"id": u["id"], "name": u["name"]})
+    jobs_by_line = {c["line_id"]: _floor_today_jobs(conn, c["line_id"])
+                    for c in cards if c["state"] != "production"}
     conn.close()
     return render_template("floor.html", cards=cards, msg=msg, operators=operators,
                            today=datetime.now().strftime("%Y-%m-%d"),
-                           selected_line=selected_line)
+                           selected_line=selected_line, jobs_by_line=jobs_by_line)
 
 
 @app.route("/favicon.ico")

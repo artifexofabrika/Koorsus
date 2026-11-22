@@ -18,10 +18,16 @@ from parsers import parse_job_number, parse_all_job_numbers, parse_int
 from .resolve import resolve_job, _explain_no_job, _fuzzy_note, next_job_hour
 
 
-def check_start(conn, job):
+def check_start(conn, job, line_id=None):
     """The three start checks, shared by the bot and the /floor page.
 
     Returns a refusal sentence, or None when the job may start.
+
+    line_id is the line the job is about to run on, which is not always the
+    line the job carries: a moved work order runs somewhere else, and the
+    operator says so (FLOOR-MODEL, Choosing the job). Checking the job's own
+    line instead would let a start on a busy line close the open event of
+    whatever is already running there, silently, with no refusal.
     """
     status = (job.get('status') or '').lower()
     if status == 'completed':
@@ -29,15 +35,15 @@ def check_start(conn, job):
     if status == 'paused':
         return (job['job_number'] + ' is paused. Say resume '
                 + job['job_number'] + ' to resume it.')
-    active_line = conn.execute("""
-        SELECT j.job_number, le.state FROM jobs j
-        JOIN line_events le ON le.job_id = j.id
-        WHERE j.line_id = ? AND le.ended_at IS NULL AND j.id != ?
-    """, (job['line_id'], job['id'])).fetchone()
-    if active_line:
+    target = line_id or job['line_id']
+    cur = db.current_line_event(conn, target)
+    if cur and cur['job_id'] and cur['job_id'] != job['id']:
+        other = conn.execute("SELECT job_number FROM jobs WHERE id=?",
+                             (cur['job_id'],)).fetchone()
+        other_no = other['job_number'] if other else 'another job'
         return (
-            f"Line {job['line_id']} is currently running "
-            f"{active_line['job_number']} ({active_line['state']}). "
+            f"Line {target} is currently running "
+            f"{other_no} ({cur['state']}). "
             f"You must complete a changeover before starting {job['job_number']}."
         )
     return None
@@ -49,7 +55,7 @@ def start_job(conn, job, line_id, user_id=None, source='telegram', reason=None):
     A crash cannot leave the job running with no event (A06), nor the line
     closed and unopened (A47).
     """
-    refusal = check_start(conn, job)
+    refusal = check_start(conn, job, line_id=line_id)
     if refusal:
         return refusal
     now = datetime.now().isoformat()

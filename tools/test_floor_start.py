@@ -1,0 +1,271 @@
+#!/usr/bin/env python3
+"""Floor start action: six cases against a throwaway database.
+
+Nothing in here touches the live database. MYARRA_DB is pointed at a temp file
+before anything from myarr_v2 is imported, the schema is applied from
+tools/schema.sql, and every assertion reads back through a fresh connection
+rather than through the app's own, so what is checked is what reached the disk.
+
+Case 2 induces a real failure inside SQLite with a BEFORE INSERT trigger on
+line_events. A monkeypatched exception would only prove that the except block
+runs; a trigger proves the transaction rolls back.
+
+Run: /home/jeeves/jeeves-env/bin/python tools/test_floor_start.py
+Exit 0 when all six pass, 1 when any fail, 2 when the test cannot start.
+"""
+import os
+import shutil
+import sqlite3
+import sys
+import tempfile
+from urllib.parse import parse_qs, urlparse
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "myarr_v2"))
+
+WORK = tempfile.mkdtemp(prefix="myarra_floor_start_")
+DB = os.path.join(WORK, "floor_start.db")
+os.environ["MYARRA_DB"] = DB
+
+# app.py pings the model at import time and ask.py builds its view cache at
+# import time (A21). Both happen before any route is reachable, so a dead model
+# would make this test fail for a reason that has nothing to do with /floor.
+import myarra_settings
+
+myarra_settings.check_llm = lambda *a, **k: (True, "stubbed by test_floor_start")
+
+import db as myarra_db
+
+myarra_db.init_db()
+
+try:
+    import app as webapp
+except Exception as exc:                                    # noqa: BLE001
+    print("CANNOT START: importing app failed: %s" % exc)
+    print("A21 is the known cause: import-time side effects in app.py and ask.py.")
+    shutil.rmtree(WORK, ignore_errors=True)
+    sys.exit(2)
+
+client = webapp.app.test_client()
+
+
+def conn():
+    c = sqlite3.connect(DB)
+    c.row_factory = sqlite3.Row
+    return c
+
+
+def seed():
+    c = conn()
+    c.executescript(
+        """
+        INSERT INTO lines (id, name) VALUES
+            (1, 'Line 1'), (2, 'Line 2'), (3, 'Line 3'), (4, 'Line 4');
+        INSERT INTO skus (id, part_number, description, case_pack) VALUES
+            (1, 'PN-1', 'Claret 750ml', 12);
+        INSERT INTO users (id, name, role, line_id, active) VALUES
+            (1, 'Randy', 'Operator', 1, 1),
+            (2, 'Ana', 'Operator', 3, 1);
+        INSERT INTO jobs (id, job_number, sku_id, line_id, target_quantity, status) VALUES
+            (1, 'WO-1001', 1, 1, 1000, 'scheduled'),
+            (2, 'WO-1002', 1, 2, 1000, 'scheduled'),
+            (3, 'WO-1003', 1, 1, 1000, 'completed'),
+            (4, 'WO-1004', 1, 1, 1000, 'paused'),
+            (5, 'WO-1005', 1, 3, 1000, 'scheduled'),
+            (6, 'WO-1006', 1, 3, 1000, 'running'),
+            (7, 'WO-1007', 1, 4, 1000, 'scheduled');
+        INSERT INTO line_events (id, line_id, state, started_at, job_id, source) VALUES
+            (1, 3, 'production', '2026-11-21T07:00:00', 6, 'seed');
+        """
+    )
+    c.commit()
+    c.close()
+
+
+def post(**form):
+    """POST to /floor without following the redirect. Returns (response, msg)."""
+    resp = client.post("/floor", data=form, follow_redirects=False)
+    loc = resp.headers.get("Location", "")
+    qs = parse_qs(urlparse(loc).query)
+    return resp, (qs.get("msg") or [""])[0]
+
+
+def open_events(line_id):
+    c = conn()
+    rows = c.execute(
+        "SELECT * FROM line_events WHERE line_id=? AND ended_at IS NULL "
+        "ORDER BY started_at", (line_id,)).fetchall()
+    c.close()
+    return [dict(r) for r in rows]
+
+
+def job_row(job_number):
+    c = conn()
+    r = c.execute("SELECT * FROM jobs WHERE job_number=?", (job_number,)).fetchone()
+    c.close()
+    return dict(r) if r else None
+
+
+def events_for(job_id):
+    c = conn()
+    n = c.execute("SELECT COUNT(*) FROM line_events WHERE job_id=?",
+                  (job_id,)).fetchone()[0]
+    c.close()
+    return n
+
+
+RESULTS = []
+
+
+def check(name, ok, detail=""):
+    RESULTS.append(bool(ok))
+    line = ("PASS  " if ok else "FAIL  ") + name
+    if not ok and detail:
+        line += "\n        " + str(detail)[:300]
+    print(line)
+
+
+# ---------------------------------------------------------------- case 1 ----
+# One good start, proving the row lands with source='floor' and a real user_id.
+
+seed()
+
+resp, msg = post(action="start", line_id="1", job_number="WO-1001", operator_id="1")
+ev = open_events(1)
+job = job_row("WO-1001")
+row = ev[0] if len(ev) == 1 else {}
+check(
+    "start: job status and line event both land, in one commit",
+    resp.status_code == 302
+    and len(ev) == 1
+    and row.get("state") == "production"
+    and row.get("job_id") == 1
+    and row.get("source") == "floor"
+    and row.get("user_id") == 1
+    and row.get("ended_at") is None
+    and job["status"] == "running"
+    and job["actual_start"]
+    and job["actual_end"] is None
+    and msg.startswith("Started"),
+    "status=%s msg=%r events=%r job=%r" % (resp.status_code, msg, ev, job),
+)
+
+# ---------------------------------------------------------------- case 2 ----
+# An induced failure inside SQLite. jobs.status must be unchanged afterwards,
+# which is only true if the UPDATE and the event INSERT share a transaction.
+
+c = conn()
+c.execute(
+    "CREATE TRIGGER t_floor_start_block BEFORE INSERT ON line_events "
+    "BEGIN SELECT RAISE(ABORT, 'induced line_events insert failure'); END;")
+c.commit()
+c.close()
+
+before = job_row("WO-1002")
+resp, msg = post(action="start", line_id="2", job_number="WO-1002", operator_id="1")
+after = job_row("WO-1002")
+ev2 = open_events(2)
+orphans = events_for(2)
+
+c = conn()
+c.execute("DROP TRIGGER IF EXISTS t_floor_start_block")
+c.commit()
+c.close()
+
+check(
+    "induced failure: line event insert fails, jobs.status is unchanged",
+    after["status"] == before["status"]
+    and after["status"] == "scheduled"
+    and after["actual_start"] == before["actual_start"]
+    and after["actual_end"] == before["actual_end"]
+    and not ev2
+    and orphans == 0
+    and "induced" in msg.lower(),
+    "before=%r after=%r msg=%r events=%r" % (before, after, msg, ev2),
+)
+
+# ---------------------------------------------------------------- case 3 ----
+# Refusal: a completed job.
+
+resp, msg = post(action="start", line_id="1", job_number="WO-1003", operator_id="1")
+check(
+    "refusal: completed job is not started",
+    job_row("WO-1003")["status"] == "completed"
+    and events_for(3) == 0
+    and "completed" in msg.lower(),
+    "msg=%r" % (msg,),
+)
+
+# ---------------------------------------------------------------- case 4 ----
+# Refusal: a paused job.
+
+resp, msg = post(action="start", line_id="1", job_number="WO-1004", operator_id="1")
+check(
+    "refusal: paused job is not started",
+    job_row("WO-1004")["status"] == "paused"
+    and events_for(4) == 0
+    and "paused" in msg.lower(),
+    "msg=%r" % (msg,),
+)
+
+# ---------------------------------------------------------------- case 5 ----
+# Refusal: a line already running another job. Twice, because the second one
+# is the moved case: WO-1007 belongs to Line 4 and is being started on Line 3,
+# which is running WO-1006. Before this fix that start closed WO-1006's event
+# without a word, because the check looked at the job's own line.
+
+resp, msg = post(action="start", line_id="3", job_number="WO-1005", operator_id="2")
+resp_m, msg_m = post(action="start", line_id="3", job_number="WO-1007", operator_id="2")
+ev3 = open_events(3)
+check(
+    "refusal: busy line, including a job moved onto it",
+    job_row("WO-1005")["status"] == "scheduled"
+    and job_row("WO-1007")["status"] == "scheduled"
+    and "changeover" in msg.lower()
+    and "changeover" in msg_m.lower()
+    and len(ev3) == 1
+    and ev3[0]["job_id"] == 6,
+    "msg=%r moved=%r events=%r" % (msg, msg_m, ev3),
+)
+
+# ---------------------------------------------------------------- case 6 ----
+# The record path, which posts no action field, must behave exactly as before.
+
+resp = client.post("/floor", data={
+    "line_id": "1",
+    "job_number": "WO-1001",
+    "period": "H3",
+    "units_filled": "0",
+    "scrap_units": "0",
+    "duration_min": "60",
+    "operator_id": "1",
+    "notes": "",
+}, follow_redirects=False)
+
+c = conn()
+run = c.execute(
+    "SELECT * FROM hourly_runs WHERE job_id=1 ORDER BY id DESC LIMIT 1").fetchone()
+c.close()
+run = dict(run) if run else {}
+
+check(
+    "record path with no action field still writes the hour, source='floor'",
+    resp.status_code == 200
+    and run.get("source") == "floor"
+    and run.get("user_id") == 1
+    and run.get("units_filled") == 0
+    and run.get("period") == "H3"
+    and run.get("shift") not in (None, ""),
+    "status=%s row=%r" % (resp.status_code, run),
+)
+
+# ------------------------------------------------------------------ end -----
+
+failed = RESULTS.count(False)
+print("")
+print("%d cases, %d failed" % (len(RESULTS), failed))
+if failed:
+    print("Database kept for inspection: " + DB)
+else:
+    shutil.rmtree(WORK, ignore_errors=True)
+sys.exit(1 if failed else 0)
