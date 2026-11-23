@@ -189,6 +189,21 @@ myarr_v2/requirements.txt created and pinned from actual imports: Flask
   Koorsus.
 - HANDOVER says backup and restore does not exist. It does now, and the
   record is a day stale.
+- Agentic Herbie, agreed 2026-11-23 and gated on hardware. Give the model
+  read-only tools behind a fixed vocabulary of named verbs: get jobs, get
+  hourly records, get downtime by cause, get changeover steps, get maintenance
+  history. Then the manager asks why Line 4 lost capacity this week and the
+  model walks those five itself and assembles an A3. Two rules keep it
+  contained. Read authority and act authority stay separate, so text the agent
+  fetched can inform an answer but cannot trigger a tool on its own. And the
+  tool surface is an allowlist of named verbs that each do one known thing,
+  never a shell and never a general HTTP client. Number-crunching stays in
+  Python where it already is: the agent plans and gathers, the arithmetic
+  remains ours, read-only so nothing can be damaged.
+  Not feasible on the current board. This needs an Orin NX or an AGX. A 3B
+  model cannot hold a tool schema and a five-step plan at the same time, and
+  the failure mode of pretending otherwise is confident nonsense in front of
+  a plant manager.
 
 ## Competitor watch
 

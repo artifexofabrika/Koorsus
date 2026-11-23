@@ -70,6 +70,16 @@ A03 OPEN  Herbie misstates losses_accounted on the line_day card. It wrote
           is a derived sum rather than a quoted field. That is the limit
           STATE.md already states: tracing catches a computed figure, not a
           field reported with the wrong value.
+          Second instance, 2026-11-23, on the line_day card. Given a payload
+          note reading "32 minutes running this hour" for a partial hour, the
+          model wrote "32 minutes running each hour". The number traced
+          perfectly and the sentence around it was false, which is this defect
+          exactly: the field was right and the scope was invented. Addressed the
+          same day by marking partial hours in the payload and giving line_day
+          rules of its own, and the generalisation did not recur in four runs.
+          The job card has since shown the same family from the other direction,
+          mixing minutes and units in one clause and calling FTQ a rate. It is
+          the next card running without rules of its own.
 
 A04 OPEN  Two competing schema strategies in one appliance. db.py applies
           tools/schema.sql and refuses a stale database loudly. bot/db.py
@@ -222,10 +232,18 @@ A21 OPEN  Import-time side effects. app.py runs ensure_views at import and
           ask.py runs _get_schemas() at import, so a wrong MYARRA_DB fails with
           an error that does not name the path.
 
-A22 OPEN  maintenance_events holds zero rows. The list page renders an empty
+A22 OPEN  maintenance_events held zero rows. The list page rendered an empty
           table, and neither the detail page nor the bot's maintenance handler
-          has ever produced a surviving row. HANDOVER calls maintenance a
+          had ever produced a surviving row. HANDOVER calls maintenance a
           first-class event. Untested rather than broken, which is worse.
+          Since 2026-11-23 the table holds three rows, written by
+          tools/seed_improvement_layer.py and attached to real jobs on the
+          lines that carried the most recorded downtime, so the list and detail
+          pages are exercised for the first time and the default thirty-day
+          view is no longer empty. That is not the same as the handler working:
+          nothing has still produced a maintenance row through the bot, and no
+          line has ever entered the maintenance state in line_events, so the
+          maintenance switch and the bot path both remain unproven.
 
 A23 OPEN  rate_label is in settings and read nowhere. The rate is described by
           a hardcoded "/hr" in board.html, line_report.html, job_detail.html,
