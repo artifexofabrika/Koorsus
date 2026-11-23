@@ -51,6 +51,14 @@
   }
   .floor-detail button.submit:active { opacity: 0.8; }
   .floor-detail form.floor-end { margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 0.5rem; }
+  .floor-detail form.floor-switches { margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 0.5rem; }
+  .floor-detail .switch-row { display: flex; gap: 0.5rem; }
+  .floor-detail button.switch {
+    flex: 1; padding: 1rem 0.25rem; font-size: 0.95rem; font-family: Georgia, serif;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+  }
+  .floor-detail button.switch.on { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: bold; }
   .floor-detail button.submit.end { background: transparent; color: var(--muted); border: 1px solid var(--border); font-size: 1rem; }
   .floor-detail button.submit.end:active { opacity: 0.6; }
 
@@ -71,9 +79,9 @@
 
 <div id="floor-tiles" class="floor-tiles">
   {% for c in cards %}
-  <div class="floor-tile {% if c.state != 'production' %}idle{% endif %}"
+  <div class="floor-tile {% if not c.job_number %}idle{% endif %}"
        data-line="{{ c.line_id }}"
-       onclick="{% if c.state == 'production' %}openLine({{ c.line_id }}){% else %}openStart({{ c.line_id }}){% endif %}">
+       onclick="{% if c.job_number %}openLine({{ c.line_id }}){% else %}openStart({{ c.line_id }}){% endif %}">
     <div>
       <div class="tile-line">{{ c.line_name }}</div>
       {% if c.job_number %}
@@ -82,18 +90,22 @@
       {% endif %}
     </div>
     <div class="tile-status">
-      {% if c.state == 'production' %}{{ c.next_period }} ready{% else %}tap to start{% endif %}
+      {% if c.state == 'production' %}{{ c.next_period }} ready{% elif c.state in ('lunch', 'maintenance', 'cip') %}{{ c.state }}{% else %}tap to start{% endif %}
     </div>
   </div>
   {% endfor %}
 </div>
 
 {% for c in cards %}
-{% if c.state == 'production' and c.job_number %}
+{% if c.job_number %}
 <div id="detail-{{ c.line_id }}" class="floor-detail">
   <button type="button" class="back-btn" onclick="closeAll()">&larr; All lines</button>
   <h2>{{ c.line_name }}</h2>
   <div class="job">{{ c.job_number }}{% if c.sku_description %} &middot; {{ c.sku_description }}{% endif %}</div>
+  {% if c.state != 'production' %}
+  <div class="period">{{ c.state|capitalize }}{% if c.state_since %} since {{ c.state_since[11:16] }}{% endif %}</div>
+  {% endif %}
+  {% if c.state == 'production' %}
   <form method="post">
     <input type="hidden" name="line_id" value="{{ c.line_id }}">
     <input type="hidden" name="job_number" value="{{ c.job_number }}">
@@ -115,7 +127,26 @@
     <input type="number" name="duration_min" min="1" max="720" value="60" inputmode="numeric">
     <label>Notes</label>
     <input type="text" name="notes" placeholder="Optional - what happened this hour?">
-    <button type="submit" class="submit">Log {{ c.next_period }}</button>  </form>
+    <button type="submit" class="submit">Log {{ c.next_period }}</button>
+  </form>
+  {% endif %}
+  <form method="post" class="floor-switches">
+    <input type="hidden" name="action" value="toggle">
+    <input type="hidden" name="line_id" value="{{ c.line_id }}">
+    <label>Switch</label>
+    <div class="switch-row">
+      <button type="submit" name="state" value="lunch" class="switch{% if c.state == 'lunch' %} on{% endif %}">Lunch</button>
+      <button type="submit" name="state" value="maintenance" class="switch{% if c.state == 'maintenance' %} on{% endif %}">Maintenance</button>
+      <button type="submit" name="state" value="cip" class="switch{% if c.state == 'cip' %} on{% endif %}">CIP</button>
+    </div>
+    <label>Who is throwing it</label>
+    <select name="operator_id" class="op-select">
+      <option value="">Not stated</option>
+      {% for o in operators.get(c.line_id, []) %}
+      <option value="{{ o.id }}">{{ o.name }}</option>
+      {% endfor %}
+    </select>
+  </form>
   <form method="post" class="floor-end">
     <input type="hidden" name="action" value="end">
     <input type="hidden" name="line_id" value="{{ c.line_id }}">

@@ -304,6 +304,51 @@ def end_job(conn, job, line_id, user_id=None, source='floor', reason=None,
     return None
 
 
+def toggle_line_state(conn, line_id, state, user_id=None, source='floor'):
+    """Throw one of lunch, maintenance or CIP, or throw it back.
+
+    FLOOR-MODEL, The switches: lunch, maintenance and CIP are operator defined
+    on and off switches against the running job. They exist to subtract time
+    from the scheduled window and they are not a module and not a reason code.
+    The duration comes from the moment the switch was thrown, because a toggle
+    pair cannot lie about when it happened.
+
+    Pressing the switch the line is already in returns it to production with
+    the job id read off the open event. Pressing a different one moves the line
+    to that state, carrying the same job id. No new storage and no new table:
+    the events are the record, and variance_allowance already subtracts them.
+
+    Returns a sentence for the floor either way, refusal or confirmation. A
+    refusal names what it found rather than saying that it cannot.
+    """
+    state = (state or '').strip().lower()
+    if state not in ('lunch', 'maintenance', 'cip'):
+        return "That is not one of the three switches: " + str(state) + "."
+
+    cur = db.current_line_event(conn, line_id)
+    if not cur:
+        return ("Nothing is running on Line " + str(line_id)
+                + ", so there is no job to take time from.")
+    if not cur['job_id']:
+        return ("Line " + str(line_id) + " is " + str(cur['state'])
+                + " with no job on it, so there is nothing to take time from.")
+
+    job_id = cur['job_id']
+    back = cur['state'] == state
+    target = 'production' if back else state
+    try:
+        db.transition_line_nc(conn, line_id, target, job_id=job_id,
+                              user_id=user_id, source=source)
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+
+    if back:
+        return "Line " + str(line_id) + " is back in production."
+    return "Line " + str(line_id) + " is now in " + state + "."
+
+
 def h_start_job(conn, s, text, user):
     job_no = parse_job_number(text)
     job, conf, alts = resolve_job(conn, job_no)

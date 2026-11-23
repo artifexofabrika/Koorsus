@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Floor start and end, and the variance gate: twelve cases, throwaway database.
+"""Floor start, end and the three switches: fifteen cases, throwaway database.
 
 Nothing in here touches the live database. MYARRA_DB is pointed at a temp file
 before anything from myarr_v2 is imported, the schema is applied from
@@ -11,7 +11,7 @@ line_events. A monkeypatched exception would only prove that the except block
 runs; a trigger proves the transaction rolls back.
 
 Run: /home/jeeves/jeeves-env/bin/python tools/test_floor_start.py
-Exit 0 when all twelve pass, 1 when any fail, 2 when the test cannot start.
+Exit 0 when all fifteen pass, 1 when any fail, 2 when the test cannot start.
 """
 import os
 import shutil
@@ -63,7 +63,8 @@ def seed():
     c.executescript(
         """
         INSERT INTO lines (id, name) VALUES
-            (1, 'Line 1'), (2, 'Line 2'), (3, 'Line 3'), (4, 'Line 4');
+            (1, 'Line 1'), (2, 'Line 2'), (3, 'Line 3'), (4, 'Line 4'),
+            (5, 'Line 5');
         INSERT INTO skus (id, part_number, description, case_pack) VALUES
             (1, 'PN-1', 'Claret 750ml', 12);
         INSERT INTO users (id, name, role, line_id, active) VALUES
@@ -461,6 +462,85 @@ check(
     and open4[0]["state"] == "idle"
     and open4[0]["source"] == "floor",
     "outcome=%r job=%r open=%r" % (outcome, done, open4),
+)
+
+# --------------------------------------------------------------- case 13 ----
+# The switches. Throwing lunch closes the production event and opens a lunch
+# event carrying the same job id; throwing it again returns the line to
+# production with the job id read back off the event, not from a session.
+
+c = conn()
+c.execute(
+    "INSERT INTO jobs (id, job_number, sku_id, line_id, target_quantity, status)"
+    " VALUES (14, 'WO-4001', 1, 5, 1000, 'running')")
+c.execute(
+    "INSERT INTO line_events (line_id, state, started_at, job_id, source)"
+    " VALUES (5, 'production', '2026-11-21T07:00:00', 14, 'floor')")
+c.commit()
+c.close()
+
+c = conn()
+said_on = bot_jobs.toggle_line_state(c, 5, "lunch", user_id=2, source="floor")
+live = open_events(5)
+c.close()
+
+c = conn()
+said_off = bot_jobs.toggle_line_state(c, 5, "lunch", user_id=2, source="floor")
+live2 = open_events(5)
+c.close()
+
+check(
+    "toggle: lunch on, lunch off, job id carried both ways",
+    len(live) == 1
+    and live[0]["state"] == "lunch"
+    and live[0]["job_id"] == 14
+    and live[0]["source"] == "floor"
+    and "now in lunch" in said_on
+    and len(live2) == 1
+    and live2[0]["state"] == "production"
+    and live2[0]["job_id"] == 14
+    and "back in production" in said_off,
+    "said_on=%r live=%r said_off=%r live2=%r" % (said_on, live, said_off, live2),
+)
+
+# --------------------------------------------------------------- case 14 ----
+# A line with no job on it has nothing to take time from, and says which it is.
+
+c = conn()
+said = bot_jobs.toggle_line_state(c, 4, "maintenance", user_id=2, source="floor")
+c.close()
+
+check(
+    "toggle: refused on a line with no job on it, naming what it found",
+    "no job on it" in said,
+    "said=%r" % (said,),
+)
+
+# --------------------------------------------------------------- case 15 ----
+# The two features meet. The gate subtracts the event the switch writes. A real
+# thirty minute lunch cannot be waited out in a test, so the event is written
+# by the real toggle and then its timestamps are moved onto the job window.
+
+c = conn()
+bot_jobs.toggle_line_state(c, 5, "lunch", user_id=2, source="floor")
+c.execute(
+    "UPDATE line_events SET started_at='2026-11-21T12:00:00',"
+    " ended_at='2026-11-21T12:30:00'"
+    " WHERE line_id=5 AND state='lunch' AND ended_at IS NULL")
+c.execute(
+    "UPDATE jobs SET scheduled_start='2026-11-21T07:00:00',"
+    " scheduled_end='2026-11-21T17:00:00' WHERE id=14")
+c.commit()
+job = dict(c.execute("SELECT * FROM jobs WHERE id=14").fetchone())
+allowance = bot_jobs.variance_allowance(c, job, now=datetime(2026, 11, 21, 18, 0))
+c.close()
+
+check(
+    "toggle feeds the gate: a thrown lunch is 30 off-time minutes, 950 allowed",
+    allowance["window"] == 600
+    and allowance["off_minutes"] == 30
+    and allowance["allowed"] == 950,
+    "allowance=%r" % (allowance,),
 )
 
 # ------------------------------------------------------------------ end -----

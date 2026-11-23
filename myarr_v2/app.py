@@ -1054,6 +1054,8 @@ def _floor_action(form):
             msg = _floor_start(conn, form, line_id, bot_jobs)
         elif action == "end":
             msg = _floor_end(conn, form, line_id, bot_jobs)
+        elif action == "toggle":
+            msg = _floor_toggle(conn, form, line_id, bot_jobs)
         else:
             msg = "Unknown action: " + action
     except Exception as e:
@@ -1140,6 +1142,27 @@ def _floor_end(conn, form, line_id, bot_jobs):
     if refusal:
         return refusal
     return "Ended " + job["job_number"] + " on Line " + str(line_id) + "."
+
+def _floor_toggle(conn, form, line_id, bot_jobs):
+    """Throw lunch, maintenance or CIP, or throw it back.
+
+    One form with three submit buttons, so the pressed button supplies the
+    state and a single operator picker serves all three. toggle_line_state
+    returns a sentence either way and it goes straight to the message bar.
+    """
+    state = (form.get("state") or "").strip().lower()
+    operator_raw = (form.get("operator_id") or "").strip()
+
+    if not line_id:
+        return "No line selected."
+    try:
+        user_id = int(operator_raw) if operator_raw else None
+    except (TypeError, ValueError):
+        user_id = None
+
+    return bot_jobs.toggle_line_state(conn, line_id, state, user_id=user_id,
+                                      source="floor")
+
 
 def _floor_today_jobs(conn, line_id):
     """Jobs worth offering in the start dropdown for one line.
@@ -1237,6 +1260,7 @@ def floor_view():
             "job_number": None,
             "next_period": "H1",
             "sku_description": None,
+            "state_since": None,
         }
         if cur and cur["state"] == "production" and cur["job_id"]:
             job = conn.execute(
@@ -1257,6 +1281,18 @@ def floor_view():
                         card["next_period"] = f"H{n}"
                     except ValueError:
                         pass
+        elif cur and cur["state"] in ("lunch", "maintenance", "cip"):
+            # A line in lunch is not an idle line. Without this it renders as
+            # idle, offers a Start panel, and check_start then refuses with a
+            # sentence about a job the operator was never shown.
+            card["state"] = cur["state"]
+            card["state_since"] = cur["started_at"]
+            if cur["job_id"]:
+                off_job = conn.execute(
+                    "SELECT job_number FROM jobs WHERE id = ?",
+                    (cur["job_id"],)).fetchone()
+                if off_job:
+                    card["job_number"] = off_job["job_number"]
         cards.append(card)
     operators = {}
     for u in conn.execute("SELECT id, name, line_id FROM users WHERE active=1 "
