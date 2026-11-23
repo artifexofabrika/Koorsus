@@ -43,6 +43,24 @@ INTENT_NOTES = {
 - The by_shift breakdown shows the same for each shift separately.
 - If pct_unaccounted is above 25, state that it is a significant gap.
 """,
+    "line_day": """DAY-SPECIFIC RULES:
+- OPERATOR NOTES are one row per hour. Never generalise one hour's note to
+  another hour or to the whole day. A note that states a duration describes
+  that hour and nothing else. If H3 says 32 minutes and run_minutes is 152,
+  the line did not run 32 minutes an hour, and saying so is a false statement
+  about a day you can see the whole of.
+- run_minutes is the total recorded across the day's hours. It is shorter than
+  the shift when the day is still running, and that is normal rather than a
+  loss. Do not call it lost time.
+- An hour marked partial is in progress or was cut short. Say so if you mention
+  it, and do not treat it as representative of the others.
+- standard_rate of 0 means no rate is loaded for this SKU on this line. Say
+  that plainly and do not report capacity_gap, losses_accounted or
+  losses_unexplained as though they had been measured.
+- p2p is actual_units over the target of the jobs scheduled that day. When no
+  job was scheduled there is nothing to compare, which is not the same as the
+  line producing nothing.
+""",
 }
 
 
@@ -58,7 +76,8 @@ DIAGNOSTIC PRINCIPLE:
 - When losses_unexplained is larger than losses_accounted, the correct
   diagnosis is that the data is incomplete. Tell the manager to revisit the
   job with the line lead and find out what happened that was not captured.
-- Quote the operator notes directly when they are relevant.
+- Quote a relevant operator note verbatim and attribute it to its hour. A note
+  belongs to one hour; it is never evidence about the others.
 
 RULES:
 - Be direct. No fluff.
@@ -79,6 +98,13 @@ FIELD GLOSSARY (use these definitions, never invent alternatives):
 - losses_unexplained: capacity_gap minus losses_accounted
 - ftq: First Time Quality (%)
 - p2p: Produce to Plan, Actual divided by Target (%)
+- actual_units: units produced that day, scrap included
+- target_units: the targets of the jobs scheduled on that line for that day
+- run_minutes: total minutes recorded across the day's hours. A day in progress
+  is short, and an individual hour in it may be partial
+- standard_rate: the line's rate for the SKU, weighted by minutes. Zero means no
+  rate is loaded for that SKU on that line, and every rate-derived figure below
+  is then meaningless rather than zero
 
 CONTEXT:
 {context}
@@ -208,7 +234,7 @@ def get_line_summary(conn, line_id, date):
 def get_floor_context(conn, line_id, date):
     """The context engine. Returns a string of operator notes and maintenance."""
     notes = conn.execute("""
-        SELECT period, notes
+        SELECT period, notes, duration_min
         FROM hourly_runs
         WHERE line_id = ?
           AND date(recorded_at) = ?
@@ -235,7 +261,15 @@ def get_floor_context(conn, line_id, date):
     if notes:
         parts.append("OPERATOR NOTES (verbatim, hour by hour):")
         for n in notes:
-            parts.append(f"  {n['period']}: {n['notes']}")
+            # A partial hour is the single most misread row on this page: in
+            # progress at the moment of asking, it looks like a whole hour of
+            # poor performance. Say which it is in the payload rather than
+            # relying on a rule to stop the model inferring it (A03).
+            mins = n['duration_min'] or 60
+            if mins < 60:
+                parts.append(f"  {n['period']} [partial hour, {mins} of 60 min]: {n['notes']}")
+            else:
+                parts.append(f"  {n['period']}: {n['notes']}")
 
     if maintenance:
         parts.append("MAINTENANCE EVENTS:")
