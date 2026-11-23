@@ -47,7 +47,7 @@
             <div style="font-size: 1.5rem; color: #8a6d3b; font-weight: bold; margin-top: 0.5rem;">{{ job.sku_description or '' }} &middot; Line {{ job.line_id }}</div>
         </div>
         <div class="meta">
-            <div style="font-size: 1.5rem; color: #000; font-weight: bold;">Takt: {{ takt_time }} sec/unit ({{ target_per_hour|int }} /hr)</div>
+            <div style="font-size: 1.5rem; color: #000; font-weight: bold;">{% if target_per_hour %}Takt: {{ takt_time }} sec/unit ({{ target_per_hour }} /hr){% else %}Takt: no rate loaded for this SKU on this line{% endif %}</div>
             <div style="font-size: 1.2rem; color: #555; margin-top: 0.5rem;">Target: {{ '{:,}'.format(tgt_cases) }} {{ case_label }} &middot; Produced: {{ '{:,}'.format(cases) }} {{ case_label }} ({{ '%.1f'|format(pct) }}%)</div>
         </div>
     </div>
@@ -70,16 +70,16 @@
             {% for r in rows %}
             <tr>
                 <td>{{ r.hour_label }}</td>
-                <td>{{ '{:,}'.format(r.target) }}</td>
+                <td>{{ r.target|num }}</td>
                 <td>{% if r.has_data %}{{ '{:,}'.format(r.actual) }}{% else %}<span class="pending">&mdash;</span>{% endif %}</td>
-                <td>{% if r.has_data %}{{ '{:,}'.format(r.target_acc) }}{% else %}<span class="pending">&mdash;</span>{% endif %}</td>
+                <td>{% if r.target_acc is not none %}{{ r.target_acc|num }}{% else %}<span class="pending">&mdash;</span>{% endif %}</td>
                 <td>{% if r.has_data %}{{ '{:,}'.format(r.actual_acc) }}{% else %}<span class="pending">&mdash;</span>{% endif %}</td>
-                <td class="{% if r.has_data and r.delta >= 0 %}delta-pos{% elif r.has_data %}delta-neg{% endif %}">
-                    {% if r.has_data %}{% if r.delta > 0 %}+{% endif %}{{ '{:,}'.format(r.delta) }}{% else %}<span class="pending">&mdash;</span>{% endif %}
+                <td class="{% if r.has_data and r.delta is not none and r.delta >= 0 %}delta-pos{% elif r.has_data %}delta-neg{% endif %}">
+                    {% if r.delta is not none %}{% if r.delta > 0 %}+{% endif %}{{ r.delta|num }}{% else %}<span class="pending">&mdash;</span>{% endif %}
                 </td>
                 <td>{% if r.has_data %}{{ '{:,}'.format(r.scrap) }}{% else %}<span class="pending">&mdash;</span>{% endif %}</td>
                 <td class="{% if r.has_data %}delta-neg{% endif %}">
-                    {% if r.has_data %}{{ '%.1f'|format(r.gap) }}{% else %}<span class="pending">&mdash;</span>{% endif %}
+                    {% if r.gap is not none %}{{ r.gap|num1 }}{% else %}<span class="pending">&mdash;</span>{% endif %}
                 </td>
                 <td style="font-size: 0.85em;">{% if r.has_data %}{{ r.comments }}{% else %}<span class="pending">&mdash; (pending)</span>{% endif %}</td>
             </tr>
@@ -90,7 +90,7 @@
     <div class="board-footer">
         <div>
             <div class="label">Total Target</div>
-            <div>{{ '{:,}'.format(total_target) }}</div>
+            <div>{{ total_target|num }}</div>
         </div>
         <div>
             <div class="label">Total Actual</div>
@@ -102,15 +102,15 @@
         </div>
         <div>
             <div class="label">Total Gap</div>
-            <div class="delta-neg">{{ '%.1f'|format(total_gap) }}m</div>
+            <div class="delta-neg">{% if total_gap is not none %}{{ total_gap|num1 }}m{% else %}&mdash;{% endif %}</div>
         </div>
         <div>
             <div class="label">FTQ</div>
-            <div class="{% if ftq >= 99 %}delta-pos{% elif ftq >= 95 %}text-warning{% else %}delta-neg{% endif %}">{{ '%.1f'|format(ftq) }}%</div>
+            <div class="{% if ftq is not none and ftq >= 99 %}delta-pos{% elif ftq is not none and ftq >= 95 %}text-warning{% else %}delta-neg{% endif %}">{{ ftq|pct1 }}</div>
         </div>
         <div>
             <div class="label">P2P</div>
-            <div class="{% if p2p >= 100 %}delta-pos{% else %}delta-neg{% endif %}">{{ '%.1f'|format(p2p) }}%</div>
+            <div class="{% if p2p is not none and p2p >= 100 %}delta-pos{% else %}delta-neg{% endif %}">{{ p2p|pct1 }}</div>
         </div>
     </div>
 </div>

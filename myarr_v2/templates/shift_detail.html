@@ -11,9 +11,9 @@
   <tr>
     <td>{{ d.period }}</td>
     <td>{{ d.job_number }}</td>
-    <td>{{ '{:,}'.format(d.expected) }}</td>
+    <td>{{ d.expected|num }}</td>
     <td>{{ '{:,}'.format(d.actual) }}</td>
-    <td class="{{ 'bad' if d.gap > 3 else 'good' }}">{{ '%.1f'|format(d.gap) }}</td>
+    <td class="{% if d.gap is not none %}{{ 'bad' if d.gap > 3 else 'good' }}{% endif %}">{{ d.gap|num1 }}</td>
     <td>
       {% if d.downtime %}
         {% for dt in d.downtime %}

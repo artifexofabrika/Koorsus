@@ -16,6 +16,28 @@ import sqlite3
 
 app = Flask(__name__)
 
+
+@app.template_filter("num")
+def _fmt_num(value):
+    """A number, or an em dash when there is none.
+
+    Never a zero standing in for a missing rate. Zero reads as "produced
+    nothing", which is a different and much worse claim than "no rate was
+    configured", and it is the sort of claim a manager acts on (A01).
+    """
+    return "\u2014" if value is None else "{:,}".format(value)
+
+
+@app.template_filter("num1")
+def _fmt_num1(value):
+    return "\u2014" if value is None else "{:.1f}".format(value)
+
+
+@app.template_filter("pct1")
+def _fmt_pct1(value):
+    return "\u2014" if value is None else "{:.1f}%".format(value)
+
+
 from verify import verify_bp
 app.register_blueprint(verify_bp)
 from admin_ops import admin_ops_bp
@@ -194,14 +216,19 @@ def dashboard():
         """, (line['id'],)).fetchall()
 
         for run in runs:
-            bpm = run['ideal_rate'] or 600.0
-            target_units = bpm * run['duration_min'] / 60.0
+            # No rate row means no target. 600.0 here made every figure on the
+            # dashboard confidently wrong by a factor of seven to sixty on the
+            # demo rates, and nothing on the page said so (A01).
+            bpm = run['ideal_rate']
             cp = run['case_pack'] or 1
+            target_units = bpm * run['duration_min'] / 60.0 if bpm else None
             row['hourly_data'].append({
                 'period': run['period'],
-                'target_cases': int(target_units // cp),
+                'target_cases': (int(target_units // cp)
+                                 if target_units is not None else None),
                 'actual_cases': int(run['units_filled'] // cp),
-                'delta_cases': int((run['units_filled'] - target_units) // cp)
+                'delta_cases': (int((run['units_filled'] - target_units) // cp)
+                                if target_units is not None else None)
             })
         if cur:
             row['state'] = cur['state']
@@ -316,8 +343,11 @@ def line_report(line_id):
 
     sample_sku = runs[0]['sku_id']
     rate_row = conn.execute("SELECT ideal_rate FROM line_sku_rates WHERE line_id=? AND sku_id=?", (line_id, sample_sku)).fetchone()
-    bpm = rate_row['ideal_rate'] if rate_row else 600.0
-    target_per_hour = int(bpm)
+    # A rate is a SKU on a line, and a SKU that has never run on this line has
+    # no rate yet. Substituting 600.0 made every target, delta and P2P on this
+    # page confidently wrong and silent about it (A01).
+    bpm = rate_row['ideal_rate'] if rate_row else None
+    target_per_hour = int(bpm) if bpm else None
 
     events = conn.execute("""
         SELECT state, started_at, ended_at
@@ -344,19 +374,20 @@ def line_report(line_id):
         enm = duration % 60
         label = f"{st:02d}:00 - {en:02d}:{enm:02d}"
 
-        target = int(bpm * duration / 60.0)
+        target = int(bpm * duration / 60.0) if bpm else None
 
         if period in existing:
             r = existing[period]
             actual = r['units_filled']
             scrap = r['scrap_units']
             comments = r['notes'] or '—'
-            target_acc += target
+            if target is not None:
+                target_acc += target
+                total_target += target
             actual_acc += actual
-            total_target += target
             total_actual += actual
             total_scrap += (scrap or 0)
-            delta = actual - target
+            delta = (actual - target) if target is not None else None
             has = True
         else:
             actual = None; scrap = None; comments = '— (pending)'
@@ -365,16 +396,18 @@ def line_report(line_id):
         rows.append({
             'hour_label': label, 'minutes': duration, 'target': target,
             'actual': actual,
-            'target_acc': target_acc if has else None,
+            'target_acc': target_acc if (has and bpm) else None,
             'actual_acc': actual_acc if has else None,
             'delta': delta, 'scrap': scrap, 'comments': comments,
             'has_data': has,
         })
 
     conn.close()
-    p2p = round((total_actual / total_target * 100), 1) if total_target else 0
+    if not bpm:
+        total_target = None
+    p2p = round((total_actual / total_target * 100), 1) if total_target else None
     ftq = round(((total_actual - total_scrap) / total_actual * 100), 1) if total_actual else 0
-    takt_time = round(3600.0 / target_per_hour, 2) if target_per_hour else 0
+    takt_time = round(3600.0 / target_per_hour, 2) if target_per_hour else None
 
     return render_template("line_report.html", line=line, report_date=latest['d'],
                            shift=shift, rows=rows, total_target=total_target,
@@ -414,9 +447,12 @@ def job_detail(job_number):
         sample_sku = job['sku_id']
 
     rate_row = conn.execute("SELECT ideal_rate FROM line_sku_rates WHERE line_id=? AND sku_id=?", (job['line_id'], sample_sku)).fetchone()
-    bpm = rate_row['ideal_rate'] if rate_row else 600.0
-    target_per_hour = int(bpm)
-    takt_time = round(3600.0 / target_per_hour, 2) if target_per_hour else 0
+    # No rate row means no target. 600.0 here was the most dangerous constant
+    # in the product: a job with an unloaded rate showed a target sixty times
+    # too small, and a gap in minutes to match, with no error (A01).
+    bpm = rate_row['ideal_rate'] if rate_row else None
+    target_per_hour = int(bpm) if bpm else None
+    takt_time = round(3600.0 / target_per_hour, 2) if target_per_hour else None
 
     rows = []
     total_target = 0
@@ -437,7 +473,7 @@ def job_detail(job_number):
         enm = duration % 60
         label = f"{st:02d}:00 - {en:02d}:{enm:02d}"
 
-        target = int(bpm * duration / 60.0)
+        target = int(bpm * duration / 60.0) if bpm else None
 
         if period in existing:
             r = existing[period]
@@ -450,13 +486,16 @@ def job_detail(job_number):
             if dt_str:
                 comments = (comments + " | " if comments else "") + dt_str
 
-            target_acc += target
+            if target is not None:
+                target_acc += target
+                total_target += target
             actual_acc += actual
-            total_target += target
             total_actual += actual
             total_scrap += scrap
-            gap = round((target - actual) / (bpm / 60.0), 1) if bpm else 0.0
-            total_gap += gap
+            gap = (round((target - actual) / (bpm / 60.0), 1)
+                   if target is not None else None)
+            if gap is not None:
+                total_gap += gap
             has = True
         else:
             actual = None; scrap = None; comments = '— (pending)'
@@ -465,15 +504,19 @@ def job_detail(job_number):
         rows.append({
             'hour_label': label, 'minutes': duration, 'target': target,
             'actual': actual,
-            'target_acc': target_acc if has else None,
+            'target_acc': target_acc if (has and bpm) else None,
             'actual_acc': actual_acc if has else None,
-            'delta': (actual - target) if has else None, 
+            'delta': ((actual - target)
+                      if (has and target is not None) else None),
             'gap': gap, 'scrap': scrap, 'comments': comments,
             'has_data': has,
         })
 
     conn.close()
-    p2p = round((total_actual / total_target * 100), 1) if total_target else 0
+    if not bpm:
+        total_target = None
+        total_gap = None
+    p2p = round((total_actual / total_target * 100), 1) if total_target else None
     ftq = round(((total_actual - total_scrap) / total_actual * 100), 1) if total_actual else 0
     cp = job['case_pack'] or 1
 
@@ -807,9 +850,13 @@ def shift_detail(run_date, shift):
     for r in runs:
         rate = conn.execute("SELECT ideal_rate FROM line_sku_rates WHERE line_id=? AND sku_id=?",
                             (r["line_id"], r["sku_id"])).fetchone()
-        rpm = rate["ideal_rate"] if rate else 600.0
-        expected = rpm * r["duration_min"] / 60.0
-        gap = (expected - r["units_filled"]) / (rpm / 60.0) if rpm else 0.0
+        # A shift can mix SKUs, so the rate is looked up per run and may be
+        # missing for one of them. 600.0 invented an expected figure for that
+        # row and a gap in minutes to go with it (A01).
+        rpm = rate["ideal_rate"] if rate else None
+        expected = rpm * r["duration_min"] / 60.0 if rpm else None
+        gap = ((expected - r["units_filled"]) / (rpm / 60.0)
+               if rpm else None)
         dts = conn.execute("SELECT station, reason, minutes FROM downtime_events WHERE run_id=?",
                            (r["id"],)).fetchall()
         details.append({"period": r["period"], "job_number": r["job_number"],
@@ -879,7 +926,7 @@ def board(line_id):
     latest = conn.execute("SELECT MAX(date(recorded_at)) as d FROM hourly_runs WHERE line_id=?", (line_id,)).fetchone()
     if not latest or not latest['d']:
         conn.close()
-        return render_template("board.html", line=line, rows=[], total_target=0, total_actual=0, p2p=0, ftq=0, takt_time=0, bpm=0, current_date=datetime.now().strftime('%Y-%m-%d'), active_job="No Active Job")
+        return render_template("board.html", line=line, rows=[], total_target=0, total_actual=0, p2p=None, ftq=0, takt_time=None, bpm=None, current_date=datetime.now().strftime('%Y-%m-%d'), active_job="No Active Job")
 
     runs = conn.execute("""
         SELECT r.period, r.units_filled, r.duration_min, r.scrap_units, r.notes, j.sku_id, r.shift, j.job_number, s.case_pack
@@ -900,8 +947,10 @@ def board(line_id):
 
     sample_sku = runs[0]['sku_id']
     rate_row = conn.execute("SELECT ideal_rate FROM line_sku_rates WHERE line_id=? AND sku_id=?", (line_id, sample_sku)).fetchone()
-    bpm = rate_row['ideal_rate'] if rate_row else 600.0
-    takt_time = round(3600.0 / bpm, 2) if bpm else 0
+    # No rate row means no target. 600.0 here put a confident wrong number on
+    # the board in front of the whole line (A01).
+    bpm = rate_row['ideal_rate'] if rate_row else None
+    takt_time = round(3600.0 / bpm, 2) if bpm else None
 
     rows = []
     total_target = 0
@@ -922,20 +971,21 @@ def board(line_id):
         label = f"{st:02d}:00 - {en:02d}:{enm:02d}"
 
         cp = runs[0]['case_pack'] or 1
-        target_units = bpm * duration / 60.0
-        target = int(target_units / cp)
+        target_units = bpm * duration / 60.0 if bpm else None
+        target = int(target_units / cp) if target_units is not None else None
 
         if period in existing:
             r = existing[period]
             actual = int(r['units_filled'] / cp)
             scrap = int((r['scrap_units'] or 0) / cp)
             comments = r['notes'] or ''
-            target_acc += target
+            if target is not None:
+                target_acc += target
+                total_target += target
             actual_acc += actual
-            total_target += target
             total_actual += actual
             total_scrap += scrap
-            delta = actual - target
+            delta = (actual - target) if target is not None else None
             has = True
         else:
             actual = None
@@ -945,14 +995,16 @@ def board(line_id):
 
         rows.append({
             'period': label, 'target': target, 'actual': actual,
-            'target_acc': target_acc if has else None,
+            'target_acc': target_acc if (has and bpm) else None,
             'actual_acc': actual_acc if has else None,
             'delta': delta, 'scrap': scrap if has else None, 'notes': comments, 'has_data': has,
         })
 
     active_job = runs[0]['job_number'] if runs else 'No Active Job'
     conn.close()
-    p2p = round((total_actual / total_target * 100), 1) if total_target else 0
+    if not bpm:
+        total_target = None
+    p2p = round((total_actual / total_target * 100), 1) if total_target else None
     ftq = round(((total_actual - total_scrap) / total_actual * 100), 1) if total_actual else 0
 
     return render_template("board.html", line=line, rows=rows, total_target=total_target, total_actual=total_actual, p2p=p2p, ftq=ftq, takt_time=takt_time, bpm=bpm, current_date=latest['d'], active_job=active_job)

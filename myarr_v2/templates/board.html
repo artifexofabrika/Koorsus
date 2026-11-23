@@ -113,7 +113,7 @@
             <div class="active-job">{{ active_job }}</div>
         </div>
         <div class="meta">
-            <div class="takt">Takt: {{ takt_time }} sec/unit ({{ bpm|int }} /hr)</div>
+            <div class="takt">{% if bpm %}Takt: {{ takt_time }} sec/unit ({{ bpm }} /hr){% else %}Takt: no rate loaded for this SKU on this line{% endif %}</div>
             <div>{{ current_date }}</div>
         </div>
     </div>
@@ -136,19 +136,19 @@
                 {% for r in rows %}
                 <tr>
                     <td>{{ r.period }}</td>
-                    <td>{{ '{:,}'.format(r.target) }}</td>
+                    <td>{{ r.target|num }}</td>
                     <td>
                         {% if r.has_data %}{{ '{:,}'.format(r.actual) }}{% else %}<span class="pending">&mdash;</span>{% endif %}
                     </td>
                     <td>
-                        {% if r.has_data %}{{ '{:,}'.format(r.target_acc) }}{% else %}<span class="pending">&mdash;</span>{% endif %}
+                        {% if r.target_acc is not none %}{{ r.target_acc|num }}{% else %}<span class="pending">&mdash;</span>{% endif %}
                     </td>
                     <td>
                         {% if r.has_data %}{{ '{:,}'.format(r.actual_acc) }}{% else %}<span class="pending">&mdash;</span>{% endif %}
                     </td>
-                    <td class="{% if r.has_data and r.delta >= 0 %}delta-pos{% elif r.has_data %}delta-neg{% endif %}">
+                    <td class="{% if r.has_data and r.delta is not none and r.delta >= 0 %}delta-pos{% elif r.has_data %}delta-neg{% endif %}">
                         {% if r.has_data %}
-                            {% if r.delta > 0 %}+{% endif %}{{ '{:,}'.format(r.delta) }}
+                            {% if r.delta is not none %}{% if r.delta > 0 %}+{% endif %}{{ r.delta|num }}{% else %}<span class="pending">&mdash;</span>{% endif %}
                         {% else %}
                             <span class="pending">&mdash;</span>
                         {% endif %}
@@ -166,7 +166,7 @@
     <div class="footer">
         <div>
             <div class="label">Total Target</div>
-            <div>{{ '{:,}'.format(total_target) }}</div>
+            <div>{{ total_target|num }}</div>
         </div>
         <div>
             <div class="label">Total Actual</div>
@@ -174,11 +174,11 @@
         </div>
         <div style="text-align: center;">
             <div class="label">FTQ</div>
-            <div class="{% if ftq >= 99 %}delta-pos{% elif ftq >= 95 %}text-warning{% else %}delta-neg{% endif %}">{{ '%.1f'|format(ftq) }}%</div>
+            <div class="{% if ftq is not none and ftq >= 99 %}delta-pos{% elif ftq is not none and ftq >= 95 %}text-warning{% else %}delta-neg{% endif %}">{{ ftq|pct1 }}</div>
         </div>
         <div style="text-align: right;">
             <div class="label">P2P</div>
-            <div class="{% if p2p >= 100 %}delta-pos{% else %}delta-neg{% endif %}">{{ '%.1f'|format(p2p) }}%</div>
+            <div class="{% if p2p is not none and p2p >= 100 %}delta-pos{% else %}delta-neg{% endif %}">{{ p2p|pct1 }}</div>
         </div>
     </div>
 </body>
