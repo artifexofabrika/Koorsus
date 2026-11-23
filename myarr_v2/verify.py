@@ -50,6 +50,35 @@ def _warnings(conn):
     """).fetchall():
         out.append(f"SKU {r['part_number']} has no line rate")
 
+    # A rate belongs to a SKU on a line, not to a SKU on its own: the same part
+    # can run at 7,200 an hour on one line and 5,000 on another. app.py looks
+    # up exactly that pair, so a SKU with a rate on Line 1 and a job on Line 2
+    # passes the check above and still gets a wrong number on Line 2. This is
+    # the grain that makes the arithmetic wrong, so it is named job by job
+    # rather than summed away (A01).
+    missing_rate = conn.execute("""
+        SELECT COUNT(*) FROM jobs j
+        WHERE j.line_id IS NOT NULL AND j.sku_id IS NOT NULL
+          AND (j.status IS NULL OR lower(j.status) != 'completed')
+          AND NOT EXISTS (SELECT 1 FROM line_sku_rates r
+                          WHERE r.line_id = j.line_id AND r.sku_id = j.sku_id)
+    """).fetchone()[0]
+    if missing_rate:
+        out.append(str(missing_rate)
+                   + " open job(s) have no rate for their SKU on their line")
+
+    for r in conn.execute("""
+        SELECT j.job_number, j.line_id, s.part_number
+        FROM jobs j JOIN skus s ON s.id = j.sku_id
+        WHERE j.line_id IS NOT NULL
+          AND (j.status IS NULL OR lower(j.status) != 'completed')
+          AND NOT EXISTS (SELECT 1 FROM line_sku_rates r
+                          WHERE r.line_id = j.line_id AND r.sku_id = j.sku_id)
+        ORDER BY j.job_number LIMIT 10
+    """).fetchall():
+        out.append("Job " + r['job_number'] + " on line " + str(r['line_id'])
+                   + " has no rate for " + r['part_number'])
+
     for r in conn.execute("""
         SELECT p.id, l.name AS line_name, pf.part_number AS from_pn, pt.part_number AS to_pn
         FROM co_procedures_v2 p
