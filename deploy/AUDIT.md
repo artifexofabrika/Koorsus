@@ -29,12 +29,27 @@ with a guess. Numbering resumes at A48.
 
 ## S1
 
-A01 OPEN  bot/db.py ideal_rate() returns 600.0 when no rate row exists, and
-          app.py repeats "or 600.0" in five routes, not four: 197 dashboard,
-          319 line_report, 417 job_detail, 810 shift_detail, 903 board. A
-          plant with an unloaded rate gets confident arithmetic: expected
-          units, gap minutes, FTY and unaccounted minutes are all wrong and
-          nothing says so. This is the most dangerous constant in the product.
+A01 OPEN  Half closed 2026-11-23. The web half is done: app.py no longer
+          substitutes 600.0 at any of its five sites (dashboard, line_report,
+          job_detail, shift_detail, board). A missing rate renders as an em
+          dash through two Jinja filters, a total with no rate behind it
+          renders as a dash rather than a confident zero, and FTQ still reports
+          because FTQ needs no rate. tools/test_rates.py, 5 checks, renders all
+          four pages against a database with one line deliberately missing its
+          rate, because the reference appliance has a rate for every open job
+          and test_pages would never have executed that path. Also added the
+          same day: a job-level check on /setup/verify that names open jobs
+          whose line and SKU have no rate row, which is the grain the
+          arithmetic actually uses.
+          Still open: bot/db.py ideal_rate() returns 600.0, and its six callers
+          in production.py and shift.py do arithmetic on the result, so it
+          cannot become None until every one of them is handled. That half
+          needs its own cases against the bot paths.
+          This gap will keep occurring rather than being an edge case. A rate
+          belongs to a SKU on a line, and a SKU that has never run on that line
+          has no rate until the first run measures it (FLOOR-MODEL, Nothing
+          stops the line). The floor is unaffected either way: it asks nothing
+          about rates.
 
 A02 OPEN  Herbie computed a figure instead of quoting one. The changeover card
           for WO-2611-398 read "32.0 minutes faster than the standard of 60.0

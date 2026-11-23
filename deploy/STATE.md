@@ -257,7 +257,18 @@ OPEN   The case-insensitive fallback for component types is implemented but
 
 COVERAGE  tools/test_csv_roundtrip.py   8 checks, all passing
 COVERAGE  tools/test_pages.py           26 routes, all 200
-COVERAGE  tools/test_floor_start.py     6 cases, all passing, added 2026-11-22
+COVERAGE  tools/test_floor_start.py     15 cases, all passing, added 2026-11-22
+COVERAGE  tools/test_rates.py           5 checks, all passing, added 2026-11-23
+
+Which of these need a restart. test_pages and test_herbie_cards make requests to
+the running service on 5002, so after any change to app.py or to a template they
+only tell the truth once myarr has been restarted. The other three build their
+own database and import the modules themselves, so they test what is on disk and
+need nothing restarted. Learned on 2026-11-23 the hard way: a template change
+installed without a restart failed four pages with a Jinja compile error, "No
+filter named num", because the running process still held the previous app.py in
+memory. New templates, old process, no filters. A green test_rates beside a red
+test_pages is that signature exactly.
 
 ## Herbie Light: the guarantee does not hold
 
