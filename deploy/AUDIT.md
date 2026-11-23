@@ -95,17 +95,30 @@ A48 OPEN  The bot conversational path commits the job status and the line
           paragraph in the A06 build plan, because a paragraph does not
           survive a grep and reads as commentary.
 
+A49 FIXED 2026-11-22. The service worker served /floor cache-first, so once a
+          device had seen the page it served itself that page forever and never
+          revalidated; CACHE_NAME never changed, so activation never purged it.
+          The floor forms carry job_number and period in hidden fields, so a
+          frozen page posts the job and the hour that were true when it was
+          cached: an hour written against a job that ended days ago, no error
+          and no trace anywhere. Fixed in static/sw.js. /floor is network-first
+          with the cached copy as the offline fallback only, /static stays
+          cache-first, POST and /api are never touched, and the cache name is
+          myarra-shell-v2 so every device purges v1 on its next visit. Found by
+          reading, not by a device; no one has yet watched a phone pick up v2.
+
 ## S2
 
-A06 OPEN  /floor can now start a job and still cannot end one. Two halves
-          closed: on 2026-11-20 the hour itself, with shift derived from the
-          clock via _current_shift, duration_min from the form, source='floor',
-          user_id from a picker and zero accepted as a valid hour; on
-          2026-11-22 the start action, which writes jobs.status and the
-          line_events row in one transaction through bot.jobs.start_job. Still
-          open: end, and the lunch, maintenance and CIP toggles, so the tablet
-          cannot close a job. Known as C27. Must precede Whisper, which lands
-          in the same POST.
+A06 FIXED Closed 2026-11-22, in three pieces rather than one. On 2026-11-20 the
+          hour itself: shift derived from the clock via _current_shift,
+          duration_min from the form, source='floor', user_id from a picker and
+          zero accepted as a valid hour. On 2026-11-22 the start action, which
+          writes jobs.status and the line_events row in one transaction through
+          bot.jobs.start_job. Then end and the three switches, where a lead can
+          start, log, close, and throw lunch, maintenance or CIP and throw it
+          back, with the job id carried on the event. Verified 15 of 15 in
+          tools/test_floor_start.py. Known as C27. Whisper still lands in the
+          same POST when it comes.
 
 A07 FIXED app.py computed shift_start = 7 + (shift_h - 1) * 8 in three routes
           while three shifts sat configured in settings. A plant that edited
@@ -293,9 +306,9 @@ the only finding there whose shape is known. Expect more.
 
 ## Counts
 
-47 findings. 8 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
-2026-11-20, and A45 on 2026-11-22. 39 open. A45, A47 and A48 were written
-down on 2026-11-22; A46 is still unaccounted for.
+48 findings. 10 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
+2026-11-20, and A06, A45 and A49 on 2026-11-22. 38 open. A45, A47, A48 and
+A49 were written down on 2026-11-22; A46 is still unaccounted for.
 
 Tools that produced them, all in the repository and all re-runnable:
 tools/test_csv_roundtrip.py, tools/test_pages.py, tools/test_herbie_cards.py.
@@ -317,8 +330,12 @@ tools/test_floor_start.py, 6 of 6, including an induced BEFORE INSERT trigger
 on line_events that proves jobs.status is unchanged when the event insert
 aborts.
 
-Still open. No end action, so the tablet cannot close a job, and no lunch,
-maintenance or CIP toggles.
+End and toggles. Done 2026-11-22. end_job closes the job and returns the line
+to idle in one transaction, calling variance_refusal first, so the gate cannot
+be skipped by closing from the tablet. toggle_line_state throws lunch,
+maintenance or CIP and throws it back, carrying the job id on the event, so the
+off-time the gate subtracts is written by the person who was there. C27 is
+closed.
 
 Shape of the remainder. Rewrite floor_view's POST as an action dispatcher on a
 hidden `action` field: record, start, end, toggle.
@@ -337,10 +354,12 @@ hidden `action` field: record, start, end, toggle.
           reason before closing. Then status='completed' with actual_end, and
           transition_line to idle.
 
-  toggle  Lunch, maintenance and CIP as three on/off switches. Throwing a
-          switch closes the production event and opens one of those states,
-          carrying the job id on the event. Throwing it back reads the job id
-          off the event and returns to production. No new storage.
+  toggle  Built. Three switches in one form, so the pressed button supplies the
+          state and one name picker serves all three. Throwing one closes the
+          production event and opens that state carrying the job id; throwing
+          it back reads the job id off the event and returns to production. No
+          new storage. A line in an off-time state is no longer rendered as
+          idle, which it was, so it used to offer a Start panel and then refuse.
 
 Two things to fix on the way. bot/jobs.py writes the job status and the line
 event in two separate commits, in cont_start_minutes, cont_end_minutes,
