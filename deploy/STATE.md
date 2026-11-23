@@ -204,6 +204,21 @@ myarr_v2/requirements.txt created and pinned from actual imports: Flask
   model cannot hold a tool schema and a five-step plan at the same time, and
   the failure mode of pretending otherwise is confident nonsense in front of
   a plant manager.
+- Repository cleanup before a stranger sees it, agreed 2026-11-23. A28 to A33
+  in one commit: the five .bak files in the bot package, bot_v2.py.retired, the
+  dead entry points, the backup copies of the tree, __pycache__, and the
+  duplicate module names. Every one is already named in the audit, so it is
+  deletion rather than detective work, and it stops "too messy" being an
+  available description of a working product.
+- A one-page walking route for a visitor. Which screen to open first, what to
+  point at, and what to say about the two rate gaps being deliberate. Written
+  for an engineer who has never seen the appliance, and short enough to read
+  standing up. Showing a visitor the repository invites him to count .bak
+  files; walking him through the appliance invites better questions.
+- When the owner walks the demo looking for weaknesses, every finding gets one
+  of three labels before anyone touches it: blocks the demo, blocks a pilot, or
+  a note. Without that discipline a two-day walk becomes a two-week one,
+  because every finding is urgent while it is in front of you.
 
 ## Competitor watch
 
