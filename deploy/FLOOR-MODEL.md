@@ -81,6 +81,30 @@ because a toggle pair cannot lie about when it happened. Do not "fix" it to
 match the line in PHILOSOPHY about the clock ordering events, because the two
 are describing different things.
 
+## Nothing stops the line
+
+Owner, 2026-11-23. Production always has to be running, and the system adapts
+to that rather than the other way round. No screen that records production may
+refuse, wait, or ask a question whose answer it does not have. A missing number
+is filled in afterwards by a person who has time to look for it; the line does
+not stop while somebody goes to find it.
+
+The run rate is the case that proves the rule. A rate belongs to a SKU on a
+line, so for a SKU that has never run on that line the rate does not exist
+yet: the first run is how the plant learns it. The one moment a plant is
+trying something new is therefore the moment the number is guaranteed absent,
+which is exactly when it must not be asked for.
+
+Nothing is lost by that, because the run measures the rate itself. Units
+produced divided by running minutes from the first run is a fair provisional
+rate for the next, so the plant corrects the number from evidence rather than
+from a guess in a spreadsheet.
+
+So the floor records what happened and asks nothing about rates. The reporting
+pages say plainly that no rate is loaded, and name the SKU and the line, so the
+gap is visible in the office rather than blocking the floor. The data is
+fluid: a rate can be edited later, and the numbers after it move with it.
+
 ## Changeover
 
 Changeovers are where stations matter. Each station has a standard changeover
