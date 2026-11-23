@@ -127,26 +127,29 @@ def main():
 
     made = []
     for (lid, station, symptom, resolution, minutes, category) in MAINTENANCE:
-        # Attach the repair to a job that can hold it: a window long enough for
-        # the repair, and the job on that line that already collected the most
-        # downtime, so the record agrees with the hours rather than inventing a
-        # bad day that the runs do not show.
+        # Attach the repair to a job that can hold it, and one recent enough to
+        # appear in the maintenance page's default thirty-day view: a demo whose
+        # first screen says "no events" is indistinguishable from a broken one.
+        # Within that window, prefer the job that already collected the most
+        # downtime, so the repair record agrees with the hours rather than
+        # inventing a bad day the runs do not show.
         row = cur.execute(
             """SELECT j.id, j.job_number, j.scheduled_start
                FROM jobs j
                WHERE j.line_id = ? AND j.status = 'completed'
                  AND j.scheduled_start IS NOT NULL
                  AND j.scheduled_end IS NOT NULL
+                 AND j.scheduled_start >= date('now', '-21 days')
                  AND (julianday(j.scheduled_end) - julianday(j.scheduled_start))
                      * 1440.0 >= ?
                ORDER BY (SELECT COUNT(*) FROM downtime_events de
                          JOIN hourly_runs r ON r.id = de.run_id
                          WHERE r.job_id = j.id) DESC,
-                        j.scheduled_start
+                        j.scheduled_start DESC
                LIMIT 1""", (lid, minutes)).fetchone()
         if not row:
-            print("  line %d: no completed job long enough to hold a repair, "
-                  "skipped" % lid)
+            print("  line %d: no completed job in the last 21 days long enough "
+                  "to hold a repair, skipped" % lid)
             continue
         day = str(row["scheduled_start"])[:10]
         began = datetime.fromisoformat(str(row["scheduled_start"]))

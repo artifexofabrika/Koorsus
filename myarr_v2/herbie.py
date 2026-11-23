@@ -90,6 +90,58 @@ Close with what the line lead should go and find out, if anything.
 }
 
 
+FIELD_GLOSSARY = [
+    ("actual_units", "parts produced, scrap included"),
+    ("gross_production", "parts produced before losses are considered"),
+    ("target_units", "the target this figure is measured against: the job's own "
+                     "target, or the sum of the job targets scheduled that day"),
+    ("scrap_units", "produced parts that failed first time; already counted "
+                    "inside actual_units"),
+    ("run_minutes", "total minutes recorded. A day or job still running is short, "
+                    "and an individual hour in it may be partial"),
+    ("recorded_downtime_min", "minutes an operator logged as downtime"),
+    ("downtime_min", "minutes an operator logged as downtime"),
+    ("downtime_by_station", "logged downtime minutes, per station"),
+    ("unaccounted_min", "minutes of production loss with no logged reason"),
+    ("pct_unaccounted", "unaccounted as a percentage of total lost time"),
+    ("by_shift", "the same figures split by shift"),
+    ("standard_rate", "the line's rate for the SKU, weighted by minutes. Zero "
+                      "means no rate is loaded for that SKU on that line, and "
+                      "every rate-derived figure below is meaningless rather "
+                      "than zero"),
+    ("rate_mixed", "true when more than one rate applied"),
+    ("theoretical_capacity", "parts that could have been made in the recorded "
+                             "minutes at the standard rate"),
+    ("capacity_gap", "variance against target in parts; negative is under target"),
+    ("lost_capacity", "parts lost to recorded downtime at the standard rate"),
+    ("losses_accounted", "scrap parts plus lost capacity parts"),
+    ("losses_unexplained", "capacity_gap minus losses_accounted"),
+    ("ftq", "First Time Quality: good parts as a percentage of parts produced"),
+    ("p2p", "Produce to Plan: parts produced as a percentage of target"),
+    ("actual_min", "how long something took, in minutes"),
+    ("standard_min", "how long it is supposed to take, in minutes"),
+    ("variance_min", "actual minus standard, in minutes"),
+    ("variance_pct", "variance as a percentage of standard"),
+    ("summary", "the authoritative characterisation of this answer; paraphrase "
+                "it, never contradict it"),
+]
+
+
+def _glossary_for(payload):
+    """Only definitions for fields this payload actually carries.
+
+    The glossary used to be a fixed block naming capacity_gap, losses_accounted
+    and losses_unexplained for every intent. Only the line card carries those,
+    so the job and jobs_over cards were handed three definitions they had no
+    legitimate use for and reached for them, producing figures nobody computed
+    and, on the line card, two adjacent sentences that contradicted each other.
+    A card cannot misuse a field it was never told about (A03).
+    """
+    keys = payload.keys() if isinstance(payload, dict) else []
+    lines = ["- %s: %s" % (k, d) for (k, d) in FIELD_GLOSSARY if k in keys]
+    return "\n".join(lines) if lines else "- no numeric fields in this answer"
+
+
 GENERIC_NARRATIVE_PROMPT = """You are Herbie, a Lean manufacturing counselor.
 
 Every number below was calculated in Python. You may quote these numbers
@@ -115,22 +167,11 @@ RULES:
 DATA (Python-computed, quote numbers exactly):
 {data}
 
-FIELD GLOSSARY (use these definitions, never invent alternatives):
-- recorded_downtime_min: minutes the operator logged as downtime
-- unaccounted_min: minutes of production loss with no logged explanation
-- lost_capacity: theoretical unit capacity lost due to recorded downtime
-- capacity_gap: variance against target in units (negative = under target)
-- losses_accounted: scrap units + lost_capacity units
-- losses_unexplained: capacity_gap minus losses_accounted
-- ftq: First Time Quality (%)
-- p2p: Produce to Plan, Actual divided by Target (%)
-- actual_units: units produced that day, scrap included
-- target_units: the targets of the jobs scheduled on that line for that day
-- run_minutes: total minutes recorded across the day's hours. A day in progress
-  is short, and an individual hour in it may be partial
-- standard_rate: the line's rate for the SKU, weighted by minutes. Zero means no
-  rate is loaded for that SKU on that line, and every rate-derived figure below
-  is then meaningless rather than zero
+FIELD GLOSSARY. These are every field in this answer, with the only meanings
+they have. A quantity that is not defined here is not part of this data, and
+does not belong in the answer.
+
+{glossary}
 
 CONTEXT:
 {context}
@@ -684,6 +725,7 @@ def narrate(intent, stats, context=None, question=""):
         data=json.dumps(payload, indent=2, default=str),
         context=context or "(none)",
         intent_notes=intent_notes,
+        glossary=_glossary_for(payload),
         question=question
     )
 
