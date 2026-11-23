@@ -61,6 +61,32 @@ INTENT_NOTES = {
   job was scheduled there is nothing to compare, which is not the same as the
   line producing nothing.
 """,
+    "job": """JOB-SPECIFIC RULES:
+Write about this job using these fields and nothing else: job_number, line_id,
+line_name, sku_description, status, target_units, actual_units, scrap_units,
+run_minutes, recorded_downtime_min, unaccounted_min, ftq, p2p, and the hourly
+rows. If a quantity is not in that list it does not exist for this answer, and
+there is no need to say so.
+
+Every field keeps its own unit. target_units, actual_units and scrap_units are
+counts of parts: write them as parts. run_minutes, recorded_downtime_min and
+unaccounted_min are durations: write them as minutes and leave them as minutes.
+A duration stays a duration through the whole sentence.
+
+ftq is the percentage of produced parts that were good. p2p is produced parts
+as a percentage of the target. Both are percentages of parts, neither is a
+speed, and neither should be called a rate.
+
+A job with no recorded downtime beside a non-zero unaccounted_min is the
+ordinary case this product exists to catch: time was lost and no reason was
+written down. Say that in one sentence, then name the largest hour it happened
+in from the hourly rows, using that hour's own unaccounted_min.
+
+If the hourly rows carry operator notes, quote one with its hour. Mention that
+notes are absent only when every hour's note is empty.
+
+Close with what the line lead should go and find out, if anything.
+""",
 }
 
 
