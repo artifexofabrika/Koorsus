@@ -3,18 +3,25 @@
 
 For each of the five cards this computes the stats in Python, asks Herbie to
 narrate, and checks:
-  1. narrate returned source == "llm", not the template fallback
+  1. narrate returned source "llm", or "vetoed" when the tracer rejected the
+     model's prose and fell back to the template
   2. the narrative is not empty
-  3. every number in the narrative traces to the stats dictionary
+  3. every number in the narrative traces to the prompt the model was shown —
+     data, glossary, the context block with the operator notes, and the rules
 
-Check 3 reports rather than fails. A 3B model will occasionally write a
-number that is not in the data, and that is exactly what the HARD NUMBERS
-rule exists to prevent. Seeing it listed is the value.
+The trace uses herbie.untraced_numbers against herbie.build_prompt, which is
+the same pair the production veto uses. It used to be a second implementation
+here, and it compared against the stats dictionary alone, so a correct card
+quoting an operator note ("shift 1 on day 10") or the payload's own partial-hour
+marker ("H3 [partial hour, 32 of 60 min]") was reported as inventing numbers.
+Two copies of a check drift; one copy cannot.
+
+A veto is reported rather than hidden. The card is correct — the template wrote
+it — and the model is not, which is the distinction the sweep exists to show.
 
 Run: /home/jeeves/jeeves-env/bin/python tools/test_herbie_cards.py
 """
 import os
-import re
 import sqlite3
 import sys
 
@@ -28,6 +35,20 @@ DB = "/mnt/lake/myarra.db"
 conn = sqlite3.connect(DB)
 conn.row_factory = sqlite3.Row
 
+# Ordering hazard, A50. The code and the view changed together: herbie selects
+# unrated_min, and app.py recreates the views at import. Between the commit and
+# the restart the database still holds the old view, so this sweep would fail
+# with "no such column" and read as a broken card. Say what it is instead.
+_view_cols = {r[1] for r in conn.execute(
+    "PRAGMA table_info(v_unaccounted_minutes_by_run)")}
+if "unrated_min" not in _view_cols:
+    print("STALE VIEWS: v_unaccounted_minutes_by_run has no unrated_min column.")
+    print("The appliance is still running the views from before A50. app.py")
+    print("recreates them at import, so restart myarr and run this sweep again.")
+    print("Refusing to report a red card for a stale schema.")
+    conn.close()
+    sys.exit(2)
+
 
 def one(sql, default=None):
     try:
@@ -35,41 +56,6 @@ def one(sql, default=None):
         return r[0] if r and r[0] is not None else default
     except sqlite3.Error:
         return default
-
-
-def numbers_in_text(text):
-    # "WO-2611-201" reads as two negative numbers. Strip job numbers before
-    # looking for figures the model invented.
-    text = re.sub(r"WO-?\d+-\d+", " ", text, flags=re.IGNORECASE)
-    text = re.sub(r"\d{4}-\d{2}-\d{2}", " ", text)
-    # "P2P" contains a 2 that is not a figure.
-    text = text.replace("P2P", " ")
-    out = set()
-    for m in re.finditer(r"-?\d[\d,]*(?:\.\d+)?", text):
-        try:
-            out.add(float(m.group(0).replace(",", "")))
-        except ValueError:
-            pass
-    return out
-
-
-def numbers_in_obj(obj):
-    out = set()
-    if isinstance(obj, dict):
-        for v in obj.values():
-            out |= numbers_in_obj(v)
-    elif isinstance(obj, (list, tuple)):
-        for v in obj:
-            out |= numbers_in_obj(v)
-    elif isinstance(obj, bool):
-        pass
-    elif isinstance(obj, str):
-        # Pre-computed fields such as "summary" carry numbers as text. Those
-        # are numbers the model is allowed to quote.
-        out |= numbers_in_text(obj)
-    elif isinstance(obj, (int, float)):
-        out.add(float(obj))
-    return out
 
 
 line_id = one("SELECT id FROM lines ORDER BY id LIMIT 1", 1)
@@ -110,6 +96,7 @@ if day:
                            herbie.get_floor_context(conn, day_line, day))))
 
 failed = 0
+vetoed = 0
 for intent, question, build in cards:
     stats, context = build()
     if isinstance(stats, dict) and "error" in stats:
@@ -120,6 +107,16 @@ for intent, question, build in cards:
     result = herbie.narrate(intent, stats, context, question)
     source = result.get("source")
     narrative = (result.get("narrative") or "").strip()
+
+    if source == "vetoed":
+        # The card is correct — the template wrote it — and the model is not.
+        # Reported separately so the two are never confused.
+        vetoed += 1
+        print("VETO  %-12s numbers=%s" % (intent, result.get("vetoed_numbers")))
+        print("        rejected: " + ((result.get("rejected") or "")
+                                      .replace(chr(10), " "))[:300])
+        print("        template: " + narrative.replace(chr(10), " ")[:300])
+        continue
 
     # A job with no runs legitimately has nothing to narrate. Every other
     # card must come from the model.
@@ -141,12 +138,13 @@ for intent, question, build in cards:
         print("        " + narrative[:200])
         continue
 
-    untraced = sorted(numbers_in_text(narrative) - numbers_in_obj(stats))
+    prompt = herbie.build_prompt(intent, stats, context, question)
+    untraced = sorted(herbie.untraced_numbers(narrative, prompt))
     if untraced:
         print("        UNTRACED NUMBERS: %s" % untraced)
         print("        " + narrative.replace(chr(10), " "))
 
 conn.close()
 print("")
-print("%d cards, %d failed" % (len(cards), failed))
-sys.exit(1 if failed else 0)
+print("%d cards, %d failed, %d vetoed" % (len(cards), failed, vetoed))
+sys.exit(1 if (failed or vetoed) else 0)

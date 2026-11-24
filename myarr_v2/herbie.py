@@ -14,6 +14,7 @@ large and the accounted losses are small, the correct diagnosis is
 standard may need reevaluation."
 """
 import json
+import re
 import requests
 import sqlite3
 
@@ -811,6 +812,80 @@ def _fallback_narrative(intent, stats):
     return str(stats)
 
 
+# ============================================================
+# The tracer, and the veto (item 2, agreed 2026-11-24)
+# ============================================================
+
+_JOB_NUMBER_RE = re.compile(r"WO-?\d+-\d+", re.IGNORECASE)
+_ISO_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+_FIGURE_RE = re.compile(r"-?\d[\d,]*(?:\.\d+)?")
+
+
+def numbers_in_text(text):
+    """Every figure in a string, as floats. Job numbers and dates are not figures.
+
+    "WO-2611-201" reads as two negative numbers to a naive scan and an ISO date
+    reads as three, so both are removed first. P2P carries a 2 that is not one.
+    """
+    t = _JOB_NUMBER_RE.sub(" ", text or "")
+    t = _ISO_DATE_RE.sub(" ", t)
+    t = t.replace("P2P", " ")
+    out = set()
+    for m in _FIGURE_RE.finditer(t):
+        try:
+            out.add(float(m.group(0).replace(",", "")))
+        except ValueError:
+            pass
+    return out
+
+
+def untraced_numbers(narrative, prompt):
+    """Figures in the narrative that appear nowhere in the prompt.
+
+    Agreed 2026-11-24, replacing the check that ran against the stats dictionary
+    alone. That version called a correct card a liar: it reported [32.0, 3.0]
+    and [10.0] as invented when 32 came from the payload marker "H3 [partial
+    hour, 32 of 60 min]", 3 from the hour label H3, and 10 from an operator note
+    reading "shift 1 on day 10". All three were in the prompt; none were in the
+    stats object. Those quotes are the most valuable thing the cards produce, so
+    a check that punishes them would remove the wrong thing.
+
+    The trace is therefore the whole prompt: data, glossary, context block with
+    the operator notes, intent rules and the question. A number the model was
+    shown is not a number it invented.
+
+    Residual weakness, recorded rather than hidden: the intent rules contain
+    figures of their own ("Under 180 words", and the 32/152 example in the
+    line_day note), so those specific numbers trace to the rule text rather than
+    to the data. That is looser than a data-only trace, and it is the price of
+    not vetoing quotes from context. It cannot excuse a number that appears
+    nowhere.
+    """
+    return numbers_in_text(narrative) - numbers_in_text(prompt)
+
+
+def build_prompt(intent, stats, context=None, question=""):
+    """The exact prompt sent to the model. Exposed so the trace runs on it.
+
+    Keeping one constructor is the point: a checker that rebuilds the prompt
+    itself can drift from the one the model saw, and then a green check is
+    evidence about the checker.
+    """
+    intent_notes = INTENT_NOTES.get(intent, "(none)")
+    # For jobs_over, the raw jobs array confuses small models. Strip it.
+    # The summary field already contains the authoritative answer.
+    payload = dict(stats)
+    if intent == "jobs_over" and isinstance(payload.get("jobs"), list):
+        payload["jobs"] = f"[{len(payload['jobs'])} jobs - see summary]"
+    return GENERIC_NARRATIVE_PROMPT.format(
+        data=json.dumps(payload, indent=2, default=str),
+        context=context or "(none)",
+        intent_notes=intent_notes,
+        glossary=_glossary_for(payload),
+        question=question
+    )
+
+
 def narrate(intent, stats, context=None, question=""):
     """Generic narrator for the /herbie web route. LLM-driven with template fallback."""
     if isinstance(stats, dict) and stats.get("actual_units") == 0 and stats.get("run_minutes") == 0:
@@ -831,19 +906,7 @@ def narrate(intent, stats, context=None, question=""):
     if isinstance(stats, dict) and "error" in stats:
         return {"narrative": stats["error"], "source": "error"}
 
-    intent_notes = INTENT_NOTES.get(intent, "(none)")
-    # For jobs_over, the raw jobs array confuses small models. Strip it.
-    # The summary field already contains the authoritative answer.
-    payload = dict(stats)
-    if intent == "jobs_over" and isinstance(payload.get("jobs"), list):
-        payload["jobs"] = f"[{len(payload['jobs'])} jobs - see summary]"
-    prompt = GENERIC_NARRATIVE_PROMPT.format(
-        data=json.dumps(payload, indent=2, default=str),
-        context=context or "(none)",
-        intent_notes=intent_notes,
-        glossary=_glossary_for(payload),
-        question=question
-    )
+    prompt = build_prompt(intent, stats, context, question)
 
     try:
         r = requests.post(LLM_URL, json={
@@ -856,6 +919,17 @@ def narrate(intent, stats, context=None, question=""):
         }, timeout=LLM_TIMEOUT)
         r.raise_for_status()
         narrative = r.json()["choices"][0]["message"]["content"].strip()
+        stray = untraced_numbers(narrative, prompt)
+        if stray:
+            # Agreed 2026-11-24: the tracer warned and the warning was read by
+            # nobody who could act on it. A figure the model was not shown is
+            # the one failure a plant manager cannot detect by reading, so the
+            # narrative is replaced by the template and the model's text is
+            # kept for the next session to look at rather than thrown away.
+            return {"narrative": _fallback_narrative(intent, stats),
+                    "source": "vetoed",
+                    "vetoed_numbers": sorted(stray),
+                    "rejected": narrative}
         return {"narrative": narrative, "source": "llm"}
     except Exception as e:
         return {"narrative": _fallback_narrative(intent, stats), "source": "fallback", "error": str(e)}
