@@ -1,10 +1,21 @@
-﻿"""Authentication: username and PIN, with a shared-PIN fallback for first run.
+"""Authentication: username and PIN, with a shared-PIN fallback for first run.
 
 If the users table is empty the appliance still accepts config.ARKIV_PIN with
 any name, so a half-finished migration cannot lock anyone out. The moment a
 named account exists, the fallback stops applying.
+
+A SECOND WAY IN, FOR LOCAL PROCESSES (2026-11-24, A44)
+A service caller is not a person: it has no session and no login form. The
+Myarra bot's SOP handler used to reach the legacy Koorsus on port 5000, which had
+no authentication at all, so retiring that service would have taken its answers
+with it. Loopback callers may now present a shared token instead of a session,
+read from KOORSUS_LOCAL_TOKEN_FILE. The token is accepted only from 127.0.0.1 or
+::1, and only when the file exists and holds something: an appliance without the
+file behaves exactly as it did before, which is the property that makes this safe
+to ship.
 """
 import hmac
+import os
 import time
 
 from flask import (request, session, redirect, url_for, jsonify,
@@ -17,6 +28,37 @@ from templates_html import LOGIN_PAGE
 _FAILED = {}
 _LOCK_MIN = 15
 _MAX_FAILS = 5
+
+_LOCAL_ADDRS = ("127.0.0.1", "::1")
+TOKEN_FILE = os.environ.get("KOORSUS_LOCAL_TOKEN_FILE",
+                            "/home/jeeves/.koorsus-local.token")
+
+
+def local_token():
+    """The shared token for local service callers, or an empty string."""
+    try:
+        with open(TOKEN_FILE) as fh:
+            return fh.read().strip()
+    except OSError:
+        return ""
+
+
+def local_token_ok():
+    """True when this request is a loopback caller holding the shared token.
+
+    Deliberately three conditions, all of them necessary: the peer is loopback,
+    the appliance has a token at all, and the presented value matches it in
+    constant time. A missing or empty token file disables the path rather than
+    opening it, because the failure mode of a permission check should be a
+    refusal.
+    """
+    if request.remote_addr not in _LOCAL_ADDRS:
+        return False
+    expected = local_token()
+    if not expected:
+        return False
+    given = request.headers.get("X-Koorsus-Token") or ""
+    return hmac.compare_digest(given, expected)
 
 
 def client_ip():
@@ -108,6 +150,8 @@ def register(app):
         if request.endpoint in ("login", "favicon", "static"):
             return None
         if session.get("authenticated"):
+            return None
+        if local_token_ok():
             return None
         if request.method == "GET" and request.path in ("/", "/ingest", "/admin", "/users"):
             return redirect(url_for("login", next=request.path))

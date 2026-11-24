@@ -1,7 +1,18 @@
 """bot/support.py — Status queries, help text, and SOP proxy."""
+import os
+
 import requests
 
 from . import db
+
+# A44, agreed 2026-11-24. SOP answers used to come from the legacy Koorsus on
+# port 5000, which had no authentication at all and is being retired. The live
+# Koorsus on 5003 requires it, so the bot presents the appliance's local token.
+# Both the URL and the token path are overridable so a test never has to touch a
+# real service.
+SOP_URL = os.environ.get("KOORSUS_SOP_URL", "https://127.0.0.1:5003/ask")
+SOP_TOKEN_FILE = os.environ.get("KOORSUS_LOCAL_TOKEN_FILE",
+                               "/home/jeeves/.koorsus-local.token")
 
 
 def h_help(conn, s, text, user):
@@ -105,16 +116,39 @@ def h_status_line(conn, s, text, user):
     return "\n".join(out)
 
 
+def _sop_token():
+    try:
+        with open(SOP_TOKEN_FILE) as fh:
+            return fh.read().strip()
+    except OSError:
+        return ""
+
+
 def h_sop(conn, s, text, user):
     import re
     q = re.sub(r'^(sop|ask|question)[,:\s]+', '', text, flags=re.IGNORECASE).strip()
     if not q:
         return "What is your question?"
+    token = _sop_token()
+    if not token:
+        return ("The document service is not set up on this appliance: there is "
+                "no local token at " + SOP_TOKEN_FILE + ", so the question was "
+                "not sent.")
     try:
-        r = requests.post("http://127.0.0.1:5000/ask", json={'question': q}, timeout=60)
+        # The peer is this same machine and the certificate is its own, so
+        # verification is off rather than pointed at a CA that does not exist.
+        # Nothing here crosses a network. If this ever moves to another host,
+        # this line is the first thing that has to change.
+        r = requests.post(SOP_URL, json={'question': q},
+                          headers={'X-Koorsus-Token': token},
+                          timeout=60, verify=False)
         if r.status_code == 200:
             d = r.json()
             return d.get('answer') or d.get('response') or str(d)
+        if r.status_code == 401:
+            return ("The document service rejected the bot's token. Check that "
+                    + SOP_TOKEN_FILE + " holds the same value the Koorsus app "
+                    "reads, and that the app has been restarted since.")
         return f"Document service returned {r.status_code}."
     except Exception as e:
         return f"Document service unavailable: {e}"
