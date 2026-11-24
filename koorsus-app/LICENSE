@@ -1,0 +1,31 @@
+# Functional Source License, Version 1.1, MIT Future License
+
+SPDX-License-Identifier: FSL-1.1-MIT
+
+## Notice
+
+Copyright 2026 Artifexo Fabrika, LLC
+
+## Status of this file
+
+This file records the license that governs Arkiv. The canonical text of the
+Functional Source License 1.1 (MIT Future License) is published at:
+
+    https://fsl.software/
+    https://spdx.org/licenses/FSL-1.1-MIT.html
+
+Before the first commercial distribution, replace this summary with the
+canonical text from fsl.software, preserving the copyright notice above.
+The summary below is a plain-language description, not the operative text.
+
+## What this license means
+
+- You receive the source code of every version we make available.
+- You may read it, run it, copy it, modify it, and create derivative works
+  for any purpose other than a Competing Use.
+- A Competing Use is making this software available to others in a commercial
+  product or service that substitutes for Arkiv. You may not sell it.
+- You may redistribute it under the same license, with this notice intact.
+- Each version converts to the MIT license on the second anniversary of the
+  date that version was first made available under this license.
+- The software is provided "as is", without warranty of any kind.

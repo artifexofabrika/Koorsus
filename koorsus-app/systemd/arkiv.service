@@ -1,0 +1,24 @@
+[Unit]
+Description=Arkiv document assistant
+After=network.target koorsus-llm.service
+Wants=koorsus-llm.service
+
+[Service]
+User=jeeves
+Group=jeeves
+Environment="PYTHONUNBUFFERED=1"
+WorkingDirectory=/home/jeeves/arkiv
+ExecStart=/home/jeeves/jeeves-env/bin/gunicorn \
+    --bind 0.0.0.0:5001 \
+    --workers 2 \
+    --timeout 180 \
+    --access-logfile - \
+    --error-logfile - \
+    --certfile /home/jeeves/myarra-certs/myarra-cert.pem \
+    --keyfile /home/jeeves/myarra-certs/myarra-key.pem \
+    app:app
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

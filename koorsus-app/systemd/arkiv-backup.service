@@ -1,0 +1,12 @@
+[Unit]
+Description=Arkiv nightly index backup
+After=arkiv.service
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+Environment="ARKIV_BACKUP_DIR=/mnt/arkiv-backup"
+Environment="ARKIV_INDEX_DIR=/mnt/lake/arkiv_index"
+Environment="ARKIV_BACKUP_LOG=/var/log/arkiv-backup.log"
+ExecStart=/home/jeeves/arkiv/backup.sh

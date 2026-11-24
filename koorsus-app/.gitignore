@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.bak*
+*.bak_*
+config.py
+*.log
+.DS_Store
+
+instance/
+demo_corpus/
+demo_corpus.txt
+.venv/
+venv/
+env/
+.pytest_cache/

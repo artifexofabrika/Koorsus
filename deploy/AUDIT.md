@@ -472,10 +472,16 @@ A54 OPEN  Found 2026-11-24 while repairing A53. The seven scripts in
           job that writes koorsus-*.tar.gz.enc with one that writes arkiv-*.enc
           into a directory Koorsus does not read. The timer installed on
           2026-11-24 would keep reporting success while writing nothing useful.
-          Not fixed, and not an edit: the repair is a decision about where the
-          Koorsus scripts live. They belong in a repository of their own, or under
-          deploy/ in this one with the installer copying them. Either is a
-          structure change, not a cleanup.
+          Half fixed 2026-11-24. The ten scripts are in deploy/koorsus-scripts/
+          with a README naming each one's state, and the application itself is now
+          snapshotted into koorsus-app/ in this repository: 47 files after the ten
+          scripts were deliberately left out to avoid a second copy of them, with
+          a PROVENANCE.md recording the source commit, what was excluded because it
+          is secret or runtime, and which files are Arkiv-named and stale.
+          Still open: koorsus-app.service runs from /home/jeeves/koorsus, so two
+          copies exist until that WorkingDirectory is re-pointed and tested. That
+          order is in A44, and PROVENANCE.md says which copy is which in the
+          meantime.
           Label: blocks a pilot. Uncommitted production code on a customer
           appliance is recoverability lost without anyone noticing.
 
