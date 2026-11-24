@@ -283,10 +283,27 @@ A47 OPEN  A line transition closes the current event and inserts the next one
 
 ## S3
 
-A14 OPEN  /etc/koorsus-backup.key encrypts every archive and is outside every
-          archive. Lose it and the archives become unreadable noise,
-          permanently, with no recovery path. Escrow is not a documented step
-          anywhere.
+A14 OPEN  Half done 2026-11-24. /etc/koorsus-backup.key encrypts every archive
+          and is outside every archive. Lose it and the archives become
+          unreadable noise, permanently, with no recovery path. Escrow was not a
+          documented step anywhere, in the installer or in the install notes.
+          Built: deploy/ESCROW.md, which states the model (two holders in the
+          plant's password manager, one printed copy sealed and held off site,
+          kept apart from the USB archives because a key in the same bag as the
+          ciphertext is one loss rather than two), the sealing procedure, and
+          what must never happen. deploy/backup/escrow-check.sh proves a
+          passphrase read off paper opens an archive on a machine that is not the
+          appliance, and it separates the two failures that need different
+          actions: it verifies the archive's own .sha256 before decrypting, so a
+          damaged file is reported as damaged rather than as mis-keyed.
+          15 checks in test-escrow-check.sh, no root and no appliance needed.
+          Not closed, deliberately: recoverability exists when a copy is off site
+          and has been used, not when a procedure is written down. The sealed copy
+          is the owner's act. Until it is sealed, stored apart from the archives,
+          and run once against the oldest archive still held, this stays open.
+          An instance cannot escrow anything on the owner's behalf, and an
+          instance that marks this fixed because the document exists has confused
+          a procedure with a copy.
 
 A15 OPEN  /mnt/appliance-backup is on the same filesystem as the data. The
           archive protects against deletion and corruption, not against the
