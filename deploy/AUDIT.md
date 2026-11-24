@@ -514,11 +514,18 @@ A39 OPEN  /mnt/lake is shared by four products: arkiv_index plus five archived
 A40 OPEN  Sudo prompts for a password. The 2026-11-06 delta claims passwordless
           sudo was configured and proven.
 
-A41 OPEN  HANDOVER says of ~/koorsus, "a local clone of ~/arkiv. Ignore it."
-          It is the live Koorsus on 5003.
+A41 FIXED 2026-11-24. HANDOVER.md said of ~/koorsus, "a local clone of ~/arkiv.
+          Ignore it." It is the live Koorsus on 5003, started by
+          koorsus-app.service, and the instruction to ignore it cost a session.
+          Corrected in place in section 3 with the date and with what it
+          actually is.
 
-A42 OPEN  HANDOVER says backup and restore does not exist. It does, and has
-          since 2026-11-17 for Koorsus and 2026-11-20 for the appliance.
+A42 FIXED 2026-11-24. HANDOVER.md said backup and restore did not exist and was
+          required before any install. It exists, and had since 2026-11-17 for
+          Koorsus and 2026-11-20 for the appliance, with a scratch restore and an
+          in-place restore both proven. Since this correction it also has a USB
+          export carrying both products, a nightly Koorsus index timer, and a
+          tested escrow procedure. Corrected in place in section 6.
 
 A43 OPEN  ~/koorsus/systemd/ holds arkiv-branded units for port 5001 that are
           not what runs. The live unit is koorsus-app.service on 5003.
@@ -541,12 +548,12 @@ the only finding there whose shape is known. Expect more.
 
 ## Counts
 
-52 findings. 18 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
-2026-11-20, A06, A45 and A49 on 2026-11-22, A01, A50 and A52 on 2026-11-24, and
-the repository cleanup of A28, A29, A30, A31 and A32 later the same day.
-34 open. A45, A47, A48 and A49 were written down on 2026-11-22, and A50, A51,
-A52 and A53 on 2026-11-24, found while proving and repairing A01, A50 and A14.
-A46 is still unaccounted for.
+52 findings. 20 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
+2026-11-20, A06, A45 and A49 on 2026-11-22, A01, A50 and A52 on 2026-11-24, the
+repository cleanup of A28 to A32 later the same day, and A41 and A42 when
+HANDOVER.md was corrected. 32 open. A45, A47, A48 and A49 were written down on
+2026-11-22, and A50, A51, A52 and A53 on 2026-11-24, found while proving and
+repairing A01, A50 and A14. A46 is still unaccounted for.
 
 Tools that produced them, all in the repository and all re-runnable:
 tools/test_csv_roundtrip.py, tools/test_pages.py, tools/test_herbie_cards.py,

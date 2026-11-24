@@ -4,16 +4,26 @@ Written 2026-11-19. This is the state of the union and it
 supersedes HANDOFF.md (2026-11-03), which describes a project that
 no longer exists. The session deltas remain the detailed history.
 
+CORRECTED 2026-11-24. Five sessions have happened since this was written, and
+several statements below were true on 19 November and are not true now. They are
+corrected in place with their dates, in the manner deploy/STATE.md uses: a state
+document that keeps a comfortable old sentence is worse than none, because the
+next reader cannot tell which half is current. Where this file and
+deploy/STATE.md disagree, STATE.md wins. deploy/AUDIT.md is the catalogue of
+defects, not section 6 below.
+
 ## 1. Read these, in this order
 
 1. PHILOSOPHY.md. Governing, never superseded. If a change
    contradicts it, the change is wrong.
-2. This file.
-3. SESSION-DELTA-2026-11-13-SPINE-AUTHORITY.md and
-   SESSION-DELTA-2026-11-13-AFTERNOON.md, the most recent technical
-   record.
-4. HERBIE-ARCHITECTURE.md, the three-layer design.
-5. Do not read HANDOFF.md as current. It describes bot_v2.py,
+2. deploy/STATE.md. The current state, corrected in place, with what is
+   proven and what is merely believed.
+3. deploy/AUDIT.md. 52 findings, 20 fixed, 32 open, each naming a file and
+   an observation that can be repeated.
+4. SESSION-DELTA-2026-11-23.md, the most recent session, and the deltas
+   before it as far back as the question needs.
+5. HERBIE-ARCHITECTURE.md, the three-layer design.
+6. Do not read HANDOFF.md as current. It describes bot_v2.py,
    Waitress and five lines.
 
 ## 2. What the product is
@@ -43,7 +53,10 @@ premise, no subscription, GPL v3, the customer owns the hardware.
   the website.
 - ~/arkiv is Arkiv, a different product, separate repo, with its own
   START-HERE.md. Not this project.
-- ~/koorsus is a local clone of ~/arkiv. Ignore it.
+- ~/koorsus is NOT a spare clone. It is the live Koorsus on port 5003,
+  started by koorsus-app.service. This line used to say it was a local
+  clone of ~/arkiv and to ignore it, which was wrong and cost a session
+  (A41).
 
 ## 4. State as of 2026-11-19
 
@@ -93,45 +106,41 @@ Believed built and working. Verify, do not assume.
 
 ## 6. Open, in priority order
 
-Blocking a customer install:
+Written 2026-11-19 and mostly consumed since. Four of these were closed by work
+that deserves to stay visible rather than be quietly deleted, so they are marked
+with their dates. The live list is deploy/AUDIT.md.
 
-1. Backup and restore. None exists. Required before any install.
-2. Installation procedure document. None exists.
-3. Config extraction. DB_PATH is an environment variable; cert
-   paths and LLM_URL are still in source.
-4. Odoo master-data import and the line-mapping screen. Only work
+Closed since: backup and restore (2026-11-20, and as of 2026-11-24 with a USB
+export carrying both products, a nightly Koorsus index timer, and a tested escrow
+procedure); the installation procedure (deploy/INSTALL.md); config extraction
+(2026-11-19, myarra_settings.py owns DB_PATH, LLM_URL and the tokens); the /floor
+write path C27 (2026-11-22, start, end and the three switches, verified 15 of 15);
+the CSV round-trip (2026-11-20, 8 checks); the systematic test pass (2026-11-20,
+and 27 routes as of 2026-11-24); and the audit itself (deploy/AUDIT.md, rebuilt
+twice, now 52 findings).
+
+Still open:
+
+1. Odoo master-data import and the line-mapping screen. Only work
    orders are imported today.
-
-Blocking correctness:
-
-5. /floor write path (C27). It writes no line_events, no source and
-   no user_id, and hardcodes shift='1' and duration_min=60. Must be
-   fixed before Whisper lands in the same POST.
-6. CSV round-trip with real data. Never run. This is the exact path
-   a customer walks during onboarding.
-7. Systematic test pass: every page, every Herbie card, every bot
-   path. Never run.
-8. Timestamp strategy across all tables. DEFAULT CURRENT_TIMESTAMP
-   is UTC, Python writes local. Both are in use.
-9. Regenerate the audit. The 115-finding audit from 2026-11-13 was
-   never saved to disk. Only eight priorities survived, and two are
-   now closed (rate averaging, /ask view list). Rebuild it from the
-   code rather than searching for the original.
-
-Next features:
-
-10. Whisper and /api/transcribe, then a microphone button on /floor
-    that parses units and scrap from the transcript.
-11. Odoo work order notes into jobs.handover_notes, HTML stripped.
-12. Idle versus planned idle (O1). Deferred until the owner writes
-    the PHILOSOPHY amendment in his own hand.
+2. Timestamp strategy across all tables. DEFAULT CURRENT_TIMESTAMP
+   is UTC, Python writes local. Both are in use. Never filed as a
+   numbered finding, which is its own problem.
+3. Whisper and /api/transcribe, then a microphone button on /floor
+   that parses units and scrap from the transcript.
+4. Odoo work order notes into jobs.handover_notes, HTML stripped.
+5. Idle versus planned idle (O1). Deferred until the owner writes
+   the PHILOSOPHY amendment in his own hand.
 
 ## 7. Parking lot
 
-Repo hygiene, none of it functional: delete bot/db.py.bak_live and
-bot/shift.py.bak_shiftcode; archive bot_live.py, telegram_bot.py and
-bot_v3.py; fix the false TEMPORARY BRIDGE comment in bot/jobs.py;
-note that bot_live_v3.py is the live entry point despite its name.
+Repo hygiene, done 2026-11-24 except one item. The .bak files are gone (41 of
+them across the tree, not the two named here), bot_live.py, telegram_bot.py,
+bot_v3.py and intent.py are deleted along with both spare copies of the tree and
+every __pycache__, and telegram-bot.service went with the script it started.
+Still outstanding: the false TEMPORARY BRIDGE comment in bot/jobs.py, which is
+A35. bot_live_v3.py is still the live entry point despite its name, which is A36
+and needs the unit edited rather than the file renamed.
 
 Product: MCP server for strategy-layer interop, read-only tools
 first; TEEP and facility OEE, distinct from conditional OEE;
@@ -160,8 +169,9 @@ funding-dependent.
   alignment in generate_demo_history.py, the full eight-hour
   skeleton on /line/<id>/report, and the bare-confirm phone test. A
   later delta not mentioning something is not evidence it was done.
-- The audit is missing, as above. Without it, this priority order
-  is inferred from deltas rather than from a catalogue.
+- The audit is no longer missing, corrected 2026-11-24. deploy/AUDIT.md holds 52
+  findings, each naming a file and an observation that can be repeated, and the
+  priority order in section 6 is now derived from it rather than from deltas.
 
 ## 9. How to resume
 
