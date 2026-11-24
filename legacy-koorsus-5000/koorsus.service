@@ -1,7 +1,7 @@
 [Unit]
 Description=Koorsus web application
-After=network.target llama-server.service
-Wants=llama-server.service
+After=network.target koorsus-llm.service
+Wants=koorsus-llm.service
 
 [Service]
 Environment="PYTHONUNBUFFERED=1"
