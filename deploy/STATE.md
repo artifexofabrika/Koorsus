@@ -158,6 +158,27 @@ myarr_v2/requirements.txt created and pinned from actual imports: Flask
   restore made the tree recoverable, which is the habit it was the seed of.
   It is closed, and closing it here is the point of writing it down.
 
+## Repository access, 2026-11-24
+
+origin is git@github.com:artifexofabrika/Koorsus.git over SSH, using
+~/.ssh/id_ed25519 (no passphrase), verified with ssh -T git@github.com
+answering "Hi artifexofabrika!". It was HTTPS until 2026-11-24, and HTTPS
+demanded a personal access token at every push.
+
+Two rules, both arrived at by nearly paying for them.
+
+1. List the commits before pushing. git status -sb says "ahead 6", which is a
+   number; git log --oneline origin/main..main says which six. That is the check
+   that catches a stray commit, or a line-ending normalisation, riding along in
+   a batch, and it costs one line.
+
+2. Never persist a credential on an appliance. No credential.helper store, no
+   token in a remote URL, no ~/.git-credentials. All three work, and all three
+   leave a personal access token in plaintext on a machine a customer will
+   eventually own. If SSH is refused for some reason, typing the token at an
+   interactive prompt each time is the correct cost, and it is the owner's to
+   pay rather than the instance's to automate away.
+
 ## Parking lot, hygiene and cleanup
 
 - Five .bak files in the bot package: production.py.bak_override,
