@@ -312,10 +312,36 @@ A15 OPEN  /mnt/appliance-backup is on the same filesystem as the data. The
           archive protects against deletion and corruption, not against the
           disk dying.
 
-A16 OPEN  export-usb.sh and import-usb.sh in /usr/local/sbin/koorsus are
-          hardcoded to /mnt/koorsus-backup and do not carry the appliance
-          archive. So Myarra has no offsite backup path at all, only Koorsus
-          does.
+A16 OPEN  Half done 2026-11-24. export-usb.sh and import-usb.sh in
+          /usr/local/sbin/koorsus are hardcoded to /mnt/koorsus-backup and do not
+          carry the appliance archive, so Myarra had no offsite path at all.
+          Built: deploy/backup/export-usb.sh and import-usb.sh carry both
+          products' newest archives with a manifest the import reads instead of
+          guessing which archive belongs to which product. Every checksum is
+          verified after the copy to the device and again after staging, a damaged
+          copy is reported as damaged rather than as a wrong passphrase, and a
+          device that already holds a passphrase file is refused outright, because
+          the key must not travel with the ciphertext (A14).
+          Import stages and stops. It prints the archives now available and how to
+          restore any of them, so a plant that discovers three days later it was
+          running the wrong thing can go back to an older archive without the
+          appliance restoring itself because somebody inserted a stick. It also
+          refuses a manifest naming a destination this appliance does not own: a
+          device does not get to choose where files land.
+          20 checks in test-usb-roundtrip.sh, no root and no stick: newest not
+          oldest, manifest names both products, no key on the device, staleness
+          warning, foreign destination refused, damaged archive refused, and the
+          import restoring nothing.
+          Also built: deploy/koorsus-backup.service and .timer, because nothing
+          scheduled the Koorsus index backup and the newest archive on the
+          reference appliance was a week old, which the export would have carried
+          and called an offsite copy. 03:15 sits between Arkiv's 03:00 and the
+          appliance's 03:30 so the three nightly jobs do not contend for the disk.
+          Not closed: the unit needs installing with sudo and running once, and the
+          old Koorsus-only scripts in /usr/local/sbin/koorsus still sit there with
+          the old behaviour. An operator who reaches for those gets a Koorsus-only
+          export that restores on insert, which is the same shape as A53 and
+          belongs to the Koorsus tree rather than this repository.
 
 A17 OPEN  No document root. Koorsus stores extracted text and metadata and
           never the original file, so the document estate lives wherever the

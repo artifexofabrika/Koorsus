@@ -1,0 +1,11 @@
+# Template. Copy to /etc/systemd/system/koorsus-backup.timer.
+[Unit]
+Description=Run the Koorsus index backup daily at 03:15
+
+[Timer]
+OnCalendar=*-*-* 03:15:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

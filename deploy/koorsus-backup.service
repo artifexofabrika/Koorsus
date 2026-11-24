@@ -1,0 +1,26 @@
+# Template. Copy to /etc/systemd/system/koorsus-backup.service.
+#
+# Until 2026-11-24 nothing scheduled the Koorsus index backup. The newest
+# archive on the reference appliance was a week old, so the USB export would
+# have carried a week-old index and called it an offsite copy, and no document
+# would have disagreed.
+#
+# 03:15 sits between Arkiv's 03:00 and the appliance's 03:30 deliberately, so the
+# three nightly jobs do not contend for the same disk.
+#
+# ARKIV_BACKUP_KEY is set explicitly rather than relied on as a default, because
+# A53 is the finding that the same default drift turns a restore into a bad
+# decrypt: the backups are written with /etc/koorsus-backup.key.
+[Unit]
+Description=Koorsus index nightly backup
+After=koorsus-app.service
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+Environment="ARKIV_BACKUP_DIR=/mnt/koorsus-backup"
+Environment="ARKIV_BACKUP_KEY=/etc/koorsus-backup.key"
+Environment="ARKIV_BACKUP_LOG=/var/log/koorsus-backup.log"
+ExecStart=/usr/local/sbin/koorsus/backup.sh
+ExecStartPost=/usr/local/sbin/koorsus/verify-backup.sh
