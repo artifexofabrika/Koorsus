@@ -20,7 +20,17 @@ COALESCE stays as belt-and-braces for any install whose generator
 predates that fix. A future editor who "cleans up" the join will
 break those installs. Leave it.
 
-Run once: python3 views.py. Idempotent: drops and recreates all nine.
+Run once: python3 views.py. Idempotent: drops and recreates all twelve.
+
+A MISSING RATE NULLS A COLUMN, IT NEVER DROPS A ROW (agreed 2026-11-24, A50)
+v_unaccounted_minutes_by_run used to end with "AND lsr.ideal_rate > 0", so an
+hour with no rate for its SKU disappeared from the view altogether and took its
+recorded downtime with it. Recorded downtime is a duration read off
+downtime_events and it never needed a rate, so a card could say that no downtime
+was recorded about an hour that had a logged repair. The rate-derived columns
+are NULL without a rate; the row and every rate-free column stay. unrated_min
+carries the duration that could not be scored, so a consumer can say how much of
+a total is unknown instead of presenting a partial sum as a whole.
 """
 from db import get_db_connection
 
@@ -218,17 +228,24 @@ SELECT
     r.scrap_units,
     r.notes,
     lsr.ideal_rate,
-    ROUND(((r.duration_min * lsr.ideal_rate) / 60.0) - r.units_filled, 0) AS gap_units,
-    ROUND((((r.duration_min * lsr.ideal_rate) / 60.0) - r.units_filled) / (lsr.ideal_rate / 60.0), 1) AS gap_min,
+    CASE WHEN lsr.ideal_rate > 0
+         THEN ROUND(((r.duration_min * lsr.ideal_rate) / 60.0) - r.units_filled, 0)
+         ELSE NULL END AS gap_units,
+    CASE WHEN lsr.ideal_rate > 0
+         THEN ROUND((((r.duration_min * lsr.ideal_rate) / 60.0) - r.units_filled) / (lsr.ideal_rate / 60.0), 1)
+         ELSE NULL END AS gap_min,
     COALESCE(SUM(d.minutes), 0) AS recorded_downtime_min,
-    ROUND(MAX(0, ((((r.duration_min * lsr.ideal_rate) / 60.0) - r.units_filled) / (lsr.ideal_rate / 60.0)) - COALESCE(SUM(d.minutes), 0)), 1) AS unaccounted_min
+    CASE WHEN lsr.ideal_rate > 0
+         THEN ROUND(MAX(0, ((((r.duration_min * lsr.ideal_rate) / 60.0) - r.units_filled) / (lsr.ideal_rate / 60.0)) - COALESCE(SUM(d.minutes), 0)), 1)
+         ELSE NULL END AS unaccounted_min,
+    CASE WHEN COALESCE(lsr.ideal_rate, 0) > 0
+         THEN 0 ELSE COALESCE(r.duration_min, 0) END AS unrated_min
 FROM hourly_runs r
 JOIN jobs j ON j.id = r.job_id
 LEFT JOIN line_sku_rates lsr ON lsr.line_id = r.line_id AND lsr.sku_id = j.sku_id
 LEFT JOIN downtime_events d ON d.run_id = r.id
 WHERE r.recorded_at IS NOT NULL
   AND (r.superseded IS NULL OR r.superseded = 0)
-  AND lsr.ideal_rate > 0
 GROUP BY r.id;
 
 CREATE VIEW IF NOT EXISTS v_pdca_trend AS

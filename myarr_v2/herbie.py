@@ -41,6 +41,9 @@ INTENT_NOTES = {
 - unaccounted_min is the minutes of production loss with no logged reason.
 - pct_unaccounted is unaccounted as a percentage of total lost time (recorded + unaccounted).
 - The by_shift breakdown shows the same for each shift separately.
+- unrated_min is time on hours with no rate for that SKU, so it could not be
+  scored at all. When it is above zero, say that the unaccounted figure covers
+  only the hours that could be scored, and that the rest are not in it.
 - If pct_unaccounted is above 25, state that it is a significant gap.
 """,
     "line_day": """DAY-SPECIFIC RULES:
@@ -54,9 +57,12 @@ INTENT_NOTES = {
   loss. Do not call it lost time.
 - An hour marked partial is in progress or was cut short. Say so if you mention
   it, and do not treat it as representative of the others.
-- standard_rate of 0 means no rate is loaded for this SKU on this line. Say
-  that plainly and do not report capacity_gap, losses_accounted or
-  losses_unexplained as though they had been measured.
+- standard_rate of 0 means no rate is loaded for this SKU on this line. When it
+  is 0, capacity_gap still compares production with the target and may be
+  quoted as a gap. losses_accounted and losses_unexplained are null rather than
+  zero, because recorded downtime cannot be valued in parts without a rate. Say
+  the loss figures were not computed, and do not reconcile the gap or describe
+  the loss data as complete.
 - p2p is actual_units over the target of the jobs scheduled that day. When no
   job was scheduled there is nothing to compare, which is not the same as the
   line producing nothing.
@@ -84,6 +90,10 @@ in from the hourly rows, using that hour's own unaccounted_min.
 
 If the hourly rows carry operator notes, quote one with its hour. Mention that
 notes are absent only when every hour's note is empty.
+
+unrated_min is time on hours with no rate for that SKU, which could not be
+scored. When it is above zero, say that unaccounted_min covers only the hours
+that could be scored.
 
 Close with what the line lead should go and find out, if anything.
 """,
@@ -114,8 +124,21 @@ FIELD_GLOSSARY = [
                              "minutes at the standard rate"),
     ("capacity_gap", "variance against target in parts; negative is under target"),
     ("lost_capacity", "parts lost to recorded downtime at the standard rate"),
-    ("losses_accounted", "scrap parts plus lost capacity parts"),
-    ("losses_unexplained", "capacity_gap minus losses_accounted"),
+    ("losses_accounted", "scrap parts plus lost capacity parts. Null means the "
+                         "figure was not computed, because no rate is loaded"),
+    ("losses_unexplained", "capacity_gap minus losses_accounted. Null means the "
+                           "figure was not computed, because no rate is loaded"),
+    ("rate_loaded", "true when every recorded hour on this day has a rate for "
+                    "its SKU on this line. False means the rate-derived loss "
+                    "figures below are null rather than zero"),
+    ("unrated_min", "minutes recorded on hours with no rate for that SKU on this "
+                    "line. Those minutes are not scored and are not part of any "
+                    "rate-derived total"),
+    ("unrated_downtime_min", "recorded downtime minutes on hours with no rate. "
+                             "The time is real and logged; only its cost in parts "
+                             "is unknown"),
+    ("reconciliation", "a sentence stating which figures could not be computed "
+                       "and why. Quote or paraphrase it; do not contradict it"),
     ("ftq", "First Time Quality: good parts as a percentage of parts produced"),
     ("p2p", "Produce to Plan: parts produced as a percentage of target"),
     ("actual_min", "how long something took, in minutes"),
@@ -222,8 +245,17 @@ def get_line_summary(conn, line_id, date):
 
     # Agreed 2026-11-13: the rate is a property of (line, sku), never an average.
     # Compute lost capacity per downtime event at the run's own SKU rate.
+    # Agreed 2026-11-24 (A50): the rate may not exist, and a missing rate is not
+    # a rate of zero. Downtime on a rated hour is valued in parts; downtime on
+    # an unrated hour is counted in minutes and left unvalued, and the card says
+    # which is which.
     lost_row = conn.execute("""
-        SELECT COALESCE(SUM(d.minutes * COALESCE(lsr.ideal_rate, 0) / 60.0), 0) AS lost_capacity
+        SELECT
+            COALESCE(SUM(CASE WHEN COALESCE(lsr.ideal_rate, 0) > 0
+                              THEN d.minutes * lsr.ideal_rate / 60.0
+                              ELSE 0 END), 0) AS rated_lost_capacity,
+            COALESCE(SUM(CASE WHEN COALESCE(lsr.ideal_rate, 0) > 0
+                              THEN 0 ELSE d.minutes END), 0) AS unrated_downtime_min
         FROM downtime_events d
         JOIN hourly_runs r ON r.id = d.run_id
         LEFT JOIN jobs j ON j.id = r.job_id
@@ -233,7 +265,30 @@ def get_line_summary(conn, line_id, date):
         WHERE r.line_id = ?
           AND date(r.recorded_at) = ?
     """, (line_id, date)).fetchone()
-    lost_capacity = (lost_row["lost_capacity"] if lost_row else 0) or 0
+    rated_lost_capacity = (lost_row["rated_lost_capacity"] if lost_row else 0) or 0
+    unrated_downtime_min = (lost_row["unrated_downtime_min"] if lost_row else 0) or 0
+
+    # The hours that carry no rate at all, and which SKUs they belong to, so the
+    # card can name the SKU and the line (FLOOR-MODEL: say plainly that no rate
+    # is loaded, and name both).
+    unrated_row = conn.execute("""
+        SELECT
+            COALESCE(SUM(r.duration_min), 0) AS unrated_min,
+            GROUP_CONCAT(DISTINCT COALESCE(s.part_number,
+                         'SKU ' || COALESCE(r.sku_id, j.sku_id))) AS unrated_skus
+        FROM hourly_runs r
+        LEFT JOIN jobs j ON j.id = r.job_id
+        LEFT JOIN skus s ON s.id = COALESCE(r.sku_id, j.sku_id)
+        LEFT JOIN line_sku_rates lsr
+               ON lsr.line_id = r.line_id
+              AND lsr.sku_id = COALESCE(r.sku_id, j.sku_id)
+        WHERE r.line_id = ?
+          AND date(r.recorded_at) = ?
+          AND (r.superseded IS NULL OR r.superseded = 0)
+          AND COALESCE(lsr.ideal_rate, 0) <= 0
+    """, (line_id, date)).fetchone()
+    unrated_min = int((unrated_row["unrated_min"] if unrated_row else 0) or 0)
+    unrated_skus = (unrated_row["unrated_skus"] if unrated_row else None) or ""
 
     # Weighted rate is for narrative phrasing only. rate_mixed flags >1 rate.
     rate_row = conn.execute("""
@@ -266,17 +321,31 @@ def get_line_summary(conn, line_id, date):
 
     # lost_capacity is computed above, per run at the run's own SKU rate.
     gross_production = actual_units + scrap_units
-    theoretical_capacity = gross_production + lost_capacity
-    capacity_gap = (theoretical_capacity - target_units) if target_units else 0
     ftq = ((actual_units - scrap_units) / actual_units * 100) if actual_units else 0
     p2p = (actual_units / target_units * 100) if target_units else 0
 
-    losses_accounted = scrap_units + lost_capacity
-    losses_unexplained = abs(capacity_gap) - losses_accounted if capacity_gap < 0 else 0
-    if losses_unexplained < 0:
-        losses_unexplained = 0
+    rate_loaded = (unrated_min == 0 and rated_min > 0)
+    if rate_loaded:
+        lost_capacity = int(round(rated_lost_capacity))
+        theoretical_capacity = gross_production + lost_capacity
+        capacity_gap = (theoretical_capacity - target_units) if target_units else 0
+        losses_accounted = int(scrap_units + lost_capacity)
+        losses_unexplained = abs(capacity_gap) - losses_accounted if capacity_gap < 0 else 0
+        if losses_unexplained < 0:
+            losses_unexplained = 0
+    else:
+        # A50, agreed 2026-11-24. capacity_gap compares production with the job
+        # target, so a missing rate does not touch it. The figures that price a
+        # loss in parts do, and they read as unknown rather than as zero: zero
+        # says nothing was lost, which is a claim nobody can support, and it is
+        # the stronger and worse of the two answers.
+        lost_capacity = None
+        theoretical_capacity = None
+        capacity_gap = (gross_production - target_units) if target_units else 0
+        losses_accounted = None
+        losses_unexplained = None
 
-    return {
+    stats = {
         "line_id": line_id,
         "date": date,
         "actual_units": int(actual_units),
@@ -285,17 +354,30 @@ def get_line_summary(conn, line_id, date):
         "downtime_min": round(downtime_min, 1),
         "downtime_by_station": downtime_by_station,
         "standard_rate": round(standard_rate, 0),
+        "rate_loaded": rate_loaded,
         "rate_mixed": rate_mixed,
         "target_units": int(target_units),
-        "lost_capacity": int(lost_capacity),
+        "lost_capacity": lost_capacity,
         "gross_production": int(gross_production),
-        "theoretical_capacity": int(theoretical_capacity),
-        "capacity_gap": int(capacity_gap),
-        "losses_accounted": int(losses_accounted),
-        "losses_unexplained": int(losses_unexplained),
+        "theoretical_capacity": theoretical_capacity,
+        "capacity_gap": int(capacity_gap) if capacity_gap is not None else None,
+        "losses_accounted": losses_accounted,
+        "losses_unexplained": losses_unexplained,
         "ftq": round(ftq, 1),
         "p2p": round(p2p, 1),
     }
+    if not rate_loaded:
+        # The fact goes in the payload, not in a rule about the payload.
+        stats["unrated_min"] = unrated_min
+        stats["unrated_downtime_min"] = round(unrated_downtime_min, 1)
+        stats["reconciliation"] = (
+            "No rate is loaded for %s on Line %d, so %d of %d recorded minutes "
+            "cannot be scored. The capacity gap of %+d parts is production "
+            "against the target, not a reconciled loss: lost capacity, losses "
+            "accounted for and losses unexplained were not computed."
+            % (unrated_skus or "this SKU", line_id, unrated_min,
+               int(run_minutes), int(capacity_gap or 0)))
+    return stats
 
 
 def get_floor_context(conn, line_id, date):
@@ -352,27 +434,50 @@ def get_floor_context(conn, line_id, date):
 
 
 def narrate_capacity_gap(stats, context):
-    """The fallback. Rigid, templated, no LLM."""
+    """The fallback. Rigid, templated, no LLM.
+
+    Since 2026-11-24 this is also what the tracer veto emits, so it must never
+    raise and never print a figure that does not exist: an unknown loss is an em
+    dash with the reason beside it, and a missing rate is stated in words rather
+    than formatted as a number (A50).
+    """
     s = stats
     if s["actual_units"] == 0 and s["run_minutes"] == 0:
         return f"Line {s['line_id']} on {s['date']}: no production recorded. Nothing to diagnose."
 
-    if s.get('rate_mixed'):
-        downtime_line = (f"Downtime: {s['downtime_min']} minutes across runs at the rates "
-                         f"on file is {s['lost_capacity']:,} units of lost capacity.")
-    else:
-        downtime_line = (f"Downtime: {s['downtime_min']} minutes, which at "
-                         f"{s['standard_rate']:,.0f}/hr is {s['lost_capacity']:,} units of lost capacity.")
+    gap = s.get("capacity_gap")
+    gap_text = f"{gap:+,}" if isinstance(gap, int) else "\u2014"
+    rate_missing = not s.get("rate_loaded", True)
+
     parts = [
         f"Line {s['line_id']} on {s['date']}.",
         f"Target: {s['target_units']:,}. Actual good output: {s['actual_units']:,}. Scrap: {s['scrap_units']:,}.",
-        downtime_line,
-        f"Capacity gap: {s['capacity_gap']:+,} units against target.",
-        f"Losses accounted for: {s['losses_accounted']:,} units (scrap plus lost capacity).",
-        f"Losses unexplained: {s['losses_unexplained']:,} units.",
     ]
 
-    if s["losses_unexplained"] > s["losses_accounted"]:
+    if rate_missing:
+        parts.append(s.get("reconciliation")
+                     or "No rate is loaded for this line and SKU, so the loss "
+                        "figures were not computed.")
+        parts.append(f"Recorded downtime: {s['downtime_min']} minutes.")
+        parts.append(f"Capacity gap: {gap_text} units against target.")
+        parts.append("Losses accounted for: \u2014 not computed without a rate.")
+        parts.append("Losses unexplained: \u2014 not computed, because the "
+                     "accounted loss is unknown.")
+    else:
+        if s.get('rate_mixed'):
+            downtime_line = (f"Downtime: {s['downtime_min']} minutes across runs at the rates "
+                             f"on file is {s['lost_capacity']:,} units of lost capacity.")
+        else:
+            downtime_line = (f"Downtime: {s['downtime_min']} minutes, which at "
+                             f"{s['standard_rate']:,.0f}/hr is {s['lost_capacity']:,} units of lost capacity.")
+        parts.append(downtime_line)
+        parts.append(f"Capacity gap: {gap_text} units against target.")
+        parts.append(f"Losses accounted for: {s['losses_accounted']:,} units (scrap plus lost capacity).")
+        parts.append(f"Losses unexplained: {s['losses_unexplained']:,} units.")
+
+    if (not rate_missing and s["losses_unexplained"] is not None
+            and s["losses_accounted"] is not None
+            and s["losses_unexplained"] > s["losses_accounted"]):
         parts.append("The unexplained loss exceeds the accounted loss. Revisit this job with the line lead to find what was not captured.")
     elif s["downtime_by_station"]:
         top = sorted(s["downtime_by_station"].items(), key=lambda x: -x[1])[0]
@@ -406,17 +511,20 @@ def get_downtime_attribution(conn, job_number):
     total_recorded = sum(by_station.values())
 
     unacc_row = conn.execute("""
-        SELECT COALESCE(SUM(unaccounted_min), 0) AS unaccounted
+        SELECT COALESCE(SUM(unaccounted_min), 0) AS unaccounted,
+               COALESCE(SUM(unrated_min), 0) AS unrated_min
         FROM v_unaccounted_minutes_by_run
         WHERE job_id = ?
     """, (job_id,)).fetchone()
     total_unaccounted = round(unacc_row["unaccounted"], 1) if unacc_row else 0.0
+    total_unrated = round(unacc_row["unrated_min"], 1) if unacc_row else 0.0
 
     return {
         "job_number": job["job_number"],
         "recorded_downtime_min": round(total_recorded, 1),
         "downtime_by_station": by_station,
         "unaccounted_min": total_unaccounted,
+        "unrated_min": total_unrated,
     }
 
 
@@ -532,6 +640,7 @@ def get_unaccounted_minutes(conn, line_id, days=30, shift=None):
         SELECT
             ROUND(COALESCE(SUM(v.recorded_downtime_min), 0), 1) AS recorded,
             ROUND(COALESCE(SUM(v.unaccounted_min), 0), 1) AS unaccounted,
+            ROUND(COALESCE(SUM(v.unrated_min), 0), 1) AS unrated_min,
             COUNT(DISTINCT v.job_id) AS job_count
         FROM v_unaccounted_minutes_by_run v
         WHERE v.line_id = ?
@@ -543,7 +652,8 @@ def get_unaccounted_minutes(conn, line_id, days=30, shift=None):
         SELECT
             v.shift,
             ROUND(COALESCE(SUM(v.recorded_downtime_min), 0), 1) AS recorded,
-            ROUND(COALESCE(SUM(v.unaccounted_min), 0), 1) AS unaccounted
+            ROUND(COALESCE(SUM(v.unaccounted_min), 0), 1) AS unaccounted,
+            ROUND(COALESCE(SUM(v.unrated_min), 0), 1) AS unrated_min
         FROM v_unaccounted_minutes_by_run v
         WHERE v.line_id = ?
           AND date(v.recorded_at) >= date('now', ?)
@@ -553,6 +663,7 @@ def get_unaccounted_minutes(conn, line_id, days=30, shift=None):
 
     total_recorded = totals["recorded"] if totals else 0
     total_unaccounted = totals["unaccounted"] if totals else 0
+    total_unrated = (totals["unrated_min"] if totals else 0) or 0
     total_lost = round(total_recorded + total_unaccounted, 1)
     pct_unaccounted = round((total_unaccounted / total_lost * 100), 1) if total_lost else 0
 
@@ -563,6 +674,7 @@ def get_unaccounted_minutes(conn, line_id, days=30, shift=None):
         "job_count": totals["job_count"] if totals else 0,
         "recorded_min": total_recorded,
         "unaccounted_min": total_unaccounted,
+        "unrated_min": total_unrated,
         "total_lost_min": total_lost,
         "pct_unaccounted": pct_unaccounted,
         "by_shift": [dict(r) for r in by_shift],
@@ -639,14 +751,17 @@ def get_job_summary(conn, job_number):
 
     hourly = conn.execute("""
         SELECT period, shift, units_filled, scrap_units, notes,
-               recorded_downtime_min, unaccounted_min, gap_min
+               recorded_downtime_min, unaccounted_min, unrated_min, gap_min
         FROM v_unaccounted_minutes_by_run
         WHERE job_id = ?
         ORDER BY recorded_at, period
     """, (job_id,)).fetchall()
 
     total_downtime = sum(r["recorded_downtime_min"] for r in hourly)
-    total_unaccounted = sum(r["unaccounted_min"] for r in hourly)
+    # unaccounted_min is NULL for an hour with no rate (A50), so it cannot be
+    # summed raw: sum(None, 3.0) raises, which would take the whole card down.
+    total_unaccounted = sum((r["unaccounted_min"] or 0) for r in hourly)
+    unrated_min = sum((r["unrated_min"] or 0) for r in hourly)
 
     target_units = job["target_quantity"] or 0
     ftq = ((actual_units - scrap_units) / actual_units * 100) if actual_units else 0
@@ -664,6 +779,7 @@ def get_job_summary(conn, job_number):
         "run_minutes": int(run_minutes),
         "recorded_downtime_min": round(total_downtime, 1),
         "unaccounted_min": round(total_unaccounted, 1),
+        "unrated_min": round(unrated_min, 1),
         "ftq": round(ftq, 1),
         "p2p": round(p2p, 1),
         "hourly": [dict(r) for r in hourly],
