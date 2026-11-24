@@ -39,7 +39,7 @@ The tablet can start a job. It cannot end one.
 Proven. tools/test_floor_start.py, six cases, 6 of 6, on its own temporary
 database. The induced failure is a real BEFORE INSERT trigger on line_events,
 so it tests the transaction rather than the except block. Regression after the
-change: test_csv_roundtrip 8 of 8, test_pages 26 routes 0 failed, /floor
+change: test_csv_roundtrip 8 of 8, test_pages 27 routes 0 failed, /floor
 returns 200 after a restart. Commits df1c99c and 36ed2db.
 
 Not proven. A human on the tablet. Everything above is Flask's test client on
@@ -130,7 +130,8 @@ myarr_v2/requirements.txt created and pinned from actual imports: Flask
 - install.sh HTTP check should accept 200 and 302 and flag 000 or a 5xx.
 - CSV round-trip with real data, then the systematic pass over every page,
   every Herbie card and every bot path. Queue item 4.
-  PART DONE 2026-11-20: the CSV round trip, the 26 pages and the 5 Herbie
+  PART DONE 2026-11-20: the CSV round trip, the page sweep (26 routes then, 27
+  since 2026-11-24) and the 5 Herbie
   cards all run and are re-runnable. The bot write paths are still unwalked,
   and the audit calls them the largest unexamined surface.
 - Regenerate the audit from the code. Queue item 5.
@@ -286,7 +287,7 @@ OPEN   The case-insensitive fallback for component types is implemented but
        component name. Reasoned, not proven.
 
 COVERAGE  tools/test_csv_roundtrip.py   8 checks, all passing
-COVERAGE  tools/test_pages.py           26 routes, all 200
+COVERAGE  tools/test_pages.py           27 routes, all 200
 COVERAGE  tools/test_floor_start.py     15 cases, all passing, added 2026-11-22
 COVERAGE  tools/test_rates.py           5 checks, all passing, added 2026-11-23
 

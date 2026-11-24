@@ -158,28 +158,59 @@ A49 FIXED 2026-11-22. The service worker served /floor cache-first, so once a
           myarra-shell-v2 so every device purges v1 on its next visit. Found by
           reading, not by a device; no one has yet watched a phone pick up v2.
 
-A50 OPEN  Found 2026-11-24 while proving A01. Same family as A01 and the
-          opposite sign. The line_day payload computes lost capacity with
-          COALESCE(lsr.ideal_rate, 0) at herbie.py:226, so a line whose SKU has
-          no rate reports zero lost capacity, and the view behind unaccounted
-          minutes, v_unaccounted_minutes_by_run, ends with "AND
-          lsr.ideal_rate > 0", so unrated hours are absent from that view
-          altogether and SUM over it returns 0. The card therefore states "no
+A50 FIXED Found 2026-11-24 while proving A01, fixed the same day. Same family as
+          A01 and the opposite sign. The line_day payload computed lost capacity
+          with COALESCE(lsr.ideal_rate, 0) at herbie.py:226, so a line whose SKU
+          had no rate reported zero lost capacity, and the view behind
+          unaccounted minutes, v_unaccounted_minutes_by_run, ended with "AND
+          lsr.ideal_rate > 0", so unrated hours were absent from that view
+          altogether and SUM over it returned 0. The card therefore stated "no
           downtime, and no lost capacity. Scrap accounted for all losses, with
-          no unexplained losses. The standard rate was 0" about hours it cannot
-          score, and then in the next breath reports a capacity gap. Observed on
-          Line 2 for 2026-11-23 in a card run tonight.
-          A zero stands where a figure is unknown, and zero lost capacity is a
+          no unexplained losses. The standard rate was 0" about hours it could
+          not score, and then in the next breath reported a capacity gap.
+          Observed on Line 2 for 2026-11-23 in a card run.
+          A zero stood where a figure was unknown, and zero lost capacity is a
           stronger claim than admitting the figure does not exist: it says the
-          line lost nothing. That is the dash contract one layer below the
-          templates, in the payload rather than in the wording, so the fix is to
-          emit the absence as an absence, carry the SKU and line that lack a
-          rate, and stop filtering unrated runs out of the view. Not started.
+          line lost nothing. It was the dash contract one layer below the
+          templates, in the payload rather than in the wording.
           The model quoted what it was handed, so no prompt change reaches this.
+          Fixed 2026-11-24. The view keeps the row and NULLs the three
+          rate-derived columns (gap_units, gap_min, unaccounted_min), so a
+          missing rate no longer deletes an hour and its recorded downtime with
+          it; unrated_min carries the duration that could not be scored, so the
+          job card and the unaccounted card stop presenting a partial sum as a
+          whole. The line card leaves lost capacity, losses accounted, losses
+          unexplained and theoretical capacity null, keeps the capacity gap
+          because it compares production with the target, and says in a sentence
+          carried in the payload which figures were not computed and for which
+          SKU on which line. The template fallback learned to render an unknown
+          as an em dash, which item 2's veto now depends on.
+          tools/test_line_card_rate_gap.py, 15 checks: red at rows=1 before the
+          change, 15 of 15 after, with the rated line asserted to its old
+          arithmetic so a fix that flattened both lines into dashes fails.
           Label: blocks the demo. The demo carries two unrated SKU-line pairs on
           purpose and one of them has a live running job, so a walk that opens
           the line_day card meets the contradiction directly. It blocks a pilot
           for the same reason whether or not anyone opens the card.
+
+A52 OPEN  Found 2026-11-24 while implementing A50. gross_production is computed
+          as actual_units + scrap_units, and the 2026-11-07 convention, stated in
+          FLOOR-MODEL and in herbie's own glossary, is that units_filled already
+          contains scrap: 600 produced with 20 scrap is 600 total and 580 good.
+          Adding scrap again counts it twice, so theoretical_capacity and
+          capacity_gap are inflated by exactly scrap_units on every line card
+          that has scrap. The card of 2026-11-23 read gross production 12,212 for
+          11,987 produced with 225 scrap, and reported a capacity gap of 550
+          against a target of 11,662 where produced against target is 325.
+          capacity_gap is therefore wrong by scrap_units, and losses_unexplained
+          inherits the error. That matters beyond arithmetic: the diagnostic rule
+          tells a reader to compare the two, so "when losses_unexplained is
+          larger than losses_accounted the data is incomplete" is advice computed
+          from an inflated gap.
+          Not fixed in this commit, because it moves a number the owner has
+          already seen on the demo.
+          Label: blocks the demo. A plant manager who totals the parts himself
+          finds a gross figure larger than the number of parts made.
 
 ## S2
 
@@ -313,6 +344,22 @@ A26 OPEN  onboarding._float_or_none does not handle a decimal comma. A
 A27 FIXED /favicon.ico returned 404 on every page. The route served from
           app.root_path and the file lives in myarr_v2/static.
 
+A51 OPEN  Found 2026-11-24. bot/shift.py writes shift_reconciliations (usable
+          minutes, actual, scrap, downtime, production time, scrap time,
+          residual, explanation) and nothing reads it. A grep across app.py,
+          views.py, recon.py and every template finds no reference outside the
+          writer. So when end shift asks the operator what happened and he
+          answers, the answer is stored where no screen, no card and no export
+          ever shows it. The bot asks a question whose answer the product does
+          not display, which is the shape PHILOSOPHY's "unknown is a valid
+          answer" exists to prevent: an operator who never sees his answer used
+          learns not to give one.
+          Not fixed. The shift page computes its own figures from hourly_runs,
+          so this is a missing consumer rather than a wrong number, and the row
+          does hold the operator's words.
+          Label: blocks a pilot. It does not stop a demo, but the operator's own
+          words are the data of record and here they are write-only.
+
 ## S4
 
 A28 OPEN  Five .bak files in the bot package: production.py.bak_override,
@@ -388,10 +435,11 @@ the only finding there whose shape is known. Expect more.
 
 ## Counts
 
-49 findings. 11 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
-2026-11-20, A06, A45 and A49 on 2026-11-22, and A01 on 2026-11-24. 38 open.
-A45, A47, A48 and A49 were written down on 2026-11-22, and A50 on 2026-11-24,
-found while proving A01. A46 is still unaccounted for.
+51 findings. 12 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
+2026-11-20, A06, A45 and A49 on 2026-11-22, and A01 and A50 on 2026-11-24.
+39 open. A45, A47, A48 and A49 were written down on 2026-11-22, and A50, A51
+and A52 on 2026-11-24, found while proving and repairing A01 and A50. A46 is
+still unaccounted for.
 
 Tools that produced them, all in the repository and all re-runnable:
 tools/test_csv_roundtrip.py, tools/test_pages.py, tools/test_herbie_cards.py,

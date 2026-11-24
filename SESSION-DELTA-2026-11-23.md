@@ -1,7 +1,10 @@
 # SESSION DELTA 2026-11-23 — THE FLOOR LOOP CLOSED
 
-Follows SESSION-DELTA-2026-11-20.md. HEAD at close: fd670a5. Everything below
-was verified on the reference Jetson unless it says otherwise.
+Follows SESSION-DELTA-2026-11-20.md. HEAD at close: 515eaa7, which is fd670a5
+plus this document's own commit and one state commit; the line read fd670a5 as
+written, and a delta cannot name the commit that contains it. Corrected
+2026-11-24. Everything below was verified on the reference Jetson unless it says
+otherwise.
 
 ## What was true when the session began
 
@@ -130,9 +133,16 @@ has.
 1. `bot/db.py`'s `ideal_rate()` still returns 600.0 for the Telegram path, into
    four call sites in `production.py` and one in `shift.py`, each of which does
    arithmetic on the result. Own test file, own commit.
-2. The tracer veto. It already detects a narrative containing a number the
-   payload does not carry, and only warns. Make it fall back to the template.
-   This is the change that decides whether a model can be put in front of a plant
+2. The tracer veto. CORRECTED 2026-11-24: the sentence that it "already detects
+   a narrative containing a number the payload does not carry, and only warns"
+   was false. Nothing in the product traced anything. The only tracer in the
+   repository was a print inside tools/test_herbie_cards.py, and it compared the
+   narrative against the stats dictionary rather than the prompt, so it also
+   flagged correct cards that quoted an operator note. What was built on
+   2026-11-24: the trace runs against the whole prompt including the context
+   block, an untraced figure replaces the narrative with the template, and the
+   card sweep calls the same functions instead of keeping its own copy. This is
+   the change that decides whether a model can be put in front of a plant
    manager at all.
 3. A14 and A16: the backup passphrase exists only on the machine and in the
    owner's Downloads, and the appliance archive has no offsite copy.
