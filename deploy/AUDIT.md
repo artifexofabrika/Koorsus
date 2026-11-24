@@ -29,22 +29,48 @@ with a guess. Numbering resumes at A48.
 
 ## S1
 
-A01 OPEN  Half closed 2026-11-23. The web half is done: app.py no longer
-          substitutes 600.0 at any of its five sites (dashboard, line_report,
-          job_detail, shift_detail, board). A missing rate renders as an em
-          dash through two Jinja filters, a total with no rate behind it
-          renders as a dash rather than a confident zero, and FTQ still reports
-          because FTQ needs no rate. tools/test_rates.py, 5 checks, renders all
-          four pages against a database with one line deliberately missing its
-          rate, because the reference appliance has a rate for every open job
-          and test_pages would never have executed that path. Also added the
-          same day: a job-level check on /setup/verify that names open jobs
-          whose line and SKU have no rate row, which is the grain the
-          arithmetic actually uses.
-          Still open: bot/db.py ideal_rate() returns 600.0, and its six callers
-          in production.py and shift.py do arithmetic on the result, so it
-          cannot become None until every one of them is handled. That half
-          needs its own cases against the bot paths.
+A01 FIXED Both halves closed: the web half 2026-11-23, the Telegram half
+          2026-11-24. The web half: app.py no longer substitutes 600.0 at any of
+          its five sites (dashboard, line_report, job_detail, shift_detail,
+          board). A missing rate renders as an em dash through two Jinja
+          filters, a total with no rate behind it renders as a dash rather than
+          a confident zero, and FTQ still reports because FTQ needs no rate.
+          tools/test_rates.py, 5 checks, renders all four pages against a
+          database with one line deliberately missing its rate, because the
+          reference appliance has a rate for every open job and test_pages would
+          never have executed that path. Also added the same day: a job-level
+          check on /setup/verify that names open jobs whose line and SKU have no
+          rate row, which is the grain the arithmetic actually uses.
+          The Telegram half: bot/db.py ideal_rate() returns None, and treats a
+          row holding NULL or zero as absent because a zero cannot divide
+          anything. The five call sites were four in production.py and one in
+          shift.py, not six: the sixth occurrence was a second ideal_rate in
+          bot/resolve.py with the same 600.0 fallback and no caller, deleted
+          with this change. production.py skips the plausibility challenge and
+          leaves the gap unmeasured when there is no expectation to check a
+          number against, names the SKU and the line in the reply, keeps FTQ,
+          and write_hour takes an unknown gap without flagging the hour.
+          shift.py had two substitutions of its own beyond the one it inherited:
+          a falsy rate became 600.0 in the per-run loop and the weighted rate
+          defaulted to 600.0 again. An unrated run now leaves production time,
+          scrap time and the residual None for the whole window, because scoring
+          the rated runs and calling the difference a residual charges the
+          unrated hours to nothing and reports it as fact. The report dashes
+          those figures and names the SKU and the line, and end shift closes
+          without asking the operator to explain a number that does not exist.
+          tools/test_bot_rates.py, 19 checks, builds its own database with one
+          rated pair and one unrated pair and drives the bot's own functions at
+          both, so a fix that deleted the arithmetic outright fails there too.
+          Run against the deployed code it failed at 600.0, at 0.0 from the zero
+          row, on the surviving resolve.py copy, and crashed the record reply on
+          the no-rate gap; after the change it is 19 of 19. Regressions:
+          test_rates 5 of 5, test_floor_start 15 of 15, test_csv_roundtrip 8 of
+          8, test_pages 27 routes 0 failed.
+          Unproven, deliberately: myarra-bot has not been restarted, because
+          sudo asks for a password on this appliance (A40). The unit is still
+          running the previous modules in memory, so it will keep answering
+          600.0 until it is restarted. The file on disk is the fix; the service
+          is not yet the file.
           This gap will keep occurring rather than being an edge case. A rate
           belongs to a SKU on a line, and a SKU that has never run on that line
           has no rate until the first run measures it (FLOOR-MODEL, Nothing
@@ -131,6 +157,29 @@ A49 FIXED 2026-11-22. The service worker served /floor cache-first, so once a
           cache-first, POST and /api are never touched, and the cache name is
           myarra-shell-v2 so every device purges v1 on its next visit. Found by
           reading, not by a device; no one has yet watched a phone pick up v2.
+
+A50 OPEN  Found 2026-11-24 while proving A01. Same family as A01 and the
+          opposite sign. The line_day payload computes lost capacity with
+          COALESCE(lsr.ideal_rate, 0) at herbie.py:226, so a line whose SKU has
+          no rate reports zero lost capacity, and the view behind unaccounted
+          minutes, v_unaccounted_minutes_by_run, ends with "AND
+          lsr.ideal_rate > 0", so unrated hours are absent from that view
+          altogether and SUM over it returns 0. The card therefore states "no
+          downtime, and no lost capacity. Scrap accounted for all losses, with
+          no unexplained losses. The standard rate was 0" about hours it cannot
+          score, and then in the next breath reports a capacity gap. Observed on
+          Line 2 for 2026-11-23 in a card run tonight.
+          A zero stands where a figure is unknown, and zero lost capacity is a
+          stronger claim than admitting the figure does not exist: it says the
+          line lost nothing. That is the dash contract one layer below the
+          templates, in the payload rather than in the wording, so the fix is to
+          emit the absence as an absence, carry the SKU and line that lack a
+          rate, and stop filtering unrated runs out of the view. Not started.
+          The model quoted what it was handed, so no prompt change reaches this.
+          Label: blocks the demo. The demo carries two unrated SKU-line pairs on
+          purpose and one of them has a live running job, so a walk that opens
+          the line_day card meets the contradiction directly. It blocks a pilot
+          for the same reason whether or not anyone opens the card.
 
 ## S2
 
@@ -339,12 +388,14 @@ the only finding there whose shape is known. Expect more.
 
 ## Counts
 
-48 findings. 10 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
-2026-11-20, and A06, A45 and A49 on 2026-11-22. 38 open. A45, A47, A48 and
-A49 were written down on 2026-11-22; A46 is still unaccounted for.
+49 findings. 11 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
+2026-11-20, A06, A45 and A49 on 2026-11-22, and A01 on 2026-11-24. 38 open.
+A45, A47, A48 and A49 were written down on 2026-11-22, and A50 on 2026-11-24,
+found while proving A01. A46 is still unaccounted for.
 
 Tools that produced them, all in the repository and all re-runnable:
-tools/test_csv_roundtrip.py, tools/test_pages.py, tools/test_herbie_cards.py.
+tools/test_csv_roundtrip.py, tools/test_pages.py, tools/test_herbie_cards.py,
+tools/test_floor_start.py, tools/test_rates.py, tools/test_bot_rates.py.
 
 ## A06 build plan, 2026-11-20
 
