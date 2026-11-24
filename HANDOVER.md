@@ -20,8 +20,9 @@ defects, not section 6 below.
    proven and what is merely believed.
 3. deploy/AUDIT.md. 52 findings, 20 fixed, 32 open, each naming a file and
    an observation that can be repeated.
-4. SESSION-DELTA-2026-11-23.md, the most recent session, and the deltas
-   before it as far back as the question needs.
+4. SESSION-DELTA-2026-11-24.md, the most recent session, and the deltas
+   before it as far back as the question needs. 11-24 is the one that says
+   where the previous instance stopped and what to do first.
 5. HERBIE-ARCHITECTURE.md, the three-layer design.
 6. Do not read HANDOFF.md as current. It describes bot_v2.py,
    Waitress and five lines.
