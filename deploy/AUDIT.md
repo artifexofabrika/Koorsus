@@ -472,16 +472,25 @@ A54 OPEN  Found 2026-11-24 while repairing A53. The seven scripts in
           job that writes koorsus-*.tar.gz.enc with one that writes arkiv-*.enc
           into a directory Koorsus does not read. The timer installed on
           2026-11-24 would keep reporting success while writing nothing useful.
-          Half fixed 2026-11-24. The ten scripts are in deploy/koorsus-scripts/
-          with a README naming each one's state, and the application itself is now
-          snapshotted into koorsus-app/ in this repository: 47 files after the ten
-          scripts were deliberately left out to avoid a second copy of them, with
-          a PROVENANCE.md recording the source commit, what was excluded because it
-          is secret or runtime, and which files are Arkiv-named and stale.
-          Still open: koorsus-app.service runs from /home/jeeves/koorsus, so two
-          copies exist until that WorkingDirectory is re-pointed and tested. That
-          order is in A44, and PROVENANCE.md says which copy is which in the
-          meantime.
+          CORRECTION, same evening. The application was first imported into this
+          repository as koorsus-app/, on the assumption that the live Koorsus was
+          an untracked fork of Arkiv. It is not. Its Python is byte-identical to
+          Arkiv at 4550426, and 4550426 is an ancestor of Arkiv's f18c132: the
+          deployment is 27 commits behind its own codebase rather than diverged
+          from it. The unit file says as much in its own header, "Koorsus is the
+          Arkiv codebase deployed a second time under a different configuration.
+          It is not a second codebase", which is exactly what the import created.
+          It was reverted in the following commit, and the token test that
+          travelled with it withdrawn, both still recoverable from history if the
+          token path lands where it belongs: upstream, since both products share
+          the code.
+          What is actually broken is narrower and worse than a missing repository.
+          The appliance runs a pinned-but-unrecorded commit, 27 behind, and nothing
+          anywhere says which one. The scripts are already out of it. The fix is to
+          choose a commit, record it, and update deliberately, which is a
+          deployment change with a test window rather than a cleanup.
+          Half of this finding stands and is done: the ten scripts are in
+          deploy/koorsus-scripts/ with a README naming each one's state.
           Label: blocks a pilot. Uncommitted production code on a customer
           appliance is recoverability lost without anyone noticing.
 
