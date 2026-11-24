@@ -13,6 +13,13 @@ RESIDUAL MATH
   residual_min     = usable - production_time - scrap_time - downtime
 
 If |residual| < 0.5, treat as balanced. Otherwise prompt once.
+
+A01, agreed 2026-11-23. A run whose SKU has no rate on its line is not scored
+at an invented 600.0. If any run in the window is unrated then production_time,
+scrap_time and residual_min are unknown: they are reported as an em dash naming
+the SKU and the line, and no reason is asked, because there is no number to
+explain. Actual, scrap, good and FTQ still report, because none of them needs a
+rate.
 """
 import json
 from datetime import datetime, timedelta
@@ -79,6 +86,7 @@ def compute_reconciliation(conn, line_id, shift_code, day):
 
     # Agreed 2026-11-13: score each run at its own rate.
     # The old code took the first run's rate for the entire shift.
+    # Agreed 2026-11-23: an unrated run is skipped, not scored at 600.0.
     actual = 0
     scrap = 0
     production_time = 0.0
@@ -86,21 +94,40 @@ def compute_reconciliation(conn, line_id, shift_code, day):
     weighted_rate_sum = 0.0
     weighted_min = 0.0
     distinct_rates = set()
+    unrated_min = 0.0
+    unrated_skus = []
     for r in runs:
         units = r['units_filled'] or 0
         s_ = r['scrap_units'] or 0
         actual += units
         scrap += s_
+        dur = r['duration_min'] or 60
         run_rate = db.ideal_rate(conn, line_id, r['sku_id'])
-        if not run_rate or run_rate <= 0:
-            run_rate = 600.0
+        if not run_rate:
+            unrated_min += dur
+            label = db.sku_label(conn, r['sku_id'])
+            if label not in unrated_skus:
+                unrated_skus.append(label)
+            continue
         production_time += ((units - s_) / run_rate) * 60.0
         scrap_time += (s_ / run_rate) * 60.0
-        dur = r['duration_min'] or 60
         weighted_rate_sum += dur * run_rate
         weighted_min += dur
         distinct_rates.add(run_rate)
-    rate = (weighted_rate_sum / weighted_min) if weighted_min else 600.0
+    rate_missing = None
+    if unrated_skus:
+        # One unrated run makes the production-time total unknown for the whole
+        # window: scoring the rest and calling the difference a residual would
+        # charge the unrated hours to nothing and report it as fact.
+        rate = None
+        production_time = None
+        scrap_time = None
+        rate_missing = (
+            "no rate on Line %d for %s (%d of %d recorded minutes unrated)"
+            % (line_id, ', '.join(unrated_skus), int(unrated_min),
+               int(unrated_min + weighted_min)))
+    else:
+        rate = (weighted_rate_sum / weighted_min) if weighted_min else None
     rate_mixed = len(distinct_rates) > 1
 
     good = actual - scrap
@@ -137,8 +164,12 @@ def compute_reconciliation(conn, line_id, shift_code, day):
     shift_len = (end - start).total_seconds() / 60.0
     usable = shift_len - lunch
 
-    # production_time and scrap_time are computed per run above.
-    residual = usable - production_time - scrap_time - downtime
+    # production_time and scrap_time are computed per run above, and are None
+    # when any run in the window had no rate (A01).
+    if production_time is None:
+        residual = None
+    else:
+        residual = usable - production_time - scrap_time - downtime
     ftq_pct = (good / actual * 100.0) if actual else 0.0
 
     return {
@@ -147,6 +178,7 @@ def compute_reconciliation(conn, line_id, shift_code, day):
         'good_units': good, 'downtime_min': downtime,
         'production_time_min': production_time, 'scrap_time_min': scrap_time,
         'residual_min': residual, 'rate': rate, 'rate_mixed': rate_mixed,
+        'rate_missing': rate_missing,
         'ftq_pct': ftq_pct,
         'run_count': len(runs),
     }
@@ -179,7 +211,10 @@ def _report(rec, line_name):
         f"Production:  {_format_minutes(rec['production_time_min'])}",
         f"Downtime:    {_format_minutes(rec['downtime_min'])}",
     ]
-    if abs(rec['residual_min']) < RESIDUAL_EPSILON:
+    if rec.get('rate_missing'):
+        lines.append(f"Residual:    — {rec['rate_missing']}.")
+        lines.append("             Production time and the residual are not computed.")
+    elif abs(rec['residual_min']) < RESIDUAL_EPSILON:
         lines.append("Residual:    balanced")
     else:
         lines.append(f"Residual:    {rec['residual_min']:+.1f} min unaccounted")
@@ -214,6 +249,18 @@ def h_end_shift(conn, s, text, user):
     line = conn.execute("SELECT name FROM lines WHERE id=?", (line_id,)).fetchone()
     name = line['name'] if line else f"Line {line_id}"
     report = _report(rec, name)
+
+    if rec['residual_min'] is None:
+        # A01, agreed 2026-11-23: with no rate there is no residual to explain,
+        # so there is no question to ask. The shift closes and the record says
+        # why the number is absent. Asking "you are unaccounted for ... minutes"
+        # about a number that does not exist is the failure this fixes.
+        _save(conn, rec, 'Residual not computed: ' + rec['rate_missing'] + '.')
+        s.set('shift', None)
+        s.set('shift_hour', 1)
+        s.save()
+        return report + "\n\nShift closed. The residual is not recorded: " \
+            + rec['rate_missing'] + "."
 
     if abs(rec['residual_min']) < RESIDUAL_EPSILON:
         _save(conn, rec, 'Balanced.')

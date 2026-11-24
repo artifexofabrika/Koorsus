@@ -11,7 +11,7 @@ Agreed 2026-11-07: modular rewrite. bot/db.py first.
 
 PUBLIC INTERFACE
     Session, get_user, ensure_schema
-    ideal_rate, case_pack, case_count, unit_label, case_label, setting
+    ideal_rate, sku_label, case_pack, case_count, unit_label, case_label, setting
     current_line_event, close_line_event, transition_line, derive_line
     parse_scrap, write_hour
 
@@ -149,10 +149,31 @@ def case_label(conn): return setting(conn, 'case_label', 'cases')
 # ============================================================
 
 def ideal_rate(conn, line_id, sku_id):
+    """The rate for this SKU on this line, or None when there is not one.
+
+    Agreed 2026-11-23 (A01). This returned 600.0 when no rate row existed, and
+    five call sites did arithmetic on the result, so expected units, the gap,
+    unaccounted minutes, the plausibility challenge, the flagged hour and the
+    shift residual were all confident and all invented. A rate belongs to a
+    SKU on a line, so a SKU that has never run there has none until the first
+    run measures one (FLOOR-MODEL, Nothing stops the line). A row holding NULL
+    or zero is treated as absent for the same reason: it cannot divide
+    anything. Callers must handle None and say so; none of them may
+    substitute a number.
+    """
     r = conn.execute(
         "SELECT ideal_rate FROM line_sku_rates WHERE line_id=? AND sku_id=?",
         (line_id, sku_id)).fetchone()
-    return r['ideal_rate'] if r else 600.0
+    if not r:
+        return None
+    rate = r['ideal_rate']
+    return rate if rate and rate > 0 else None
+
+
+def sku_label(conn, sku_id):
+    """Part number for a sentence. Falls back to the id if the row is gone."""
+    r = conn.execute("SELECT part_number FROM skus WHERE id=?", (sku_id,)).fetchone()
+    return r['part_number'] if r else f"SKU {sku_id}"
 
 
 def case_pack(conn, sku_id):
@@ -246,7 +267,14 @@ def derive_line(conn, job, sess, user):
 def write_hour(conn, job, shift, period, units, duration, user_id, raw_text,
                jh_start, jh_end, unacc, dts, override_reason=None,
                superseded=0, scrap_units=0):
-    """Insert one hourly_run. scrap_units is total produced that was bad."""
+    """Insert one hourly_run. scrap_units is total produced that was bad.
+
+    unacc may be None (A01, agreed 2026-11-23): with no rate on the SKU-line
+    pair there is no gap to measure, and an unknown gap is not flagged. A flag
+    is a claim that the hour lost unexplained production; when the number
+    behind it does not exist, the honest answer is not to make the claim.
+    """
+    flagged = 1 if (unacc is not None and unacc > unacc_threshold(conn)) else 0
     cur = conn.execute("""
         INSERT INTO hourly_runs
         (job_id, line_id, shift, period, recorded_at, units_filled, raw_text,
@@ -255,7 +283,7 @@ def write_hour(conn, job, shift, period, units, duration, user_id, raw_text,
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (job['id'], job['line_id'], shift, period, datetime.now().isoformat(),
           units, raw_text, duration, 'run', jh_start, jh_end,
-          user_id, 1 if unacc > unacc_threshold(conn) else 0, 'telegram',
+          user_id, flagged, 'telegram',
           override_reason, superseded, scrap_units))
     for d in dts:
         conn.execute(

@@ -69,11 +69,6 @@ def next_job_hour(conn, job_id):
                      (job_id,)).fetchone()
     return r['m'] if r and r['m'] is not None else 0.0
 
-def ideal_rate(conn, line_id, sku_id):
-    r = conn.execute('SELECT ideal_rate FROM line_sku_rates WHERE line_id=? AND sku_id=?',
-                     (line_id, sku_id)).fetchone()
-    return r['ideal_rate'] if r else 600.0
-
 def check_plausibility(units, expected, force=False):
     if force:
         return True, ''

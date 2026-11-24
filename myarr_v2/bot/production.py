@@ -141,24 +141,36 @@ def _summarize(conn, job, hour, units, scrap, duration, jh_start, jh_end, gap,
     ul = db.unit_label(conn)
     cl = db.case_label(conn)
     scrap_bit = f", {scrap:,} scrap" if scrap else ""
-    expected_units = rate * duration / 60.0
-    gap_units = expected_units - units
     downtime_min = sum((d or {}).get('minutes', 0) for d in dts)
-    downtime_units = downtime_min * rate / 60.0
-    unaccounted_units = max(0.0, gap_units - downtime_units)
-    unaccounted_min = unaccounted_units / (rate / 60.0) if rate else 0.0
     ftq = ((units - scrap) / units * 100) if units else 0.0
     parts = [
         f"Recorded: {job['job_number']} H{hour}, {cases:,} {cl} "
         f"({units:,} {ul}{scrap_bit}), {duration:.0f} min.",
-        f"Expected {expected_units:,.0f} at {rate:,.0f}/hr. "
-        f"Gap: {gap_units:,.0f} units ({gap:.1f} min).",
     ]
-    if downtime_min > 0:
-        parts.append(f"Downtime: {downtime_min:.1f} min ({downtime_units:,.0f} units).")
-    if unaccounted_units > 0:
-        parts.append(f"Unaccounted: {unaccounted_units:,.0f} units "
-                     f"({unaccounted_min:.1f} min).")
+    if rate:
+        expected_units = rate * duration / 60.0
+        gap_units = expected_units - units
+        downtime_units = downtime_min * rate / 60.0
+        unaccounted_units = max(0.0, gap_units - downtime_units)
+        unaccounted_min = unaccounted_units / (rate / 60.0)
+        gap_disp = (f"{gap:.1f} min" if gap is not None else "no minutes measured")
+        parts.append(f"Expected {expected_units:,.0f} at {rate:,.0f}/hr. "
+                     f"Gap: {gap_units:,.0f} units ({gap_disp}).")
+        if downtime_min > 0:
+            parts.append(f"Downtime: {downtime_min:.1f} min ({downtime_units:,.0f} units).")
+        if unaccounted_units > 0:
+            parts.append(f"Unaccounted: {unaccounted_units:,.0f} units "
+                         f"({unaccounted_min:.1f} min).")
+    else:
+        # A01, agreed 2026-11-23: there is no rate behind the arithmetic, so
+        # none of it is reported. Say which SKU and which line, and let FTQ
+        # through, because FTQ needs no rate.
+        parts.append(
+            f"No rate on Line {job['line_id']} for "
+            f"{db.sku_label(conn, job['sku_id'])}, so expected units, the gap "
+            f"and unaccounted minutes are not computed.")
+        if downtime_min > 0:
+            parts.append(f"Downtime: {downtime_min:.1f} min recorded.")
     parts.append(f"Job-hours {jh_start:.1f}-{jh_end:.1f}. FTQ {ftq:.1f}%.")
     reply = ' '.join(parts)
     if user and user.get('line_id') and user['line_id'] != job['line_id']:
@@ -238,22 +250,28 @@ def h_running_job(conn, s, text, user, force=False):
     duration = 60.0 - (s.get('start_offset') or 0.0)
 
     rate = db.ideal_rate(conn, job['line_id'], job['sku_id'])
-    expected = rate * duration / 60.0
-    ok, reason = check_plausibility(units, expected, force=force)
-    if not ok:
-        _save_pending(s, {
-            'job_number': job['job_number'],
-            'hour': hour,
-            'minutes': duration,
-            'units': units,
-            'scrap': scrap,
-            'dts': dts,
-        })
-        s.set('state', 'awaiting_record_plausibility')
-        s.save()
-        return reason
-
-    gap_min = (expected - units) / (rate / 60.0) if rate else 0.0
+    if rate:
+        expected = rate * duration / 60.0
+        ok, reason = check_plausibility(units, expected, force=force)
+        if not ok:
+            _save_pending(s, {
+                'job_number': job['job_number'],
+                'hour': hour,
+                'minutes': duration,
+                'units': units,
+                'scrap': scrap,
+                'dts': dts,
+            })
+            s.set('state', 'awaiting_record_plausibility')
+            s.save()
+            return reason
+        gap_min = (expected - units) / (rate / 60.0)
+    else:
+        # A01, agreed 2026-11-23: with no rate there is no expectation to check
+        # a number against, so there is no question to ask. A challenge built
+        # on an invented 600 stops the operator for a figure the plant does not
+        # have, which is what "nothing stops the line" forbids.
+        gap_min = None
     return _write_record(conn, s, job, hour, duration, units, scrap, dts,
                          gap_min, user, text)
 
@@ -333,16 +351,21 @@ def h_record_hour(conn, s, text, user, force=False, _is_continuation=False):
 
     # 5. Plausibility check AT UNITS ENTRY
     rate = db.ideal_rate(conn, job['line_id'], job['sku_id'])
-    expected = rate * mins / 60.0
-    ok, reason = check_plausibility(units, expected, force=force)
-    if not ok:
-        if 'dts' not in pending:
-            pending['dts'] = parse_downtime(text)
-        s.set('state', 'awaiting_record_plausibility')
-        _save_pending(s, pending)
-        s.save()
-        return reason
-    gap_min = (expected - units) / (rate / 60.0) if rate else 0.0
+    if rate:
+        expected = rate * mins / 60.0
+        ok, reason = check_plausibility(units, expected, force=force)
+        if not ok:
+            if 'dts' not in pending:
+                pending['dts'] = parse_downtime(text)
+            s.set('state', 'awaiting_record_plausibility')
+            _save_pending(s, pending)
+            s.save()
+            return reason
+        gap_min = (expected - units) / (rate / 60.0)
+    else:
+        # A01: no rate, so no expectation, so no challenge. The hour is
+        # recorded and the gap is unknown rather than invented.
+        gap_min = None
 
     # 6. Resolve scrap
     has_scrap_word = bool(re.search(r'\b(scrap|rework|reject|bad)\b', text, re.IGNORECASE))
@@ -364,7 +387,7 @@ def h_record_hour(conn, s, text, user, force=False, _is_continuation=False):
         dts = pending['dts']
     if not dts and pending.get('downtime_text'):
         dts = parse_downtime(pending['downtime_text'])
-    if not dts and gap_min > 1.0 and not pending.get('downtime_asked'):
+    if not dts and gap_min is not None and gap_min > 1.0 and not pending.get('downtime_asked'):
         pending['downtime_asked'] = True
         s.set('state', 'awaiting_record_downtime')
         _save_pending(s, pending)
