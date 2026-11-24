@@ -437,14 +437,23 @@ A53 OPEN  Found 2026-11-24 during A14's escrow recon, and enlarged the same day.
           The evidence for which passphrase is live: the matrix run on 2026-11-24
           showed /etc/koorsus-backup.key opening both the appliance and the
           Koorsus archives, and /etc/arkiv-backup.key opening neither.
-          Replaced 2026-11-24 in the source tree. restore.sh is now a stub that
-          refuses and names the two working paths: restore-index.sh for the
+          Replaced 2026-11-24 and installed the same day. restore.sh is a stub
+          that refuses and names the two working paths: restore-index.sh for the
           Koorsus index, and deploy/backup/restore.sh for the whole appliance.
           setup-backup-key.sh defaults to the key the backups read, and says that
           overwriting it orphans the archives already written with the old one.
-          NOT LIVE YET: /usr/local/sbin/koorsus holds root-owned copies, so the
-          install is one sudo cp. Until that runs, a Koorsus restore still fails
-          on the wrong key, which is why this stays open.
+          Verified by running the installed copy: refusal on stderr, exit 1.
+          The same rename missed reset.sh, and that one is worse. It is Arkiv's
+          factory reset: running it stops arkiv.service, moves
+          /mnt/lake/arkiv_index aside and leaves an empty library, while the
+          Koorsus collection it is named for is untouched. Replaced with a stub
+          that refuses. NOT yet installed, so one sudo cp remains. There is still
+          no Koorsus reset, which A17 needs before a customer install.
+          smoke-check.sh also belongs to Arkiv, but the installed arkiv-smoke.timer
+          runs /usr/local/sbin/arkiv/smoke-check.sh, so the copy here is baggage
+          rather than a hazard.
+          The source of truth is now deploy/koorsus-scripts/ in this repository,
+          with a README that names the state of each of the ten.
           Label: blocks a pilot. A restore that fails on a good archive is the
           worst failure this product has, because it happens on the day nothing
           else can be tried.
