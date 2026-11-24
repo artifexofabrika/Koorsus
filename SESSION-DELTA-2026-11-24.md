@@ -116,8 +116,11 @@ sentence in front of a plant manager.
 3. **The local token is not in the installer or the backup manifest.** On a fresh
    unit the bot will say the document service is not set up until someone creates
    `/home/jeeves/.koorsus-local.token`. That belongs in install.sh (A19).
-4. **32 open findings**, almost all notes. A51 (shift_reconciliations is written and
+4. **33 open findings**, almost all notes. A51 (shift_reconciliations is written and
    read by nothing) and the A44-adjacent installer gaps are the ones with teeth.
+   A55, filed after this delta was first written, is the capacity gap adding the
+   downtime cost back before comparing with the target; the owner deferred it to
+   after his walk.
 
 ## Corrections to earlier documents
 
@@ -128,4 +131,6 @@ the story. A35's docstring was false in three ways and is now true.
 
 ## Counts
 
-53 findings, 21 fixed, 32 open. 312 tracked files.
+54 findings, 21 fixed, 33 open. 312 tracked files. A55 was filed after this delta
+was first written, so its count is one higher than the summary above it; the audit
+is the catalogue and it is current.

@@ -222,6 +222,32 @@ A52 FIXED Found 2026-11-24 while implementing A50, fixed the same day.
           Label: blocks the demo. A plant manager who totals the parts himself
           finds a gross figure larger than the number of parts made.
 
+A55 OPEN  Found 2026-11-24 while answering a question about the two measures, and
+          filed after this session's delta was written, which is why the delta's
+          count is one short.
+          The line card computes theoretical_capacity as gross_production plus
+          lost_capacity, and capacity_gap as that minus the target. So when a rate
+          is loaded, the parts a recorded breakdown cost are added to the parts
+          produced before comparing with what was due. A line that produced 800
+          against a target of 1000 with 200 parts lost to downtime reports a
+          capacity gap of zero, not minus 200. The loss appears only as "losses
+          accounted for", which is a reconciliation, not a capacity statement.
+          That contradicts the rule the product is built on. Capacity compares
+          parts produced against parts due (FLOOR-MODEL, Two measures), and the
+          downtime is the reason for the shortfall rather than something added back
+          before measuring it. The unrated branch already does it the owner's way,
+          produced minus target, so the two branches disagree with each other and
+          one of them disagrees with the document.
+          The repair is one line: drop the uplift from capacity_gap. It moves
+          numbers on every card where downtime was recorded, which is why the owner
+          deferred it to after his walk of the demo. Do not do it silently.
+          Related, and to be looked at in the same pass: losses_unexplained then
+          subtracts lost capacity twice, once through the uplift inside the gap and
+          once through losses_accounted. Fixing one alone leaves the other wrong in
+          a new way.
+          Label: blocks a pilot. Nothing is visibly broken today only because no
+          demo line carries downtime on a rated day.
+
 ## S2
 
 A06 FIXED Closed 2026-11-22, in three pieces rather than one. On 2026-11-20 the
@@ -628,10 +654,10 @@ the only finding there whose shape is known. Expect more.
 
 ## Counts
 
-53 findings. 21 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
+54 findings. 21 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
 2026-11-20, A06, A45 and A49 on 2026-11-22, A01, A50 and A52 on 2026-11-24, the
 repository cleanup of A28 to A32 later the same day, A41 and A42 when HANDOVER.md
-was corrected, and A35 when jobs.py was read in full. 32 open. A45, A47, A48 and A49 were written down on
+was corrected, and A35 when jobs.py was read in full. 33 open. A45, A47, A48 and A49 were written down on
 2026-11-22, and A50, A51, A52 and A53 on 2026-11-24, found while proving and
 repairing A01, A50 and A14. A46 is still unaccounted for.
 
