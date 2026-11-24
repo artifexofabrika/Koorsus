@@ -296,6 +296,9 @@ A14 OPEN  Half done 2026-11-24. /etc/koorsus-backup.key encrypts every archive
           appliance, and it separates the two failures that need different
           actions: it verifies the archive's own .sha256 before decrypting, so a
           damaged file is reported as damaged rather than as mis-keyed.
+          A second key file, /etc/arkiv-backup.key, is not a second passphrase to
+          escrow but a way to open the wrong one during a restore; it is recorded
+          as A53.
           15 checks in test-escrow-check.sh, no root and no appliance needed.
           Not closed, deliberately: recoverability exists when a copy is off site
           and has been used, not when a procedure is written down. The sealed copy
@@ -387,6 +390,32 @@ A51 OPEN  Found 2026-11-24. bot/shift.py writes shift_reconciliations (usable
           Label: blocks a pilot. It does not stop a demo, but the operator's own
           words are the data of record and here they are write-only.
 
+A53 OPEN  Found 2026-11-24 during A14's escrow recon. Two key files exist:
+          /etc/koorsus-backup.key (48 bytes, 2026-11-17) and /etc/arkiv-backup.key
+          (27 bytes, 2026-11-15). Both backup scripts default to the first:
+          deploy/backup/backup.sh writes the appliance archive with it, and
+          /usr/local/sbin/koorsus/backup.sh writes the Koorsus index archive with
+          it. /usr/local/sbin/koorsus/restore.sh defaults to
+          ${ARKIV_BACKUP_KEY:-/etc/arkiv-backup.key}, and no unit and no
+          /etc/default entry sets ARKIV_BACKUP_KEY, so the restore path opens
+          with a key the archives were never written with. A recovery run reports
+          a bad decrypt on a good archive, and the natural conclusion is that the
+          backup is corrupt. setup-backup-key.sh carries the same default, so it
+          writes a key that nothing reads for backup.
+          The evidence that the live passphrase is the 48-byte one: the only
+          Koorsus archive on the box (2026-11-17T10:41) was written fifteen
+          minutes after that key was created, and the other key is two days older
+          than the archive it would have to have encrypted.
+          Not fixed here. restore.sh lives in /usr/local/sbin/koorsus, which is
+          the Koorsus product's tree and not this repository; the repair is one
+          default in one script and belongs to whoever owns that tree. What this
+          repository can do is say so, which ESCROW.md now does, along with the
+          workaround: set ARKIV_BACKUP_KEY=/etc/koorsus-backup.key when restoring,
+          or let escrow-check.sh tell you which passphrase opens the file.
+          Label: blocks a pilot. A restore that fails on a good archive is the
+          worst failure this product has, because it happens on the day nothing
+          else can be tried.
+
 ## S4
 
 A28 OPEN  Five .bak files in the bot package: production.py.bak_override,
@@ -462,11 +491,11 @@ the only finding there whose shape is known. Expect more.
 
 ## Counts
 
-51 findings. 13 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
+52 findings. 13 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
 2026-11-20, A06, A45 and A49 on 2026-11-22, and A01, A50 and A52 on 2026-11-24.
-38 open. A45, A47, A48 and A49 were written down on 2026-11-22, and A50, A51
-and A52 on 2026-11-24, found while proving and repairing A01 and A50. A46 is
-still unaccounted for.
+39 open. A45, A47, A48 and A49 were written down on 2026-11-22, and A50, A51,
+A52 and A53 on 2026-11-24, found while proving and repairing A01, A50 and A14.
+A46 is still unaccounted for.
 
 Tools that produced them, all in the repository and all re-runnable:
 tools/test_csv_roundtrip.py, tools/test_pages.py, tools/test_herbie_cards.py,

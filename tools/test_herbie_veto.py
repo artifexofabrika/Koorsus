@@ -98,6 +98,25 @@ check("a rounded figure counts as untraced, because rounding is deriving",
       herbie.untraced_numbers("about 951 units", "the figure was 950.9") == {951.0},
       herbie.untraced_numbers("about 951 units", "the figure was 950.9"))
 
+# The 2026-11-24 production false positive: the jobs_over card listed three jobs
+# as "1. ... 2. ... 3. ...", and the scan read the numbering as three invented
+# figures. A correct card was vetoed for using a list.
+check("numbered list markers are not figures",
+      herbie.numbers_in_text("1. filler jam\n2. capper jam\n3. label roll") == set(),
+      herbie.numbers_in_text("1. filler jam\n2. capper jam\n3. label roll"))
+
+check("a figure on a numbered line is still a figure, and the marker is not",
+      herbie.numbers_in_text("1. 92 minutes of downtime") == {92.0},
+      herbie.numbers_in_text("1. 92 minutes of downtime"))
+
+check("a ranked list of quoted figures is no longer a veto",
+      herbie.untraced_numbers(
+          "1. Filler saved 5 minutes\n2. Capper saved 8 minutes",
+          "Filler SAVED 5.0 minutes. Capper SAVED 8.0 minutes.") == set(),
+      herbie.untraced_numbers(
+          "1. Filler saved 5 minutes\n2. Capper saved 8 minutes",
+          "Filler SAVED 5.0 minutes. Capper SAVED 8.0 minutes."))
+
 # ------------------------------------------------- the prompt is the trace
 
 prompt = herbie.build_prompt("line_day", STATS, CONTEXT, "What happened on Line 2?")

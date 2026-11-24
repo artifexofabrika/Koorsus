@@ -827,6 +827,7 @@ def _fallback_narrative(intent, stats):
 
 _JOB_NUMBER_RE = re.compile(r"WO-?\d+-\d+", re.IGNORECASE)
 _ISO_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+_LIST_MARKER_RE = re.compile(r"(?m)^[ \t]*\d{1,2}[.)][ \t]")
 _FIGURE_RE = re.compile(r"-?\d[\d,]*(?:\.\d+)?")
 
 
@@ -835,9 +836,16 @@ def numbers_in_text(text):
 
     "WO-2611-201" reads as two negative numbers to a naive scan and an ISO date
     reads as three, so both are removed first. P2P carries a 2 that is not one.
+
+    Numbered list markers are removed too, and that one was learned in production
+    on 2026-11-24: the jobs_over card wrote "1. WO-2026-41415 ... 2. ... 3. ..."
+    and the scan read 1, 2 and 3 as figures the model had invented, so a correct
+    card was vetoed for using a list. Only a marker at the start of a line
+    followed by whitespace is removed, so "1.5" and "79 jobs" are untouched.
     """
     t = _JOB_NUMBER_RE.sub(" ", text or "")
     t = _ISO_DATE_RE.sub(" ", t)
+    t = _LIST_MARKER_RE.sub(" ", t)
     t = t.replace("P2P", " ")
     out = set()
     for m in _FIGURE_RE.finditer(t):
