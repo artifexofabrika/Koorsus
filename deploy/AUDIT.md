@@ -337,11 +337,19 @@ A16 OPEN  Half done 2026-11-24. export-usb.sh and import-usb.sh in
           reference appliance was a week old, which the export would have carried
           and called an offsite copy. 03:15 sits between Arkiv's 03:00 and the
           appliance's 03:30 so the three nightly jobs do not contend for the disk.
-          Not closed: the unit needs installing with sudo and running once, and the
-          old Koorsus-only scripts in /usr/local/sbin/koorsus still sit there with
-          the old behaviour. An operator who reaches for those gets a Koorsus-only
-          export that restores on insert, which is the same shape as A53 and
-          belongs to the Koorsus tree rather than this repository.
+          Installed and run 2026-11-24T12:19. The timer is enabled, next elapse
+          03:18 on 2026-11-25, and the first run wrote
+          koorsus-20261124-121924.tar.gz.enc: 261,696 bytes against 94,096 for the
+          week-old archive, because the index now holds 80 documents.
+          ExecStartPost verified the result rather than trusting the exit code:
+          sqlite integrity ok, and the document count inside the archive matched
+          live at 80 of 80, which is the only check that distinguishes a backup
+          from a file that merely got written.
+          Not closed: the old Koorsus-only scripts in /usr/local/sbin/koorsus
+          still sit there with the old behaviour. An operator who reaches for
+          those gets a Koorsus-only export that restores on insert, which is the
+          same shape as A53 and belongs to the Koorsus tree rather than this
+          repository.
 
 A17 OPEN  No document root. Koorsus stores extracted text and metadata and
           never the original file, so the document estate lives wherever the
