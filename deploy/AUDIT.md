@@ -452,30 +452,46 @@ A53 OPEN  Found 2026-11-24 during A14's escrow recon. Two key files exist:
 
 ## S4
 
-A28 OPEN  Five .bak files in the bot package: production.py.bak_override,
-          production.py.bak_20261115, jobs.py.bak_bridge, db.py.bak_live,
-          shift.py.bak_shiftcode. Two still contain the deleted session gate
-          verbatim and will mislead the next grep.
+A28 FIXED 2026-11-24. There were 41 .bak files, not five. Six in the bot package,
+          including changeover.py.bak_20261114, which this entry never listed,
+          and roughly twenty template backups under myarr_v2/templates/ and
+          myarr_v2/static/. Every one was gitignored, so none was ever in
+          history: they were litter on the disk that a grep would trip over, and
+          five was the part of the mess somebody had noticed. Removed, along with
+          every __pycache__ directory.
 
-A29 OPEN  Dead entry points and modules: myarr_v2/bot_live.py, bot_v3.py,
-          telegram_bot.py, root telegram_bot.py, and myarr_archive/ at about
-          830 lines including its own dashboard.py.
+A29 FIXED 2026-11-24. Deleted: myarr_v2/bot_live.py, bot_v3.py, both
+          telegram_bot.py, test_intent.py, test_scenarios.py,
+          test_scenarios_v3.py, telegram-bot.service, myarr_archive/, and the
+          archive/ tree of old Jeeves code. Nothing live referenced any of them,
+          and that was checked rather than assumed: the bot unit runs
+          myarr_v2/bot_live_v3.py, which imports myarra_settings, bot.db and
+          bot.dispatch and not bot_v3, despite its own docstring claiming
+          otherwise (A36).
 
-A30 OPEN  intent.py is dead. It is imported only by bot_v3.py and
-          test_intent.py, both dead. It carries a can-line station list and
-          "bottles" wording that describe nothing that runs, which is how a
-          future instance concludes the live parser is hardcoded when it is
-          not.
+A30 FIXED 2026-11-24. intent.py is deleted with both of its consumers, bot_v3.py
+          and test_intent.py. The can-line station list and the "bottles" wording
+          describe nothing that runs, and now they describe nothing at all, so
+          the future grep this entry was written for cannot happen.
 
-A31 OPEN  Client-Demo-backup/ inside the repository holds another complete
-          copy of the code, including its own config.py.
+A31 FIXED 2026-11-24. Client-Demo-backup/ is deleted, about forty files
+          including its own config.py and its own copy of the rag package.
 
-A32 OPEN  __pycache__ present in the tree. Whether .pyc files are committed is
-          unverified.
+A32 FIXED 2026-11-24. Answered as well as closed: .pyc files were committed,
+          inside Client-Demo-backup, and the tree also carried __pycache__
+          directories beside live modules. All are gone from the tip. They remain
+          reachable in history, which is why the directory is 22MB for 299 files;
+          removing them needs a history rewrite and this repository forbids one.
+          A clone is clean, a clone's .git is not.
 
 A33 OPEN  Name collisions: db.py twice, config.py three times, app.py twice,
           telegram_bot.py twice. New rule adopted: a new module gets a name
-          unique across the whole repository.
+          unique across the whole repository. Progress 2026-11-24: the
+          telegram_bot.py collision is gone, and config.py is not tracked at all
+          any more, only config.example.py, because the real one holds
+          credentials. What remains is myarr_v2/app.py beside the root app.py,
+          and db.py in myarr_v2 beside bot/db.py. The root app.py belongs to the
+          Koorsus product on port 5000 and moves only when those units move.
 
 A34 OPEN  Two identical udev rules now exist, 99-arkiv-usb.rules and
           99-koorsus-usb.rules.
@@ -525,9 +541,10 @@ the only finding there whose shape is known. Expect more.
 
 ## Counts
 
-52 findings. 13 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
-2026-11-20, A06, A45 and A49 on 2026-11-22, and A01, A50 and A52 on 2026-11-24.
-39 open. A45, A47, A48 and A49 were written down on 2026-11-22, and A50, A51,
+52 findings. 18 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
+2026-11-20, A06, A45 and A49 on 2026-11-22, A01, A50 and A52 on 2026-11-24, and
+the repository cleanup of A28, A29, A30, A31 and A32 later the same day.
+34 open. A45, A47, A48 and A49 were written down on 2026-11-22, and A50, A51,
 A52 and A53 on 2026-11-24, found while proving and repairing A01, A50 and A14.
 A46 is still unaccounted for.
 
