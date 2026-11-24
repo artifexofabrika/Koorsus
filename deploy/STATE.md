@@ -115,36 +115,45 @@ myarr_v2/requirements.txt created and pinned from actual imports: Flask
 
 ## Not done, planned
 
-- The printable installation procedure. Last piece of queue item 3.
-- No offsite copy of the appliance archive. export-usb.sh and import-usb.sh
-  are hardcoded to /mnt/koorsus-backup.
-- Key escrow is not a documented step. The passphrase exists only on the
-  machine and in the owner's Downloads.
+- The printable installation procedure. deploy/INSTALL.md exists as of
+  2026-11-24; whether it is the printed procedure the queue meant has not been
+  checked, and HANDOVER now lists it closed. Confirm before a customer install.
+- DONE 2026-11-24: an offsite copy of the appliance archive. deploy/backup/
+  export-usb.sh and import-usb.sh carry both products with a manifest, verify
+  every checksum after the copy and again after staging, refuse a device that
+  already holds a passphrase file, and stage without restoring. A nightly
+  koorsus-backup.timer now writes the index archive, which nothing had scheduled
+  since 2026-11-17 (A16).
+- DONE 2026-11-24: key escrow. deploy/ESCROW.md states the model, the sealing
+  procedure and what must never happen, and deploy/backup/escrow-check.sh proves
+  that a passphrase read off paper opens a real archive. Closed on the owner's
+  word: escrow is a maintenance habit rather than a code path (A14).
 - No durable document root. Koorsus documents were ingested from /tmp and
   no longer exist, so 64 chunks cite files nobody can open. Neither product
   stores a document.
 - Reset the Koorsus collection before any customer install, or the unit
-  ships with our test text.
+  ships with our test text. There is still no Koorsus reset: reset.sh was
+  Arkiv's and now refuses (A53, A17).
 - install.sh should refuse when the env file lacks a variable the units
   interpolate. A stale env file produces empty arguments, not an error.
 - install.sh HTTP check should accept 200 and 302 and flag 000 or a 5xx.
 - CSV round-trip with real data, then the systematic pass over every page,
   every Herbie card and every bot path. Queue item 4.
   PART DONE 2026-11-20: the CSV round trip, the page sweep (26 routes then, 27
-  since 2026-11-24) and the 5 Herbie
-  cards all run and are re-runnable. The bot write paths are still unwalked,
-  and the audit calls them the largest unexamined surface.
+  since 2026-11-24) and the 5 Herbie cards all run and are re-runnable. The bot
+  write paths are still unwalked, and the audit calls them the largest
+  unexamined surface.
 - Regenerate the audit from the code. Queue item 5.
-  DONE 2026-11-20: deploy/AUDIT.md holds 44 numbered findings, each naming a
-  file. The 115 in this line was the count from an earlier audit that was
-  never saved, and the two figures should not be reconciled; the saved one
-  wins. Regenerated again 2026-11-22 to 47 when A45, A47 and A48 were finally
-  written down.
-- /floor write path, C27, then Whisper. Queue item 6.
-  HALF DONE. The hour was fixed 2026-11-20 and the start action 2026-11-22.
-  Still missing: end, and the lunch, maintenance and CIP toggles. A45, the
-  variance gate's off-time allowance, gets built before end, in one shared
-  function, or it will be built twice and the two will disagree.
+  DONE 2026-11-20, regenerated 2026-11-22 to 47 when A45, A47 and A48 were
+  written down, and again on 2026-11-24 to 53 when A50 to A54 were found.
+  deploy/AUDIT.md is the catalogue: 21 fixed, 32 open, each naming a file and an
+  observation that can be repeated. The 115 in this line was a count from an
+  audit that was never saved; do not reconcile them.
+- /floor write path, C27. DONE 2026-11-22, and this line was stale from that day
+  until 2026-11-24: the end action and the lunch, maintenance and CIP toggles
+  were built on A45's shared variance gate, verified 15 of 15 in
+  tools/test_floor_start.py, and A06 is closed in the audit. Whisper is not
+  started and would land in the same POST.
 - Odoo master-data import and the line-mapping screen. HANDOVER calls this
   install-blocking; the owner's revised list drops it. Unresolved.
 - The architecture map. Agreed as worth doing, not yet written.
