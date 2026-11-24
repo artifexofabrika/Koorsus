@@ -59,7 +59,7 @@ STATS = {
     "actual_units": 11987, "scrap_units": 225, "run_minutes": 720,
     "downtime_min": 0.0, "downtime_by_station": {"Filler": 20.0},
     "standard_rate": 0, "rate_loaded": False, "rate_mixed": False,
-    "target_units": 11662, "lost_capacity": None, "gross_production": 12212,
+    "target_units": 11662, "lost_capacity": None, "gross_production": 11987,
     "theoretical_capacity": None, "capacity_gap": 550,
     "losses_accounted": None, "losses_unexplained": None,
     "ftq": 98.1, "p2p": 102.8, "unrated_min": 720, "unrated_downtime_min": 0.0,

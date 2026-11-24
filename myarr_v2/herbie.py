@@ -103,7 +103,9 @@ Close with what the line lead should go and find out, if anything.
 
 FIELD_GLOSSARY = [
     ("actual_units", "parts produced, scrap included"),
-    ("gross_production", "parts produced before losses are considered"),
+    ("gross_production", "parts produced, scrap included: the same count as "
+                         "actual_units, because scrap is a subset of it and is "
+                         "never added on top"),
     ("target_units", "the target this figure is measured against: the job's own "
                      "target, or the sum of the job targets scheduled that day"),
     ("scrap_units", "produced parts that failed first time; already counted "
@@ -321,7 +323,13 @@ def get_line_summary(conn, line_id, date):
     target_units = target["target"] if target else 0
 
     # lost_capacity is computed above, per run at the run's own SKU rate.
-    gross_production = actual_units + scrap_units
+    # Agreed 2026-11-24 (A52). units_filled already contains scrap: 600 produced
+    # with 20 scrap is 600 total and 580 good (the 2026-11-07 convention, stated
+    # in FLOOR-MODEL and in the glossary below). This added scrap on top, so
+    # every theoretical_capacity and capacity_gap built from it carried an extra
+    # scrap_units, and losses_unexplained inherited it. Gross production is the
+    # parts produced, and scrap is a subset of them rather than a second helping.
+    gross_production = actual_units
     ftq = ((actual_units - scrap_units) / actual_units * 100) if actual_units else 0
     p2p = (actual_units / target_units * 100) if target_units else 0
 
@@ -452,7 +460,8 @@ def narrate_capacity_gap(stats, context):
 
     parts = [
         f"Line {s['line_id']} on {s['date']}.",
-        f"Target: {s['target_units']:,}. Actual good output: {s['actual_units']:,}. Scrap: {s['scrap_units']:,}.",
+        f"Target: {s['target_units']:,}. Actual output: {s['actual_units']:,}, "
+        f"of which {s['scrap_units']:,} scrap.",
     ]
 
     if rate_missing:

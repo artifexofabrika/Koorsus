@@ -145,7 +145,7 @@ check("no rate: the card says the rate figures are unknown rather than zero",
                    "losses_unexplained", "theoretical_capacity")}))
 
 check("no rate: the capacity gap survives, because it compares with the target",
-      stats["capacity_gap"] == (900 + 25) - 1000,
+      stats["capacity_gap"] == 900 - 1000,
       "capacity_gap=%r" % (stats["capacity_gap"],))
 
 check("no rate: the card names the SKU and the line and the unrated minutes",
@@ -173,16 +173,24 @@ check("a rated line still prices its downtime in parts",
       rated["lost_capacity"] == 400 and rated["rate_loaded"] is True,
       "lost_capacity=%r" % (rated["lost_capacity"],))
 
-check("a rated line still computes the gap, the accounted loss and the rest "
-      "exactly as before this change",
-      rated["gross_production"] == 1020
-      and rated["theoretical_capacity"] == 1420
-      and rated["capacity_gap"] == 420
+check("a rated line computes the gap from produced parts plus the downtime "
+      "uplift, and no longer adds scrap a second time",
+      rated["gross_production"] == 1000
+      and rated["theoretical_capacity"] == 1400
+      and rated["capacity_gap"] == 400
       and rated["losses_accounted"] == 420
       and rated["losses_unexplained"] == 0,
       json.dumps({k: rated[k] for k in
                   ("gross_production", "theoretical_capacity", "capacity_gap",
                    "losses_accounted", "losses_unexplained")}))
+
+check("scrap is not counted twice: gross production is the parts produced, "
+      "on both lines",
+      rated["gross_production"] == rated["actual_units"] == 1000
+      and stats["gross_production"] == stats["actual_units"] == 900,
+      "rated gross=%r actual=%r, unrated gross=%r actual=%r"
+      % (rated["gross_production"], rated["actual_units"],
+         stats["gross_production"], stats["actual_units"]))
 
 body = herbie.narrate_capacity_gap(rated, "")
 check("a rated line's template still reports numbers and no dash",

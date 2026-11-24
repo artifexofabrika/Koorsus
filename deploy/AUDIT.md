@@ -193,22 +193,32 @@ A50 FIXED Found 2026-11-24 while proving A01, fixed the same day. Same family as
           the line_day card meets the contradiction directly. It blocks a pilot
           for the same reason whether or not anyone opens the card.
 
-A52 OPEN  Found 2026-11-24 while implementing A50. gross_production is computed
-          as actual_units + scrap_units, and the 2026-11-07 convention, stated in
-          FLOOR-MODEL and in herbie's own glossary, is that units_filled already
-          contains scrap: 600 produced with 20 scrap is 600 total and 580 good.
-          Adding scrap again counts it twice, so theoretical_capacity and
-          capacity_gap are inflated by exactly scrap_units on every line card
-          that has scrap. The card of 2026-11-23 read gross production 12,212 for
-          11,987 produced with 225 scrap, and reported a capacity gap of 550
-          against a target of 11,662 where produced against target is 325.
-          capacity_gap is therefore wrong by scrap_units, and losses_unexplained
-          inherits the error. That matters beyond arithmetic: the diagnostic rule
-          tells a reader to compare the two, so "when losses_unexplained is
-          larger than losses_accounted the data is incomplete" is advice computed
-          from an inflated gap.
-          Not fixed in this commit, because it moves a number the owner has
-          already seen on the demo.
+A52 FIXED Found 2026-11-24 while implementing A50, fixed the same day.
+          gross_production was computed as actual_units + scrap_units, and the
+          2026-11-07 convention, stated in FLOOR-MODEL and in herbie's own
+          glossary, is that units_filled already contains scrap: 600 produced
+          with 20 scrap is 600 total and 580 good. Adding scrap again counted it
+          twice, so theoretical_capacity and capacity_gap were inflated by
+          exactly scrap_units on every line card that had scrap. The card of
+          2026-11-23 read gross production 12,212 for 11,987 produced with 225
+          scrap, and reported a capacity gap of 550 against a target of 11,662
+          where produced against target is 325.
+          That mattered beyond arithmetic: the diagnostic rule tells a reader to
+          compare losses_unexplained with losses_accounted, so "when
+          losses_unexplained is larger than losses_accounted the data is
+          incomplete" was advice computed from an inflated gap.
+          Fixed: gross_production is actual_units, so theoretical_capacity,
+          capacity_gap and losses_unexplained all lose the extra scrap. The
+          glossary now says gross production is the parts produced and that scrap
+          is a subset of it rather than a second helping, and the fallback
+          narrative no longer calls actual_units "good output" when it is the
+          total including scrap.
+          Capacity gap figures change as a result. The card that read 550 against
+          a target of 11,662 now reads 325, which is 11,987 produced against
+          11,662 due. tools/test_line_card_rate_gap.py holds it at 16 checks:
+          three were red against the previous arithmetic — the unrated gap, the
+          rated arithmetic, and gross against actual — and all are green after,
+          with the rated line still carrying its downtime uplift.
           Label: blocks the demo. A plant manager who totals the parts himself
           finds a gross figure larger than the number of parts made.
 
@@ -435,9 +445,9 @@ the only finding there whose shape is known. Expect more.
 
 ## Counts
 
-51 findings. 12 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
-2026-11-20, A06, A45 and A49 on 2026-11-22, and A01 and A50 on 2026-11-24.
-39 open. A45, A47, A48 and A49 were written down on 2026-11-22, and A50, A51
+51 findings. 13 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
+2026-11-20, A06, A45 and A49 on 2026-11-22, and A01, A50 and A52 on 2026-11-24.
+38 open. A45, A47, A48 and A49 were written down on 2026-11-22, and A50, A51
 and A52 on 2026-11-24, found while proving and repairing A01 and A50. A46 is
 still unaccounted for.
 
