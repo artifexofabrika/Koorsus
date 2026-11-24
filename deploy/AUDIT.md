@@ -559,8 +559,28 @@ A42 FIXED 2026-11-24. HANDOVER.md said backup and restore did not exist and was
 A43 OPEN  ~/koorsus/systemd/ holds arkiv-branded units for port 5001 that are
           not what runs. The live unit is koorsus-app.service on 5003.
 
-A44 OPEN  koorsus.service on 5000 is the legacy Koorsus, kept only because a
-          Telegram bot posts to it. Nothing records that.
+A44 OPEN  Found the real dependency 2026-11-24, and it is not what this entry
+          said. koorsus.service on 5000 is the legacy Koorsus: enabled and active,
+          serving plain HTTP with no TLS, from /home/jeeves/Client-Demo/serve.py.
+          Two live callers, not one. myarr_v2/bot/support.py:114 posts h_sop
+          questions to http://127.0.0.1:5000/ask, and email_skill.py:21 sets
+          KOORSUS_URL to the same endpoint for the email agent. Both are
+          unauthenticated, and both would break the day it stops.
+          That is why it cannot simply be switched off. The Koorsus on 5003 does
+          serve POST /ask, but it answers 401 with
+          {"error":"Not authenticated","login":"/login"}. A repoint is therefore
+          not a URL change: support.py would take the error object, find neither
+          "answer" nor "response" in it, and read the raw dictionary out to the
+          operator as the answer to his question.
+          To retire it, in this order. Give the Koorsus application a repository
+          home (A54), because adding a localhost credential to an unversioned
+          application is how a working service becomes an unrecoverable one. Add a
+          token or session path on 5003 for localhost callers. Repoint both
+          callers and test them. Then stop, disable and mask koorsus.service, and
+          move serve.py and app.py into an archive that is tracked rather than
+          gitignored, since archive/ is ignored and would vanish from the record.
+          Label: a note today. The capability works; only the name collides, and
+          that collision is what the owner wants gone.
 
 ## What this audit does not cover
 
