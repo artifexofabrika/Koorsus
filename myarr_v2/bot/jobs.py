@@ -1,11 +1,19 @@
 """bot/jobs.py — Job lifecycle: start, end, pause, resume, variance.
 
-TEMPORARY BRIDGE: resolve_job, _explain_no_job, _fuzzy_note, next_job_hour,
-and cont_end_minutes are imported from bot_v2. They will be extracted into
-bot/resolve.py in a follow-up session. Reason: fuzzy voice-to-text job
-matching is non-trivial and duplicating it today risks re-introducing the
-bugs we are eliminating. Extraction is a small, safe task for a fresh
-session.
+THE BRIDGE THIS DOCSTRING DESCRIBED WAS ALREADY GONE (A35, corrected 2026-11-24)
+It said that resolve_job, _explain_no_job, _fuzzy_note, next_job_hour and
+cont_end_minutes were "imported from bot_v2" and would be extracted into
+bot/resolve.py in a follow-up session. By the time anyone read it, none of that
+was true. The first four are imported from bot/resolve.py on line 18, which is
+where the extraction landed on 2026-11-13. cont_end_minutes is not imported from
+anywhere: it is defined in this file, four hundred lines down. And bot_v2.py no
+longer exists, having been deleted on 2026-11-24.
+
+It stood long enough to cost a session a morning. A reader took it as proof that
+the live parser was still bot_v2's, and went looking for a module that had not
+existed for eleven days. The live path is bot_live_v3.py -> bot.dispatch -> here,
+and this note is the only warning anyone needs: there is no bridge, there never
+was one after 2026-11-13, and nothing in this file depends on bot_v2.
 
 The handlers in this module are new and use bot/db.py for all state.
 """

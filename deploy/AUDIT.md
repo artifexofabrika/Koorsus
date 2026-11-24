@@ -540,7 +540,23 @@ A33 OPEN  Name collisions: db.py twice, config.py three times, app.py twice,
 A34 OPEN  Two identical udev rules now exist, 99-arkiv-usb.rules and
           99-koorsus-usb.rules.
 
-A35 OPEN  The TEMPORARY BRIDGE comment in bot/jobs.py is false.
+A35 FIXED 2026-11-24. The TEMPORARY BRIDGE comment in bot/jobs.py was false in
+          three ways at once. It named resolve_job, _explain_no_job, _fuzzy_note,
+          next_job_hour and cont_end_minutes as "imported from bot_v2" and
+          awaiting extraction into bot/resolve.py. The first four have been
+          imported from bot/resolve.py since 2026-11-13, which is where the
+          extraction landed; cont_end_minutes is defined in jobs.py itself and
+          imported from nowhere; and bot_v2.py was deleted the same day this was
+          found. The docstring now says all of that, and says why it mattered: a
+          reader took it as proof the live parser was still bot_v2's and spent a
+          morning looking for a module that had not existed for eleven days.
+          Found by reading the file in full. Two things noticed on the way and
+          deliberately not changed, because they are not this finding: the two
+          blank lines before start_job are missing, which a linter would flag;
+          and h_start_job calls check_start without a line_id, so a work order
+          moved by Telegram is still checked against the line it carries rather
+          than the line it is starting on, which is the floor path's behaviour and
+          the bot path's remaining gap.
 
 A36 OPEN  bot_live_v3.py implies a v3 lineage that does not exist. It is the
           live entry point.
@@ -612,10 +628,10 @@ the only finding there whose shape is known. Expect more.
 
 ## Counts
 
-53 findings. 20 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
+53 findings. 21 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
 2026-11-20, A06, A45 and A49 on 2026-11-22, A01, A50 and A52 on 2026-11-24, the
-repository cleanup of A28 to A32 later the same day, and A41 and A42 when
-HANDOVER.md was corrected. 33 open. A45, A47, A48 and A49 were written down on
+repository cleanup of A28 to A32 later the same day, A41 and A42 when HANDOVER.md
+was corrected, and A35 when jobs.py was read in full. 32 open. A45, A47, A48 and A49 were written down on
 2026-11-22, and A50, A51, A52 and A53 on 2026-11-24, found while proving and
 repairing A01, A50 and A14. A46 is still unaccounted for.
 
