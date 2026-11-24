@@ -424,31 +424,51 @@ A51 OPEN  Found 2026-11-24. bot/shift.py writes shift_reconciliations (usable
           Label: blocks a pilot. It does not stop a demo, but the operator's own
           words are the data of record and here they are write-only.
 
-A53 OPEN  Found 2026-11-24 during A14's escrow recon. Two key files exist:
-          /etc/koorsus-backup.key (48 bytes, 2026-11-17) and /etc/arkiv-backup.key
-          (27 bytes, 2026-11-15). Both backup scripts default to the first:
-          deploy/backup/backup.sh writes the appliance archive with it, and
-          /usr/local/sbin/koorsus/backup.sh writes the Koorsus index archive with
-          it. /usr/local/sbin/koorsus/restore.sh defaults to
-          ${ARKIV_BACKUP_KEY:-/etc/arkiv-backup.key}, and no unit and no
-          /etc/default entry sets ARKIV_BACKUP_KEY, so the restore path opens
-          with a key the archives were never written with. A recovery run reports
-          a bad decrypt on a good archive, and the natural conclusion is that the
-          backup is corrupt. setup-backup-key.sh carries the same default, so it
-          writes a key that nothing reads for backup.
-          The evidence that the live passphrase is the 48-byte one: the only
-          Koorsus archive on the box (2026-11-17T10:41) was written fifteen
-          minutes after that key was created, and the other key is two days older
-          than the archive it would have to have encrypted.
-          Not fixed here. restore.sh lives in /usr/local/sbin/koorsus, which is
-          the Koorsus product's tree and not this repository; the repair is one
-          default in one script and belongs to whoever owns that tree. What this
-          repository can do is say so, which ESCROW.md now does, along with the
-          workaround: set ARKIV_BACKUP_KEY=/etc/koorsus-backup.key when restoring,
-          or let escrow-check.sh tell you which passphrase opens the file.
+A53 OPEN  Found 2026-11-24 during A14's escrow recon, and enlarged the same day.
+          /usr/local/sbin/koorsus/restore.sh was not a Koorsus script at all. It
+          was a copy of Arkiv's restore: it looked in /mnt/arkiv-backup for
+          arkiv-*.tar.gz.enc, opened them with /etc/arkiv-backup.key, unpacked
+          arkiv_index into /mnt/lake, and stopped and started arkiv.service. Run
+          against a real Koorsus archive it failed at the key and reported "wrong
+          passphrase or corrupt archive" about a good file, which is the worst
+          sentence available during a recovery. setup-backup-key.sh carried the
+          same wrong default, so running it wrote a key that nothing read for
+          backup.
+          The evidence for which passphrase is live: the matrix run on 2026-11-24
+          showed /etc/koorsus-backup.key opening both the appliance and the
+          Koorsus archives, and /etc/arkiv-backup.key opening neither.
+          Replaced 2026-11-24 in the source tree. restore.sh is now a stub that
+          refuses and names the two working paths: restore-index.sh for the
+          Koorsus index, and deploy/backup/restore.sh for the whole appliance.
+          setup-backup-key.sh defaults to the key the backups read, and says that
+          overwriting it orphans the archives already written with the old one.
+          NOT LIVE YET: /usr/local/sbin/koorsus holds root-owned copies, so the
+          install is one sudo cp. Until that runs, a Koorsus restore still fails
+          on the wrong key, which is why this stays open.
           Label: blocks a pilot. A restore that fails on a good archive is the
           worst failure this product has, because it happens on the day nothing
           else can be tried.
+
+A54 OPEN  Found 2026-11-24 while repairing A53. The seven scripts in
+          /usr/local/sbin/koorsus are byte-identical to the working tree of
+          ~/koorsus, and ~/koorsus is a clone of /home/jeeves/arkiv, a different
+          product's repository. Five of the seven carry uncommitted edits that
+          rename arkiv to koorsus: backup.sh, export-usb.sh, import-usb.sh,
+          restore-index.sh and verify-backup.sh. restore.sh and
+          setup-backup-key.sh were never renamed, which is A53. So the live
+          Koorsus backup and restore scripts exist in no history anywhere.
+          The failure that follows is quiet. A git checkout in ~/koorsus returns
+          those five files to Arkiv paths, and whoever then copies source to
+          /usr/local/sbin, as the install has done until now, replaces the nightly
+          job that writes koorsus-*.tar.gz.enc with one that writes arkiv-*.enc
+          into a directory Koorsus does not read. The timer installed on
+          2026-11-24 would keep reporting success while writing nothing useful.
+          Not fixed, and not an edit: the repair is a decision about where the
+          Koorsus scripts live. They belong in a repository of their own, or under
+          deploy/ in this one with the installer copying them. Either is a
+          structure change, not a cleanup.
+          Label: blocks a pilot. Uncommitted production code on a customer
+          appliance is recoverability lost without anyone noticing.
 
 ## S4
 
@@ -548,10 +568,10 @@ the only finding there whose shape is known. Expect more.
 
 ## Counts
 
-52 findings. 20 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
+53 findings. 20 fixed and verified: A05, A07, A08, A09, A12, A13 and A27 on
 2026-11-20, A06, A45 and A49 on 2026-11-22, A01, A50 and A52 on 2026-11-24, the
 repository cleanup of A28 to A32 later the same day, and A41 and A42 when
-HANDOVER.md was corrected. 32 open. A45, A47, A48 and A49 were written down on
+HANDOVER.md was corrected. 33 open. A45, A47, A48 and A49 were written down on
 2026-11-22, and A50, A51, A52 and A53 on 2026-11-24, found while proving and
 repairing A01, A50 and A14. A46 is still unaccounted for.
 
